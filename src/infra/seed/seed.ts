@@ -81,7 +81,7 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
       for (const r of u.roles) {
         await tx
           .insert(s.roleAssignment)
-          .values({ orgId: org.id, userId: id, role: r.role, orgUnitId: unitIds[r.unit] });
+          .values({ orgId: org.id, userId: id, role: r.role, orgUnitId: unitIds[r.unit], isHead: r.isHead });
       }
     }
 

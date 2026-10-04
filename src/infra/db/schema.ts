@@ -156,6 +156,8 @@ export const roleAssignment = pgTable(
     orgUnitId: uuid("org_unit_id")
       .notNull()
       .references(() => orgUnit.id),
+    /** The head of the unit for this role (e.g. the VP of a department with several managers). One per unit and role. */
+    isHead: boolean("is_head").notNull().default(false),
   },
   (t) => [uniqueIndex("role_assignment_uq").on(t.userId, t.role, t.orgUnitId)],
 );
