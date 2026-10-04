@@ -25,8 +25,8 @@ still pass; handoff and decisions updated; Eran signs off after a demo.
 
 ## Phase 0 acceptance
 
-- [ ] Fresh clone runs with the README's four commands
-- [ ] First PR's CI is green
-- [ ] Dev `/api/health` returns 200 with the merged commit's SHA and DB ok
-- [ ] `pnpm run doctor` passes locally and against Dev
-- [ ] gitleaks finds nothing
+- [x] Fresh clone runs with the README's four commands
+- [x] First PR's CI is green
+- [x] Dev `/api/health` returns 200 with the merged commit's SHA and DB ok
+- [x] `pnpm run doctor` passes locally and against Dev
+- [x] gitleaks finds nothing
