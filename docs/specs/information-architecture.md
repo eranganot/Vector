@@ -13,28 +13,30 @@ insights**, never as the headline. This is how VECTOR avoids turning into a BI d
 ## Navigation (as built)
 
 ```text
-Sidebar (desktop) / top bar (mobile):  VECTOR · Today · Performance · Approvals (badge) · Audit* · Demo controls**
+Sidebar (desktop) / top bar (mobile):  VECTOR · Home · Organization · Waiting on you (badge) · Audit* · Demo controls**
 Header:                                 demo clock · persona chip ("Viewing as Dana Levi · CEO · demo") with the switcher
 * Executive and Admin   ** Admin
 ```
 
-| Route            | Screen                                                                    | Primary question it answers                             | Status     |
-| ---------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- | ---------- |
-| `/login`         | Sign in / demo personas                                                   | Who am I in this demo?                                  | Built      |
-| `/`              | **Today**: waiting on you, risk lane, opportunity lane, recently resolved | What needs my attention now?                            | Built      |
-| `/performance`   | **Performance**, by position (group, region, branch, department)          | How is my area doing, and what drives it?               | Built (G2) |
-| `/insights/[id]` | Insight trace                                                             | Why am I seeing this, and what should happen?           | Built      |
-| `/approvals`     | Approvals inbox                                                           | What am I being asked to approve, and why me?           | Built      |
-| `/audit`         | Audit: chain verification (explorer later)                                | Is the log intact? (what exactly happened: Phase 4)     | Partial    |
-| `/admin/demo`    | Demo controls                                                             | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days) | Built      |
-| `/units/[id]`    | Department / Region / Branch drill-down                                   | What is happening in this unit, and who owns it?        | Phase 3    |
-| `/actions`       | Actions tracker                                                           | What's in flight, and did it work?                      | Phase 4    |
+| Route            | Screen                                                                                        | Primary question it answers                             | Status     |
+| ---------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------- |
+| `/login`         | Sign in / demo personas                                                                       | Who am I in this demo?                                  | Built      |
+| `/`              | **Home**, by role: Command Center (Executive, Viewer, Admin); managers are sent to their unit | What needs my attention now?                            | Built (P3) |
+| `/units/[id]`    | **Unit view** (group, region, branch, department): one template                               | What is happening in this unit, and who owns it?        | Built (P3) |
+| `/org`           | **Organization**: the hierarchy you can see, departments owns / involved                      | Where is it going wrong, and how do I get there?        | Built (P3) |
+| `/performance`   | Redirects to your own unit view (Phase 2 address)                                             | —                                                       | Redirect   |
+| `/insights/[id]` | Insight trace                                                                                 | Why am I seeing this, and what should happen?           | Built      |
+| `/approvals`     | **Waiting on you**: decisions, approvals and your actions                                     | What am I being asked to decide or approve, and why me? | Built      |
+| `/audit`         | Audit: chain verification (explorer later)                                                    | Is the log intact? (what exactly happened: Phase 4)     | Partial    |
+| `/admin/demo`    | Demo controls                                                                                 | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days) | Built      |
+| `/actions`       | Actions tracker                                                                               | What's in flight, and did it work?                      | Phase 4    |
 
-Search and the scope breadcrumb arrive with the unit views (Phase 3).
+Unit views carry a breadcrumb (Group › Region › Branch); every unit name links to its view, so any unit is at most two
+clicks from any screen. Search is not built yet.
 
-**Home:** everyone lands on **Today**, scoped to their role. Region and branch managers see risks ranked by local priority;
-the Performance page carries the role-specific view (performance-dashboards.md). Role-routed homes (Command Center for the
-Executive, unit view for managers) are Phase 3.
+**Home (Phase 3):** the Executive, the board observer and the Admin land on the **Command Center**; region, branch and
+department managers land on **their own unit view**, where risks are ranked and banded by local priority. A unit outside
+your scope returns 404, as an insight does.
 
 ## Visual
 
@@ -44,9 +46,10 @@ Numbers in KPI cards are large; status is always a dot plus a word, never colour
 
 ## Screen anatomy
 
-**Command Center** (Phase 3; in Phase 2 its content is split between Today and the group Performance dashboard)
+**Command Center** (built in Phase 3; screens/command-center-ceo.png)
 
-1. Header strip: one sentence of org health ("2 regions on track, North at risk") + as-of time.
+1. Header strip: one sentence of org health ("Center and North need attention; Coast to watch.") + a subline (P1 count, O1
+   count). What changed in the last 24 h and the biggest KPI moves sit below the lanes.
 2. **Top priorities**: ranked insight cards (P1/P2): title, affected units, impact, band, owner, status.
 3. **Decisions waiting on you**: approvals and pending decisions.
 4. Health by region: a small multiple per region (one composite status + the 2 KPIs driving it).

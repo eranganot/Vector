@@ -1,6 +1,8 @@
 # Performance dashboards
 
-Status: **Built in Phase 2 (Eran's G2 request, 2026-10-04)**: "add a performance dashboard (differentiate between
+Status: **Built in Phase 2 (Eran's G2 request, 2026-10-04); in Phase 3 the dashboard became the unit view** at
+`/units/[id]` (any unit you may read, same template; `/performance` redirects to your own unit). Bands on a unit view are
+the viewer's local bands everywhere: cards, counts, KPI links and Waiting on you. Original status line:: "add a performance dashboard (differentiate between
 positions)". Visual reference: Eran's dashboard images (dark navy, cyan accent, KPI cards with target and change, an
 organization pulse). Route `/performance`; read model `performanceView` in `src/application/queries/performance.ts`.
 
@@ -60,7 +62,7 @@ affected units.
 Region and branch dashboards rank "Needs handling" by local priority (priority-v2.1-local, raise-only; see
 [priority.md](priority.md)) and show the group-wide band beside it where they differ.
 
-## Not yet (Phase 3+)
+## Not yet
 
-Unit drill-down pages (`/units/[id]`), date range selection, plan-vs-actual budgets per month, and the Time-to-Understanding
-test with real users.
+Date range selection, plan-vs-actual budgets per month, and the Time-to-Understanding test with real users (protocol:
+time-to-understanding.md; the automated above-the-fold check runs in e2e).

@@ -1,0 +1,41 @@
+# Time-to-Understanding test
+
+Status: **Phase 3.** Charter §31 Phase 3 asks us to validate that people understand the organization rather than browse
+data. This test measures that two ways: an automated check on every build, and a short live test with real people.
+
+## What "understood" means
+
+A person understands their part of the organization when they can say, unprompted:
+
+1. **What** needs attention (the item or the unit).
+2. **How bad** it is (band, ₪ at stake, or time to impact).
+3. **What should happen**, and whether it waits on them.
+
+## Automated check (every CI run)
+
+`tests/e2e/00-time-to-understanding.spec.ts` opens each role's home at **1440×900** (a laptop) and checks that all three
+answers are visible **above the fold**, without scrolling:
+
+| Role                     | Home               | What                             | How bad                     | What to do                                  |
+| ------------------------ | ------------------ | -------------------------------- | --------------------------- | ------------------------------------------- |
+| CEO (Dana)               | Command Center     | headline naming the regions      | first card's band and "Why" | the "Waiting on you" card or "Recommended:" |
+| Regional manager (Yossi) | North              | the unit name and the first card | band and "Why"              | "Recommended:" or the waiting chip          |
+| Branch manager (Avi)     | Haifa Grand Canyon | the sales-drop card              | P1 for the branch, "Why"    | "Waiting on you: Decide"                    |
+| Department head (Noa)    | Supply Chain       | the first card                   | band and "Why"              | "Recommended:" or the waiting chip          |
+
+It is a proxy: it proves the answer is on screen, not that a person reads it.
+
+## Live test (Eran, five people, ~10 minutes each)
+
+1. Brief: "You are the {role} of a retail group. Sign in and tell me what's going on." Use the persona switcher.
+2. Start a timer when the home page appears. Stop when the person has said all three (what, how bad, what to do) for
+   the most important item, without help. Note anything they misread.
+3. Then ask them to find one branch two levels down, and time it.
+4. Record the results in the table below (time in seconds, 0–2 score per question, comments).
+
+**Pass:** median time to all three answers is **under 60 seconds**, at least 4 of 5 people get "what to do" right, and
+finding a branch takes **at most two clicks**.
+
+| Person | Role | Seconds to 3 answers | What (0–2) | How bad (0–2) | What to do (0–2) | Clicks to a branch | Notes |
+| ------ | ---- | -------------------- | ---------- | ------------- | ---------------- | ------------------ | ----- |
+|        |      |                      |            |               |                  |                    |       |

@@ -9,6 +9,7 @@ import { hasPermission } from "@/domain/policy/permissions";
 import {
   computeLocalPriority,
   effectiveLocal,
+  explainPriority,
   type OpportunityInput,
   type PriorityBreakdown,
   type PriorityInput,
@@ -17,11 +18,15 @@ import type { Actor } from "@/domain/types";
 import {
   action,
   approval,
+  auditEvent,
+  decision,
   demoClock,
+  evidence,
   insight,
   kpi,
   kpiObservation,
   orgUnit,
+  outcome,
   roleAssignment,
   user,
 } from "@/infra/db/schema";
@@ -52,6 +57,15 @@ export function positionOf(actor: Actor, units: Unit[]): { position: Position; u
   const d = byType("department");
   if (d) return { position: "department", unit: d };
   return null;
+}
+
+const positionFor = (u: Unit): Position =>
+  u.type === "group" ? "group" : u.type === "region" ? "region" : u.type === "branch" ? "branch" : "department";
+
+/** Whether this person may read this unit (a unit inside one of their read scopes). */
+export function canReadUnit(actor: Actor, unit: { pathIds: string[] }) {
+  if (actor.kind !== "user") return false;
+  return actor.assignments.some((a) => hasPermission(a.role, "insight.read") && unit.pathIds.includes(a.unit.id));
 }
 
 async function asOfDay(db: DbOrTx, orgId: string) {
@@ -170,12 +184,15 @@ export async function localPriorities(
     primaryUnitId: string;
     priorityBreakdown: unknown;
   }[],
+  /** View the risks from this unit instead of the viewer's own scope (unit pages). */
+  scopeUnitId?: string,
 ): Promise<Map<string, LocalView>> {
   const out = new Map<string, LocalView>();
   const risks = rows.filter((r) => r.workstream === "risk");
   if (risks.length === 0) return out;
   const units = await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId));
-  const pos = positionOf(actor, units);
+  const scopeUnit = scopeUnitId ? units.find((u) => u.id === scopeUnitId) : undefined;
+  const pos = scopeUnit ? { position: positionFor(scopeUnit), unit: scopeUnit } : positionOf(actor, units);
   if (!pos || (pos.position !== "region" && pos.position !== "branch")) return out;
   const scopeBranches = branchesUnder(units, pos.unit);
   const asOf = await asOfDay(db, orgId);
@@ -223,9 +240,19 @@ export async function localPriorities(
 const BAND_WEIGHT: Record<string, number> = { P1: 20, P2: 10, P3: 4, P4: 1 };
 const INVOLVED_WEIGHT: Record<string, number> = { P1: 6, P2: 3, P3: 1, P4: 0 };
 
-export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
+/**
+ * The view of one unit (group, region, branch or department): its performance, its risks and opportunities, who
+ * owns what, and its dependencies. Without `unitId`, the viewer's own unit (their position). A unit outside the
+ * viewer's scope is null (404 in the UI, like an out-of-scope insight).
+ */
+export async function performanceView(db: DbOrTx, orgId: string, actor: Actor, unitId?: string) {
   const units = await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId));
-  const pos = positionOf(actor, units);
+  let pos: { position: Position; unit: Unit } | null;
+  if (unitId) {
+    const u = units.find((x) => x.id === unitId);
+    if (!u || !canReadUnit(actor, u)) return null;
+    pos = { position: positionFor(u), unit: u };
+  } else pos = positionOf(actor, units);
   if (!pos) return null;
   const asOf = await asOfDay(db, orgId);
   const kpis = await db.select().from(kpi).where(eq(kpi.orgId, orgId));
@@ -243,6 +270,7 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
       primaryUnitId: insight.primaryUnitId,
       affectedUnitIds: insight.affectedUnitIds,
       visibleUnitIds: insight.visibleUnitIds,
+      evidenceIds: insight.evidenceIds,
       ownerDepartmentId: insight.ownerDepartmentId,
       priorityBreakdown: insight.priorityBreakdown,
     })
@@ -272,10 +300,15 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
   };
   const personName = (uid: string) => people.find((p) => p.id === uid)?.name ?? "—";
 
+  // Local priority (raise-only, G2-a) is the band a region or branch manager sees everywhere on their unit view:
+  // the cards, the counts, the KPI links and what is waiting on them (STATUS.md, 2026-10-04: one screen showed both).
+  const unitLocal = await localPriorities(db, orgId, actor, visible, pos.unit.id);
+  const bandOf = (i: { id: string; band: string }) => unitLocal.get(i.id)?.band ?? i.band;
+
   const workstreams = {
     risks: ["P1", "P2", "P3", "P4"].map((b) => ({
       band: b,
-      count: visible.filter((i) => i.workstream === "risk" && i.band === b).length,
+      count: visible.filter((i) => i.workstream === "risk" && bandOf(i) === b).length,
     })),
     opportunities: ["O1", "O2", "O3"].map((b) => ({
       band: b,
@@ -333,12 +366,88 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
       };
     });
 
+  // Contextual intelligence: which open insights explain which KPI (their evidence is that KPI's series).
+  const visibleList = [...visible];
+  const ev = visibleList.length
+    ? await db
+        .select({ id: evidence.id, sourceRef: evidence.sourceRef, kind: evidence.kind })
+        .from(evidence)
+        .where(inArray(evidence.id, [...new Set(visibleList.flatMap((i) => i.evidenceIds))]))
+    : [];
+  const kpiOfEvidence = new Map(
+    ev
+      .filter((e) => e.kind === "kpi_series" && e.sourceRef.startsWith("kpi_observation:"))
+      .map((e) => [e.id, e.sourceRef.split(":")[1]]),
+  );
+  const kpiLinks: Record<string, { id: string; title: string; band: string }[]> = {};
+  for (const i of visibleList)
+    for (const code of new Set(i.evidenceIds.map((e) => kpiOfEvidence.get(e)).filter((c): c is string => !!c)))
+      (kpiLinks[code] ??= []).push({ id: i.id, title: i.title, band: bandOf(i) });
+
+  const decisions = visibleList.length
+    ? await db
+        .select()
+        .from(decision)
+        .where(
+          inArray(
+            decision.insightId,
+            visibleList.map((i) => i.id),
+          ),
+        )
+    : [];
+  const unitName = (id: string) => units.find((u) => u.id === id)?.name ?? "—";
+  const items = visibleList
+    .map((i) => {
+      const local = unitLocal.get(i.id) ?? null;
+      const dec = decisions.find((d) => d.insightId === i.id);
+      const acts = actions.filter((a) => a.insightId === i.id);
+      const waiting =
+        dec?.status === "recommended"
+          ? `Decision by the manager of ${unitName(i.primaryUnitId)}`
+          : acts.some((a) => a.status === "pending_approval")
+            ? `${acts.filter((a) => a.status === "pending_approval").length} action(s) awaiting approval`
+            : acts.some((a) => ["ready", "executing"].includes(a.status))
+              ? "Executing"
+              : acts.length && acts.every((a) => ["executed", "cancelled", "rejected"].includes(a.status))
+                ? "Actions done; watching the outcome"
+                : null;
+      return {
+        id: i.id,
+        workstream: i.workstream,
+        title: i.title,
+        band: local?.band ?? i.band,
+        score: local?.score ?? i.score,
+        groupBand: i.band,
+        local,
+        status: i.status,
+        primaryUnitName: unitName(i.primaryUnitId),
+        ownerDepartmentName: i.ownerDepartmentId ? unitName(i.ownerDepartmentId) : null,
+        why: explainPriority(i.priorityBreakdown as PriorityBreakdown),
+        recommendation: dec?.statement ?? null,
+        waiting,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const breadcrumb = pos.unit.pathIds.map((id) => {
+    const u = units.find((x) => x.id === id)!;
+    return { id: u.id, name: u.name, type: u.type };
+  });
+
+  const resolved = insights
+    .filter((i) => (i.status === "resolved" || i.status === "dismissed") && i.visibleUnitIds.includes(pos.unit.id))
+    .map((i) => ({ id: i.id, title: i.title, band: i.band, status: i.status, workstream: i.workstream }));
+
   const base = {
+    resolved,
     position: pos.position,
-    scope: { id: pos.unit.id, name: pos.unit.name },
+    scope: { id: pos.unit.id, name: pos.unit.name, type: pos.unit.type, code: pos.unit.code },
+    breadcrumb,
     asOf,
     workstreams,
     execution,
+    items,
+    kpiLinks,
   };
 
   if (pos.position === "group" || pos.position === "region" || pos.position === "branch") {
@@ -391,7 +500,7 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
     ).sort((a, b) => a.name.localeCompare(b.name));
     // Branch: the actions on its insights, grouped by the department that owns each (cross-department dependencies).
     const dependencies =
-      pos.position === "branch"
+      pos.position === "branch" || pos.position === "region"
         ? myActions
             .filter((a) => !["cancelled"].includes(a.status))
             .map((a) => ({
@@ -399,7 +508,8 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
               title: a.title,
               status: a.status,
               owner: personName(a.ownerUserId),
-              department: deptOfUser(a.ownerUserId)?.name ?? "Your branch",
+              department:
+                deptOfUser(a.ownerUserId)?.name ?? (pos.position === "branch" ? "This branch" : "Regions & branches"),
               insightId: a.insightId,
             }))
         : [];
@@ -466,3 +576,187 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor) {
 }
 
 export const _test = { kpiStat, branchesUnder };
+
+// ── Executive Command Center ─────────────────────────────────────────────────
+
+const CHANGE_VERBS: Record<string, string> = {
+  "insight.created": "New",
+  "insight.reprioritized": "Re-prioritized",
+  "decision.decided": "Decided",
+  "decision.declined": "Declined",
+  "approval.granted": "Approved",
+  "approval.denied": "Denied",
+  "action.executed": "Executed",
+  "action.requirement_grew": "Needs approval again",
+  "outcome.evaluated": "Outcome measured",
+  "insight.resolved": "Resolved",
+};
+
+/**
+ * The Executive Command Center: the group view plus a one-sentence health headline, what changed in the last
+ * 24 hours (demo clock), and the biggest KPI moves across branches this week.
+ */
+export async function commandCenter(db: DbOrTx, orgId: string, actor: Actor) {
+  const units = await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId));
+  const group = units.find((u) => u.type === "group");
+  if (!group) return null;
+  const v = await performanceView(db, orgId, actor, group.id);
+  if (!v || !("children" in v)) return null;
+
+  // Headline: which regions need attention, in plain words.
+  const atRisk = v.children.filter((c) => c.health === "at_risk").map((c) => c.name);
+  const watch = v.children.filter((c) => c.health === "watch").map((c) => c.name);
+  const list = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
+  const p1 = v.items.filter((i) => i.workstream === "risk" && i.band === "P1").length;
+  const headline =
+    atRisk.length > 0
+      ? `${list(atRisk)} need${atRisk.length === 1 ? "s" : ""} attention${watch.length ? `; ${list(watch)} to watch` : ""}.`
+      : watch.length > 0
+        ? `Nothing critical; ${list(watch)} to watch.`
+        : "Everything is on track.";
+  const subline = `${p1} P1 risk${p1 === 1 ? "" : "s"} across the group, ${v.items.filter((i) => i.workstream === "opportunity" && i.band === "O1").length} opportunity to pursue now.`;
+
+  // What changed: audited events of the last 24 h on insights the viewer can see.
+  const asOfNow = (await db.select().from(demoClock).where(eq(demoClock.orgId, orgId)))[0]?.now ?? new Date();
+  const since = new Date(asOfNow.getTime() - 24 * 3_600_000);
+  const visibleIds = new Set(v.items.map((i) => i.id));
+  const [decs, acts, aps, outs, evs] = await Promise.all([
+    db.select({ id: decision.id, insightId: decision.insightId }).from(decision).where(eq(decision.orgId, orgId)),
+    db.select({ id: action.id, insightId: action.insightId }).from(action).where(eq(action.orgId, orgId)),
+    db.select({ id: approval.id, actionId: approval.actionId }).from(approval).where(eq(approval.orgId, orgId)),
+    db.select({ id: outcome.id, insightId: outcome.insightId }).from(outcome).where(eq(outcome.orgId, orgId)),
+    db
+      .select()
+      .from(auditEvent)
+      .where(
+        and(
+          eq(auditEvent.orgId, orgId),
+          gte(auditEvent.occurredAt, since),
+          inArray(auditEvent.operation, Object.keys(CHANGE_VERBS)),
+        ),
+      ),
+  ]);
+  const insightOf = new Map<string, string>();
+  for (const d of decs) insightOf.set(d.id, d.insightId);
+  for (const a of acts) if (a.insightId) insightOf.set(a.id, a.insightId);
+  for (const ap of aps) {
+    const i = insightOf.get(ap.actionId);
+    if (i) insightOf.set(ap.id, i);
+  }
+  for (const o of outs) if (o.insightId) insightOf.set(o.id, o.insightId);
+  const titleOf = new Map(v.items.map((i) => [i.id, i]));
+  const changes = evs
+    .map((e) => ({ e, insightId: e.entityType === "insight" ? e.entityId : insightOf.get(e.entityId) }))
+    .filter((x) => x.insightId && visibleIds.has(x.insightId))
+    .sort((a, b) => Number(b.e.seq) - Number(a.e.seq));
+  const counts = Object.entries(
+    changes.reduce<Record<string, number>>(
+      (m, x) => ((m[CHANGE_VERBS[x.e.operation]] = (m[CHANGE_VERBS[x.e.operation]] ?? 0) + 1), m),
+      {},
+    ),
+  ).map(([verb, n]) => ({ verb, n }));
+  const feed = changes.slice(0, 8).map((x) => ({
+    id: x.e.id,
+    at: x.e.occurredAt,
+    verb: CHANGE_VERBS[x.e.operation],
+    insightId: x.insightId!,
+    title: titleOf.get(x.insightId!)!.title,
+    band: titleOf.get(x.insightId!)!.band,
+  }));
+
+  // Biggest KPI moves this week, across branches (vs target, or vs the usual level).
+  const branches = units.filter((u) => u.type === "branch" && canReadUnit(actor, u));
+  const kpis = (await db.select().from(kpi).where(eq(kpi.orgId, orgId))).filter((k) => k.level === "branch");
+  const asOf = asOfNow.toISOString().slice(0, 10);
+  const obs = await loadObservations(
+    db,
+    orgId,
+    branches.map((b) => b.id),
+    addDays(asOf, -35),
+    asOf,
+  );
+  const moves = branches
+    .flatMap((b) =>
+      kpis.map((k) => {
+        const st = kpiStat(k, obs, new Set([b.id]), asOf, 0);
+        const ref = k.target ?? st.usual;
+        const gap = (k.higherIsBetter ? st.value - ref : ref - st.value) / Math.abs(ref);
+        return {
+          unitId: b.id,
+          unitName: b.name,
+          kpi: k.name,
+          unit: k.unit,
+          value: st.value,
+          ref,
+          against: k.target !== null ? "target" : "usual",
+          gap,
+        };
+      }),
+    )
+    .filter((m) => Number.isFinite(m.gap) && m.gap < -0.05)
+    .sort((a, b) => a.gap - b.gap)
+    .slice(0, 5);
+
+  return { ...v, headline, subline, changes: { counts, feed }, moves };
+}
+
+/** The organization as a tree the viewer may read: each unit with its health and its worst specific open risk. */
+export async function orgTree(db: DbOrTx, orgId: string, actor: Actor) {
+  const units = (await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId))).filter((u) => canReadUnit(actor, u));
+  const open = (
+    await db
+      .select({
+        id: insight.id,
+        workstream: insight.workstream,
+        band: insight.priorityBand,
+        status: insight.status,
+        primaryUnitId: insight.primaryUnitId,
+        affectedUnitIds: insight.affectedUnitIds,
+        ownerDepartmentId: insight.ownerDepartmentId,
+      })
+      .from(insight)
+      .where(eq(insight.orgId, orgId))
+  ).filter((i) => i.status === "open" || i.status === "acknowledged");
+  // Same rule as "Health by region": an item counts for a unit when it is specific to it (listed at or inside it,
+  // and not at every sibling); the group root counts everything.
+  const touches = (i: (typeof open)[number], x: Unit) =>
+    [i.primaryUnitId, ...i.affectedUnitIds].some((id) => {
+      const y = units.find((z) => z.id === id);
+      return !!y && y.type !== "department" && y.pathIds.includes(x.id);
+    });
+  const node = (u: Unit) => {
+    const siblings = units.filter((x) => x.parentId === u.parentId && x.type === u.type);
+    const mine =
+      u.type === "department"
+        ? open.filter((i) => i.ownerDepartmentId === u.id || i.affectedUnitIds.includes(u.id))
+        : u.type === "group"
+          ? open
+          : open.filter((i) => touches(i, u) && !siblings.every((sib) => touches(i, sib)));
+    const risks = mine.filter((i) => i.workstream === "risk");
+    return {
+      id: u.id,
+      name: u.name,
+      type: u.type,
+      risks: risks.length,
+      opportunities: mine.length - risks.length,
+      owned: u.type === "department" ? mine.filter((i) => i.ownerDepartmentId === u.id).length : 0,
+      worstBand: risks.map((i) => i.band).sort()[0] ?? null,
+    };
+  };
+  const byParent = (id: string | null) =>
+    units.filter((u) => u.parentId === id).sort((a, b) => a.name.localeCompare(b.name));
+  const roots = units.filter((u) => !u.parentId || !units.some((p) => p.id === u.parentId));
+  const build = (u: Unit): ReturnType<typeof node> & { children: unknown[] } => ({
+    ...node(u),
+    children: byParent(u.id)
+      .filter((c) => c.type !== "department")
+      .map(build),
+  });
+  return {
+    trees: roots.map(build),
+    departments: units
+      .filter((u) => u.type === "department")
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(node),
+  };
+}
