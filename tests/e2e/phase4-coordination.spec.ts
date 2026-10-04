@@ -158,3 +158,38 @@ test("acknowledge and dismiss an insight from its trace (audited, with a reason)
   await expect(page.getByText("dismissed", { exact: true })).toBeVisible();
   await expect(page.getByText(/insight\.dismissed/)).toBeVisible();
 });
+
+test("closed loop: Avi records the lesson of the Haifa transfer; the next stock transfer shows it", async ({
+  page,
+}) => {
+  await as(page, "Avi Mizrahi");
+  await page.getByRole("link", { name: "Actions & outcomes" }).click();
+  await page.getByRole("link", { name: /Outcomes & lessons · 1 to review/ }).click();
+  const card = page
+    .locator("div", { has: page.getByRole("link", { name: /Transfer top-category stock Haifa Downtown/ }) })
+    .filter({
+      has: page.getByRole("button", { name: "Record lesson" }),
+    });
+  await expect(card.last().getByText("Worked", { exact: true }).first()).toBeVisible();
+  await card
+    .last()
+    .locator('input[name="lesson"]')
+    .fill("Move stock from a sister branch within 24 h; it beats waiting for the DC");
+  await card.last().getByRole("button", { name: "Record lesson" }).click();
+  await page.waitForURL(/\/insights\//);
+  await expect(page.getByText(/Lesson: Move stock from a sister branch/)).toBeVisible();
+
+  await as(page, "Yossi Cohen");
+  await page.goto("/risks");
+  await page
+    .getByRole("link", { name: /Stock-outs on top-50 SKUs/ })
+    .first()
+    .click();
+  await expect(page.getByText("Last time we did this")).toBeVisible();
+  await expect(page.getByText(/Move stock from a sister branch within 24 h/)).toBeVisible();
+
+  await page.goto("/actions?f=approval");
+  await expect(page.getByRole("table")).toBeVisible();
+  await page.goto("/actions?tab=outcomes");
+  await expect(page.getByText(/“Move stock from a sister branch within 24 h/)).toBeVisible();
+});

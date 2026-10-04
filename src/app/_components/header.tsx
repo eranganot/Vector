@@ -16,6 +16,7 @@ const ICONS = {
   risks: "M12 3l9 16H3zM12 10v4M12 17h.01",
   opportunities: "M3 17l6-6 4 4 8-8M15 7h6v6",
   commitments: "M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9",
+  actions: "M4 6h16M4 12h10M4 18h7M17 15l2 2 4-4",
   org: "M12 3v6M12 9H5v5M12 9h7v5M3 14h4v4H3zM10 14h4v4h-4zM17 14h4v4h-4z",
   approvals: "M9 12l2 2 4-4M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z",
   audit: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",
@@ -63,6 +64,9 @@ export async function Shell({
       </NavLink>
       <NavLink href="/commitments">
         <Icon d={ICONS.commitments} /> Commitments
+      </NavLink>
+      <NavLink href="/actions">
+        <Icon d={ICONS.actions} /> Actions &amp; outcomes
       </NavLink>
       <NavLink href="/org">
         <Icon d={ICONS.org} /> Organization

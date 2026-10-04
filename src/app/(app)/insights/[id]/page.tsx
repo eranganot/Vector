@@ -68,6 +68,7 @@ export default async function TracePage({
     api.canDecide(actor, id), // cosmetic; acceptDecision re-checks
     api.commitmentsForInsight(actor, id), // Phase 4: the promises and plans behind this insight
   ]);
+  const lessons = await api.lessonsFor(actor, id); // Phase 4f: what we learned last time we did this
   const { insight: ins } = t;
   // Cosmetic (every command re-checks): which lifecycle controls to offer this person.
   const live = ins.status === "open" || ins.status === "acknowledged";
@@ -278,6 +279,25 @@ export default async function TracePage({
                 ))}
               </div>
             </section>
+          )}
+
+          {lessons.length > 0 && (
+            <Card className="flex flex-col gap-2 border-good/50">
+              <SectionTitle
+                aside={<span className="text-xs text-muted">reviewed outcomes of the same kind of action</span>}
+              >
+                Last time we did this
+              </SectionTitle>
+              {lessons.map((l) => (
+                <p key={l.id} className="text-sm">
+                  <span className="font-semibold">{l.actionTitle}</span>{" "}
+                  <span className="text-muted">({l.verdict?.replaceAll("_", " ")})</span>: “{l.lesson}”{" "}
+                  <a href={`/insights/${l.insightId}`} className="text-xs text-accent">
+                    see it →
+                  </a>
+                </p>
+              ))}
+            </Card>
           )}
 
           {decision && (

@@ -27,6 +27,7 @@ import {
   renegotiateCommitment,
 } from "./commands/commitments";
 import { commitmentFormOptions, commitmentsForInsight, commitmentsView } from "./queries/commitments";
+import { type ActionFilter, actionsView, lessonsForInsight, outcomesView } from "./queries/actions";
 import type { CommitmentEffect } from "@/domain/commitments";
 import { activeOrgId, createContext, loadUserActor } from "./context";
 import {
@@ -121,6 +122,9 @@ export const api = {
     input: { dueAt: Date; rationale: string; effects?: CommitmentEffect[] },
   ) => renegotiateCommitment(await ctx(), a, id, input),
   cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
+  actions: async (a: Actor, filter?: ActionFilter) => actionsView(db(), await activeOrgId(db()), a, filter),
+  outcomes: async (a: Actor) => outcomesView(db(), await activeOrgId(db()), a),
+  lessonsFor: async (a: Actor, insightId: string) => lessonsForInsight(db(), await activeOrgId(db()), a, insightId),
   approvalHistory: async (a: Actor) => listMyApprovalHistory(db(), await activeOrgId(db()), a),
   /** Cosmetic (every command re-checks): may this person use this capability over these units? */
   may: async (a: Actor, capability: Capability, unitIds: string[]) => {
@@ -148,5 +152,6 @@ export const api = {
 };
 export type { KpiStat, PerformanceView } from "./queries/performance";
 export { headlineFor } from "./queries/performance";
+export type { ActionFilter } from "./queries/actions";
 
 export { parseInput } from "./inputs";
