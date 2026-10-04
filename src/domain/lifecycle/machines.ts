@@ -50,6 +50,9 @@ export const ACTION: Row<ActionState, string>[] = [
   { id: "A11", from: "pending_approval", command: "cancel", to: "cancelled" },
   { id: "A11", from: "ready", command: "cancel", to: "cancelled" },
   { id: "P6b", from: "ready", command: "approval_lapsed", to: "pending_approval" },
+  { id: "A12", from: "proposed", command: "amend", to: "proposed" },
+  { id: "A12", from: "pending_approval", command: "amend", to: "proposed" },
+  { id: "A12", from: "ready", command: "amend", to: "proposed" },
 ];
 
 export const APPROVAL: Row<ApprovalState, string>[] = [
