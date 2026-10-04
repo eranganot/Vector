@@ -9,6 +9,7 @@ import { ActionList, Breadcrumb, ChildTable, DepartmentPulse, HEALTH, type View 
 import { Band, Card, Dot, fmtIls, fmtKpi, LineChart, Pill, Ring, SectionTitle } from "./ui";
 import { DependenciesCard, type CommitmentsView } from "./commitments";
 import { ActionsSummary, CommitmentsSummary } from "./home-cards";
+import { getT } from "../_lib/locale";
 
 type ActionsView = Awaited<ReturnType<typeof api.actions>>;
 type OutcomesView = Awaited<ReturnType<typeof api.outcomes>>;
@@ -39,33 +40,43 @@ function change(k: KpiStat) {
   const text = ratio
     ? `${v >= 0 ? "+" : ""}${(v * 100).toFixed(1)}%`
     : `${v >= 0 ? "+" : ""}${v.toFixed(k.unit === "count" ? 0 : 1)}${k.unit === "pct" ? " pts" : ""}`;
+  // "pts" is translated where it is shown (see KpiTile).
   return { text, good };
 }
 
 const STATUS_WORD: Record<string, string> = { good: "on target", watch: "watch", bad: "off target", neutral: "" };
 
 /** A compact KPI tile: value, change, reference, trend, and the insight that explains it (one line). */
-export function KpiTile({ k, links }: { k: KpiStat; links: { id: string; title: string; band: string }[] }) {
+export async function KpiTile({ k, links }: { k: KpiStat; links: { id: string; title: string; band: string }[] }) {
+  const t = await getT();
   const d = change(k);
   const first = links[0];
   return (
     <Card className="flex min-w-0 flex-col gap-2 p-4">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[13px] text-muted">{k.name}</span>
+        <span className="truncate text-[13px] text-muted">{t(k.name)}</span>
         <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted">
           <Dot tone={k.status} />
-          {STATUS_WORD[k.status]}
+          {STATUS_WORD[k.status] ? t(STATUS_WORD[k.status]) : ""}
         </span>
       </div>
       <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
         <div className="flex flex-col">
           <span className="flex items-baseline gap-2">
-            <span className="text-[26px] font-semibold leading-tight tracking-tight">{fmtKpi(k.value, k.unit)}</span>
-            {d && <span className={`text-[13px] font-semibold ${d.good ? "text-good" : "text-p1"}`}>{d.text}</span>}
+            <span className="num text-[26px] font-semibold leading-tight tracking-tight">
+              {fmtKpi(k.value, k.unit)}
+            </span>
+            {d && (
+              <span className={`num text-[13px] font-semibold ${d.good ? "text-good" : "text-p1"}`}>
+                {d.text.replace(" pts", ` ${t("pts")}`)}
+              </span>
+            )}
           </span>
           <span className="text-xs text-muted">
-            {k.target !== null ? `Target ${fmtKpi(k.target, k.unit)}` : `Usual ${fmtKpi(k.usual, k.unit)}`} · vs last
-            week
+            {k.target !== null
+              ? t("Target {value}", { value: fmtKpi(k.target, k.unit) })
+              : t("Usual {value}", { value: fmtKpi(k.usual, k.unit) })}{" "}
+            · {t("vs last week")}
           </span>
         </div>
         {k.series.length > 1 && (
@@ -83,15 +94,15 @@ export function KpiTile({ k, links }: { k: KpiStat; links: { id: string; title: 
           href={`/insights/${first.id}`}
           className="flex min-w-0 items-center gap-2 border-t border-line pt-2 text-xs text-ink no-underline hover:underline"
         >
-          <span className="shrink-0 text-muted">Explained by</span>
+          <span className="shrink-0 text-muted">{t("Explained by")}</span>
           <Band band={first.band} />
           <span className="truncate">{first.title}</span>
           {links.length > 1 && <span className="shrink-0 text-muted">+{links.length - 1}</span>}
         </Link>
       ) : k.status === "bad" ? (
-        <p className="border-t border-line pt-2 text-xs text-warn">No insight explains this yet.</p>
+        <p className="border-t border-line pt-2 text-xs text-warn">{t("No insight explains this yet.")}</p>
       ) : (
-        <p className="border-t border-line pt-2 text-xs text-muted">No open item on this result.</p>
+        <p className="border-t border-line pt-2 text-xs text-muted">{t("No open item on this result.")}</p>
       )}
     </Card>
   );
@@ -145,22 +156,23 @@ function BandMix({
 }
 
 /** Summary of one workstream: band mix, value at stake, the top three, and a link to the full tab. */
-export function WorkstreamSummary({ v, ws, unitId }: { v: View; ws: "risk" | "opportunity"; unitId?: string }) {
+export async function WorkstreamSummary({ v, ws, unitId }: { v: View; ws: "risk" | "opportunity"; unitId?: string }) {
+  const t = await getT();
   const items = v.items.filter((i) => i.workstream === ws);
   const mix = ws === "risk" ? v.workstreams.risks : v.workstreams.opportunities;
   const top = items.slice(0, 3);
-  const label = ws === "risk" ? "Risks" : "Opportunities";
+  const label = ws === "risk" ? t("Risks") : t("Opportunities");
   const money =
     ws === "risk"
-      ? `${fmtIls(v.workstreams.atStakeIls)}/week at stake`
-      : `${fmtIls(v.workstreams.upsideIls)}/week upside`;
+      ? t("{money}/week at stake", { money: fmtIls(v.workstreams.atStakeIls) })
+      : t("{money}/week upside", { money: fmtIls(v.workstreams.upsideIls) });
   return (
     <Card className="flex min-w-0 flex-col gap-4">
       <SectionTitle aside={<span className="text-xs text-muted">{items.length ? money : ""}</span>}>
         {label} · {items.length}
       </SectionTitle>
       {items.length === 0 ? (
-        <p className="text-sm text-muted">{ws === "risk" ? "No open risks here." : "No opportunities here."}</p>
+        <p className="text-sm text-muted">{ws === "risk" ? t("No open risks here.") : t("No opportunities here.")}</p>
       ) : (
         <>
           <BandMix mix={mix} ws={ws} unitId={unitId} />
@@ -173,16 +185,23 @@ export function WorkstreamSummary({ v, ws, unitId }: { v: View; ws: "risk" | "op
       )}
       <Link href={laneHref(ws, unitId)} className="mt-auto text-sm text-accent">
         {items.length > 1
-          ? `All ${items.length} ${label.toLowerCase()} →`
+          ? ws === "risk"
+            ? t("All {n} risks →", { n: items.length })
+            : t("All {n} opportunities →", { n: items.length })
           : items.length === 1
-            ? `Open the ${ws === "risk" ? "risk" : "opportunity"} list →`
-            : `Open ${label} →`}
+            ? ws === "risk"
+              ? t("Open the risk list →")
+              : t("Open the opportunity list →")
+            : ws === "risk"
+              ? t("Open Risks →")
+              : t("Open Opportunities →")}
       </Link>
     </Card>
   );
 }
 
-function SummaryRow({ i, detail }: { i: Item; detail: boolean }) {
+async function SummaryRow({ i, detail }: { i: Item; detail: boolean }) {
+  const t = await getT();
   return (
     <li className="py-2.5 first:pt-0">
       <Link href={`/insights/${i.id}`} className="flex flex-col gap-1 text-ink no-underline hover:[&_.t]:underline">
@@ -191,25 +210,30 @@ function SummaryRow({ i, detail }: { i: Item; detail: boolean }) {
           <span className="t min-w-0 flex-1 text-sm font-semibold leading-snug">{i.title}</span>
           {i.waiting && (
             <span className="hidden shrink-0 text-xs text-warn md:inline">
-              {i.waiting.replace(/^Decision by the manager of /, "Decision: ")}
+              {i.waiting.replace(/^Decision by the manager of /, `${t("Decision")}: `)}
             </span>
           )}
         </span>
         {detail && (
-          <span className="flex flex-col gap-0.5 pl-[3.25rem] text-[13px] leading-snug">
+          <span className="flex flex-col gap-0.5 ps-[3.25rem] text-[13px] leading-snug">
             <span>
-              <span className="text-muted">Why: </span>
+              <span className="text-muted">{t("Why:")} </span>
               {i.why}
               {i.local && i.local.band !== i.groupBand && (
                 <span className="text-muted">
                   {" "}
-                  · {i.local.band} for {i.local.scopeName} (group {i.groupBand})
+                  ·{" "}
+                  {t("{band} for {scope} (group {group})", {
+                    band: i.local.band,
+                    scope: i.local.scopeName,
+                    group: i.groupBand,
+                  })}
                 </span>
               )}
             </span>
             {i.recommendation && (
               <span>
-                <span className="text-muted">{i.workstream === "risk" ? "Recommended: " : "Play: "}</span>
+                <span className="text-muted">{i.workstream === "risk" ? t("Recommended:") : t("Play:")} </span>
                 {i.recommendation}
               </span>
             )}
@@ -225,21 +249,22 @@ type Changes = {
   feed: { id: string; verb: string; band: string; insightId: string; title: string }[];
 };
 
-function WhatChanged({ changes }: { changes: Changes }) {
+async function WhatChanged({ changes }: { changes: Changes }) {
+  const t = await getT();
   return (
     <Card className="flex min-w-0 flex-col gap-3">
-      <SectionTitle aside={<span className="text-xs text-muted">last 24 h (demo clock)</span>}>
-        What changed
+      <SectionTitle aside={<span className="text-xs text-muted">{t("last 24 h (demo clock)")}</span>}>
+        {t("What changed")}
       </SectionTitle>
       {changes.counts.length === 0 ? (
-        <p className="text-sm text-muted">No change in the last 24 hours.</p>
+        <p className="text-sm text-muted">{t("No change in the last 24 hours.")}</p>
       ) : (
         <>
-          <p className="text-sm">{changes.counts.map((c) => `${c.n} ${c.verb.toLowerCase()}`).join(" · ")}</p>
+          <p className="text-sm">{changes.counts.map((c) => `${c.n} ${t(c.verb).toLowerCase()}`).join(" · ")}</p>
           <ul className="flex flex-col gap-2 text-sm">
             {changes.feed.slice(0, 5).map((f) => (
               <li key={f.id} className="flex items-center gap-3">
-                <span className="w-20 shrink-0 text-xs uppercase tracking-wide text-muted">{f.verb}</span>
+                <span className="w-20 shrink-0 text-xs uppercase tracking-wide text-muted">{t(f.verb)}</span>
                 <Band band={f.band} />
                 <Link href={`/insights/${f.insightId}`} className="min-w-0 truncate no-underline hover:underline">
                   {f.title}
@@ -257,7 +282,7 @@ function WhatChanged({ changes }: { changes: Changes }) {
  * The dashboard. `home` renders the greeting and makes the headline the page heading; a drill-down names the unit.
  * `waiting` is shown only on the viewer's own scope; `changes` only where the read model provides them (group).
  */
-export function Dashboard({
+export async function Dashboard({
   v,
   greeting,
   waiting,
@@ -274,6 +299,7 @@ export function Dashboard({
   /** Phase 4 on the home (Eran, 2026-10-05): actions & outcomes for this scope. */
   work?: { actions: ActionsView; outcomes: OutcomesView };
 }) {
+  const t = await getT();
   const { headline, subline } = headlineFor(v);
   const own = !!greeting;
   const unitId = own ? undefined : v.scope.id;
@@ -302,7 +328,10 @@ export function Dashboard({
             <p className="text-sm text-muted">{subline}</p>
           </div>
           <Pill>
-            {TYPE_LABEL[v.scope.type]} · week {weekStart} → {weekEnd}
+            {t(TYPE_LABEL[v.scope.type])} · {t("week")}{" "}
+            <span className="num">
+              {weekStart} → {weekEnd}
+            </span>
           </Pill>
         </div>
       </div>
@@ -311,12 +340,14 @@ export function Dashboard({
 
       <section className="flex flex-col gap-3">
         <SectionTitle
-          aside={<span className="text-xs text-muted">last 7 days vs the week before · target or usual level</span>}
+          aside={
+            <span className="text-xs text-muted">{t("last 7 days vs the week before · target or usual level")}</span>
+          }
         >
-          {v.position === "department" ? "Department results" : "Key results"}
+          {v.position === "department" ? t("Department results") : t("Key results")}
         </SectionTitle>
         {v.kpis.length === 0 ? (
-          <p className="text-sm text-muted">No key results are owned here.</p>
+          <p className="text-sm text-muted">{t("No key results are owned here.")}</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {v.kpis.map((k) => (
@@ -342,11 +373,11 @@ export function Dashboard({
         <>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <Card className="min-w-0">
-              <SectionTitle aside={<span className="text-xs text-muted">click a region to drill down</span>}>
-                Health by region
+              <SectionTitle aside={<span className="text-xs text-muted">{t("click a region to drill down")}</span>}>
+                {t("Health by region")}
               </SectionTitle>
               <div className="mt-3">
-                <ChildTable rows={v.children} unitLabel="Region" />
+                <ChildTable rows={v.children} unitLabel={t("Region")} />
               </div>
             </Card>
             {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
@@ -359,11 +390,11 @@ export function Dashboard({
       {"children" in v && v.position === "region" && (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <Card className="min-w-0">
-            <SectionTitle aside={<span className="text-xs text-muted">items specific to a branch</span>}>
-              Branches in {v.scope.name}
+            <SectionTitle aside={<span className="text-xs text-muted">{t("items specific to a branch")}</span>}>
+              {t("Branches in {name}", { name: v.scope.name })}
             </SectionTitle>
             <div className="mt-3">
-              <ChildTable rows={v.children} unitLabel="Branch" />
+              <ChildTable rows={v.children} unitLabel={t("Branch")} />
             </div>
           </Card>
           {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
@@ -374,7 +405,7 @@ export function Dashboard({
         <>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <Card className="min-w-0">
-              <SectionTitle>Net sales by day vs usual level · 4 weeks</SectionTitle>
+              <SectionTitle>{t("Net sales by day vs usual level · 4 weeks")}</SectionTitle>
               <div className="mt-3">
                 <LineChart
                   days={v.kpis.find((k) => k.code === "net_sales")!.series}
@@ -388,11 +419,11 @@ export function Dashboard({
           </div>
           <Card className="min-w-0">
             <SectionTitle
-              aside={<span className="text-xs text-muted">who owns the work on this branch&apos;s items</span>}
+              aside={<span className="text-xs text-muted">{t("who owns the work on this branch's items")}</span>}
             >
-              Open actions · {v.dependencies.length}
+              {t("Open actions")} · {v.dependencies.length}
             </SectionTitle>
-            <ActionList items={v.dependencies} empty="No open actions on this branch's items." />
+            <ActionList items={v.dependencies} empty={t("No open actions on this branch's items.")} />
           </Card>
         </>
       )}
@@ -401,32 +432,34 @@ export function Dashboard({
         <>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]">
             <Card className="flex flex-col items-center justify-center gap-2 text-center">
-              <SectionTitle>Department health</SectionTitle>
+              <SectionTitle>{t("Department health")}</SectionTitle>
               <Ring
                 value={v.pulse.health}
                 size={110}
                 tone={HEALTH[v.pulse.status]?.tone ?? (v.pulse.status === "at_risk" ? "bad" : "watch")}
               />
-              <span className="text-xs text-muted">100 − open risks it owns and must act on, weighted by band</span>
+              <span className="text-xs text-muted">
+                {t("100 − open risks it owns and must act on, weighted by band")}
+              </span>
             </Card>
             {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
           </div>
           <div className="grid gap-6 xl:grid-cols-2">
             <Card className="min-w-0">
               <SectionTitle
-                aside={<span className="text-xs text-muted">actions other departments own on our items</span>}
+                aside={<span className="text-xs text-muted">{t("actions other departments own on our items")}</span>}
               >
-                We depend on · {v.weDependOn.length}
+                {t("We depend on")} · {v.weDependOn.length}
               </SectionTitle>
-              <ActionList items={v.weDependOn} empty="This department's items don't wait on other departments." />
+              <ActionList items={v.weDependOn} empty={t("This department's items don't wait on other departments.")} />
             </Card>
             <Card className="min-w-0">
               <SectionTitle
-                aside={<span className="text-xs text-muted">our actions on other departments&apos; items</span>}
+                aside={<span className="text-xs text-muted">{t("our actions on other departments' items")}</span>}
               >
-                Others depend on us · {v.dependOnUs.length}
+                {t("Others depend on us")} · {v.dependOnUs.length}
               </SectionTitle>
-              <ActionList items={v.dependOnUs} empty="No other department is waiting on this one." />
+              <ActionList items={v.dependOnUs} empty={t("No other department is waiting on this one.")} />
             </Card>
           </div>
         </>

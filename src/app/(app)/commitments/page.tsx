@@ -8,15 +8,9 @@ import {
   type CommitmentItem,
 } from "../../_components/commitments";
 import { Notice, SectionTitle } from "../../_components/ui";
+import { getT } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";
 
-const DONE: Record<string, string> = {
-  recorded: "Commitment recorded. No conflict with other units' plans.",
-  conflict: "Commitment recorded, and it collides with another unit's plan: VECTOR raised a conflict insight.",
-  completed: "Marked delivered.",
-  renegotiated: "Date moved. The teams waiting on it see the change and your reason.",
-  cancelled: "Commitment cancelled.",
-};
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function Section({
@@ -33,7 +27,7 @@ function Section({
   return (
     <section className="flex flex-col gap-3">
       <SectionTitle aside={aside ? <span className="text-xs text-muted">{aside}</span> : undefined}>
-        {title} · {items.length}
+        {title} · <span className="num">{items.length}</span>
       </SectionTitle>
       {items.length === 0 ? (
         <p className="text-sm text-muted">{empty}</p>
@@ -56,6 +50,14 @@ export default async function CommitmentsPage({
 }) {
   const sp = await searchParams;
   const { actor } = await requireActor();
+  const t = await getT();
+  const DONE: Record<string, string> = {
+    recorded: t("Commitment recorded. No conflict with other units' plans."),
+    conflict: t("Commitment recorded, and it collides with another unit's plan: VECTOR raised a conflict insight."),
+    completed: t("Marked delivered."),
+    renegotiated: t("Date moved. The teams waiting on it see the change and your reason."),
+    cancelled: t("Commitment cancelled."),
+  };
   if (sp.unit && !UUID.test(sp.unit)) notFound();
   const [v, options, now] = await Promise.all([
     api.commitments(actor, sp.unit),
@@ -67,10 +69,13 @@ export default async function CommitmentsPage({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-semibold tracking-tight">Commitments · {v.scope.name}</h1>
+        <h1 className="text-[28px] font-semibold tracking-tight">
+          {t("Commitments · {unit}", { unit: v.scope.name })}
+        </h1>
         <p className="text-sm text-muted">
-          Promises between units, from meetings and plans: who owes what to whom, by when, and who is waiting on it.
-          Overdue promises that matter become insights; plans that collide become conflicts.
+          {t(
+            "Promises between units, from meetings and plans: who owes what to whom, by when, and who is waiting on it. Overdue promises that matter become insights; plans that collide become conflicts.",
+          )}
         </p>
       </div>
       <Notice error={sp.error} done={sp.done && sp.done !== "conflict" ? DONE[sp.done] : undefined} />
@@ -78,26 +83,31 @@ export default async function CommitmentsPage({
         <p role="status" className="rounded-md border border-p1 bg-p1/10 px-4 py-3 text-sm">
           {DONE.conflict}{" "}
           <Link href={`/insights/${sp.insight}`} className="font-semibold text-accent">
-            See the conflict →
+            {t("See the conflict →")}
           </Link>
         </p>
       )}
       {!sp.unit && <RecordCommitmentForm options={options} now={now} />}
       <DependenciesCard v={v} unitId={sp.unit} />
-      <Section title="Overdue" aside="past the due date, not delivered" items={v.overdue} empty="Nothing overdue." />
       <Section
-        title={`${v.scope.name} owes`}
-        aside="open, soonest first"
+        title={t("Overdue")}
+        aside={t("past the due date, not delivered")}
+        items={v.overdue}
+        empty={t("Nothing overdue.")}
+      />
+      <Section
+        title={t("{unit} owes", { unit: v.scope.name })}
+        aside={t("open, soonest first")}
         items={v.owe.filter((c) => !overdueIds.has(c.id))}
-        empty="No open commitments."
+        empty={t("No open commitments.")}
       />
       <Section
-        title={`Owed to ${v.scope.name}`}
-        aside="other units' promises you depend on"
+        title={t("Owed to {unit}", { unit: v.scope.name })}
+        aside={t("other units' promises you depend on")}
         items={v.owed.filter((c) => !overdueIds.has(c.id))}
-        empty="No other unit owes you anything open."
+        empty={t("No other unit owes you anything open.")}
       />
-      <Section title="Recently delivered" items={v.delivered} empty="Nothing delivered yet." />
+      <Section title={t("Recently delivered")} items={v.delivered} empty={t("Nothing delivered yet.")} />
     </>
   );
 }

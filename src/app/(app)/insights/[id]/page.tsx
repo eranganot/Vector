@@ -14,7 +14,10 @@ import {
 } from "../../../actions";
 import { CommitmentCard } from "../../../_components/commitments";
 import { BackLink, Band, Card, EvidenceChart, Notice, Pill, SectionTitle, Simulated } from "../../../_components/ui";
+import { getLocale } from "../../../_lib/locale";
 import { requireActor } from "../../../_lib/session";
+import { intlOf } from "@/i18n/locale";
+import { makeT, type T } from "@/i18n/t";
 
 const ROLE_LABEL: Record<string, string> = {
   executive: "Executive",
@@ -43,13 +46,13 @@ const SIGNAL_LABEL: Record<string, string> = {
   incident: "incident",
   facility_review: "facility review",
 };
-const sourceLabel = (g: string) =>
+const sourceLabel = (t: T, g: string) =>
   g.startsWith("rule:")
-    ? `Rule-generated · ${g.slice(5)}`
+    ? t("Rule-generated · {rule}", { rule: g.slice(5) })
     : g.startsWith("scenario-catalog")
-      ? "Scenario catalog · synthetic feed"
+      ? t("Scenario catalog · synthetic feed")
       : g.startsWith("commitment-monitor") || g.startsWith("conflict-rules")
-        ? `Rule-generated · ${g} · commitment register`
+        ? t("Rule-generated · {rule} · commitment register", { rule: g })
         : g;
 
 export default async function TracePage({
@@ -62,21 +65,23 @@ export default async function TracePage({
   const { id } = await params;
   const { error } = await searchParams;
   const { actor } = await requireActor();
-  const t = await api.trace(actor, id);
-  if (!t) notFound(); // out of scope looks exactly like missing (authorization.md §1)
+  const locale = await getLocale();
+  const t = makeT(locale);
+  const trace = await api.trace(actor, id);
+  if (!trace) notFound(); // out of scope looks exactly like missing (authorization.md §1)
   const [mayDecide, behind] = await Promise.all([
     api.canDecide(actor, id), // cosmetic; acceptDecision re-checks
     api.commitmentsForInsight(actor, id), // Phase 4: the promises and plans behind this insight
   ]);
   const lessons = await api.lessonsFor(actor, id); // Phase 4f: what we learned last time we did this
-  const { insight: ins } = t;
+  const { insight: ins } = trace;
   // Cosmetic (every command re-checks): which lifecycle controls to offer this person.
   const live = ins.status === "open" || ins.status === "acknowledged";
   const [mayAck, mayDismiss, controls] = await Promise.all([
     live && ins.status === "open" ? api.may(actor, "insight.acknowledge", [ins.primaryUnitId]) : false,
     live ? api.may(actor, "insight.dismiss", [ins.primaryUnitId]) : false,
     Promise.all(
-      t.actions.map(async (a) => ({
+      trace.actions.map(async (a) => ({
         id: a.id,
         cancel:
           ["proposed", "pending_approval", "ready"].includes(a.status) &&
@@ -88,13 +93,13 @@ export default async function TracePage({
       })),
     ),
   ]);
-  const unitName = (uid: string) => t.units.find((u) => u.id === uid)?.name ?? "unknown unit";
+  const unitName = (uid: string) => trace.units.find((u) => u.id === uid)?.name ?? t("unknown unit");
   const personName = (pid: string | null) =>
-    t.people.find((p) => p.id === pid)?.name ??
-    (pid?.startsWith("system:") || pid?.startsWith("policy:") ? pid : "unknown");
+    trace.people.find((p) => p.id === pid)?.name ??
+    (pid?.startsWith("system:") || pid?.startsWith("policy:") ? pid : t("unknown"));
   const pb = ins.priorityBreakdown as PriorityBreakdown;
   const isOpp = ins.workstream === "opportunity";
-  const decision = t.decisions[0];
+  const decision = trace.decisions[0];
   const owner = ins.ownerDepartmentId ? unitName(ins.ownerDepartmentId) : null;
   const involved = [ins.primaryUnitId, ...ins.affectedUnitIds]
     .filter((id) => id !== ins.ownerDepartmentId)
@@ -102,33 +107,39 @@ export default async function TracePage({
 
   return (
     <>
-      <BackLink href="/">← Insights</BackLink>
+      <BackLink href="/">{t("← Insights")}</BackLink>
       <Notice error={error} />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-5 lg:col-span-2">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Band band={t.local?.band ?? ins.priorityBand} score={t.local?.score ?? ins.priorityScore} />
-              {t.local && t.local.band !== ins.priorityBand && (
+              <Band band={trace.local?.band ?? ins.priorityBand} score={trace.local?.score ?? ins.priorityScore} />
+              {trace.local && trace.local.band !== ins.priorityBand && (
                 <Pill>
-                  {t.local.band} for {t.local.scopeName} · group-wide {ins.priorityBand}
+                  {t("{band} for {scope} · group-wide {groupBand}", {
+                    band: trace.local.band,
+                    scope: trace.local.scopeName,
+                    groupBand: ins.priorityBand,
+                  })}
                 </Pill>
               )}
-              <Pill tone={isOpp ? "good" : "neutral"}>{isOpp ? "Opportunity workstream" : "Risk workstream"}</Pill>
-              <Pill tone={ins.status === "resolved" ? "good" : "neutral"}>{ins.status}</Pill>
-              <Pill>{sourceLabel(ins.generatedBy)}</Pill>
+              <Pill tone={isOpp ? "good" : "neutral"}>
+                {isOpp ? t("Opportunity workstream") : t("Risk workstream")}
+              </Pill>
+              <Pill tone={ins.status === "resolved" ? "good" : "neutral"}>{t(ins.status)}</Pill>
+              <Pill>{sourceLabel(t, ins.generatedBy)}</Pill>
               {mayAck && (
                 <form action={acknowledgeInsightAction}>
                   <input type="hidden" name="insightId" value={ins.id} />
                   <button className="rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
-                    Acknowledge
+                    {t("Acknowledge")}
                   </button>
                 </form>
               )}
               {mayDismiss && (
                 <details>
                   <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
-                    Dismiss…
+                    {t("Dismiss…")}
                   </summary>
                   <form action={dismissInsightAction} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                     <input type="hidden" name="insightId" value={ins.id} />
@@ -136,11 +147,11 @@ export default async function TracePage({
                       name="rationale"
                       required
                       minLength={3}
-                      placeholder="Why it needs no action"
+                      placeholder={t("Why it needs no action")}
                       className="field min-w-64"
                     />
                     <button className="rounded-lg border border-p1 px-3 py-1 font-semibold text-p1">
-                      Dismiss insight
+                      {t("Dismiss insight")}
                     </button>
                   </form>
                 </details>
@@ -148,31 +159,42 @@ export default async function TracePage({
             </div>
             <h1 className="text-[26px] font-semibold leading-tight">{ins.title}</h1>
             <p className="leading-relaxed">
-              <b>What happened.</b> {ins.whatHappened}
+              <b>{t("What happened.")}</b> {ins.whatHappened}
             </p>
             <p className="leading-relaxed">
-              <b>Why it matters.</b> {ins.whyItMatters}
+              <b>{t("Why it matters.")}</b> {ins.whyItMatters}
             </p>
           </div>
 
           <Card className="flex flex-col gap-4 border-ink">
-            <h2 className="text-lg font-semibold">Why am I seeing this?</h2>
+            <h2 className="text-lg font-semibold">{t("Why am I seeing this?")}</h2>
             <ol className="flex flex-wrap items-center gap-2 text-[13px]">
               {[
-                `Signal: ${t.signals.length} × ${SIGNAL_LABEL[t.signals[0]?.type] ?? t.signals[0]?.type}`,
-                `Evidence: ${t.evidence.length} frozen snapshots`,
-                "Insight",
-                `${isOpp ? "Opportunity score" : "Priority"} ${Math.round(pb.score)} = ${pb.band}`,
-                "Recommendation",
+                t("Signal: {n} × {type}", {
+                  n: trace.signals.length,
+                  type: SIGNAL_LABEL[trace.signals[0]?.type]
+                    ? t(SIGNAL_LABEL[trace.signals[0]?.type])
+                    : String(trace.signals[0]?.type),
+                }),
+                t("Evidence: {n} frozen snapshots", { n: trace.evidence.length }),
+                t("Insight"),
+                isOpp
+                  ? t("Opportunity score {score} = {band}", { score: Math.round(pb.score), band: pb.band })
+                  : t("Priority {score} = {band}", { score: Math.round(pb.score), band: pb.band }),
+                t("Recommendation"),
               ].map((s, i) => (
                 <li key={s} className="flex items-center gap-2">
-                  {i > 0 && <span aria-hidden>→</span>}
+                  {i > 0 && (
+                    <span aria-hidden className="rtl:-scale-x-100">
+                      →
+                    </span>
+                  )}
                   <span className="rounded-md border border-line px-2 py-1">{s}</span>
                 </li>
               ))}
             </ol>
             <div className="grid gap-4 md:grid-cols-2">
-              {t.evidence.map((e) => {
+              {trace.evidence.map((e) => {
                 const p = e.payload as {
                   unit?: string;
                   expectedIs?: string;
@@ -186,7 +208,7 @@ export default async function TracePage({
                       <EvidenceChart
                         days={p.days}
                         unit={p.unit ?? ""}
-                        expectedLabel={p.expectedIs ?? "usual level for that weekday"}
+                        expectedLabel={p.expectedIs ?? t("usual level for that weekday")}
                       />
                     ) : (
                       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
@@ -199,8 +221,11 @@ export default async function TracePage({
                       </dl>
                     )}
                     <div className="text-xs text-muted">
-                      Source: {e.sourceRef} (synthetic) · captured {fmtTime(e.capturedAt)} · frozen · sha256{" "}
-                      {e.payloadHash.slice(0, 10)}…
+                      {t("Source: {ref} (synthetic) · captured {time} · frozen · sha256 {hash}…", {
+                        ref: e.sourceRef,
+                        time: fmtTime(e.capturedAt),
+                        hash: e.payloadHash.slice(0, 10),
+                      })}
                     </div>
                   </figure>
                 );
@@ -208,7 +233,7 @@ export default async function TracePage({
             </div>
             <div className="rounded-lg border border-line p-3 text-[13px]">
               <div className="mb-2 font-semibold">
-                {isOpp ? "Opportunity score" : "Priority breakdown"} · {pb.model}
+                {isOpp ? t("Opportunity score") : t("Priority breakdown")} · {pb.model}
                 {pb.weightsVersion ? `, ${pb.weightsVersion}` : ""}
               </div>
               <div className="grid grid-cols-[120px_minmax(0,1fr)_48px] items-center gap-x-3 gap-y-1.5 font-mono text-xs">
@@ -228,27 +253,38 @@ export default async function TracePage({
                 ))}
               </div>
               <p className="mt-2 text-muted">
-                Confidence {ins.confidence.toFixed(2)} → ×{pb.confidenceMultiplier.toFixed(2)} · score {pb.score} ·{" "}
+                {t("Confidence {confidence} → ×{multiplier} · score {score}", {
+                  confidence: ins.confidence.toFixed(2),
+                  multiplier: pb.confidenceMultiplier.toFixed(2),
+                  score: pb.score,
+                })}{" "}
+                ·{" "}
                 {isOpp
-                  ? `bands O1 ≥ ${OPPORTUNITY_BANDS.O1} pursue now, O2 ≥ ${OPPORTUNITY_BANDS.O2} plan, else O3 watch`
-                  : `bands P1 ≥ ${BANDS.P1}, P2 ≥ ${BANDS.P2}, P3 ≥ ${BANDS.P3}`}
+                  ? t("bands O1 ≥ {o1} pursue now, O2 ≥ {o2} plan, else O3 watch", {
+                      o1: OPPORTUNITY_BANDS.O1,
+                      o2: OPPORTUNITY_BANDS.O2,
+                    })
+                  : t("bands P1 ≥ {p1}, P2 ≥ {p2}, P3 ≥ {p3}", { p1: BANDS.P1, p2: BANDS.P2, p3: BANDS.P3 })}
               </p>
-              {t.local && (
+              {trace.local && (
                 <p className="mt-1">
-                  For you ({t.local.scopeName}): <b>{t.local.band}</b> · {t.local.score} with {t.local.model} (impact
-                  and breadth measured against your own scope; local priority only ever raises an item).
+                  {t("For you ({scope}):", { scope: trace.local.scopeName })} <b>{trace.local.band}</b> ·{" "}
+                  {t(
+                    "{score} with {model} (impact and breadth measured against your own scope; local priority only ever raises an item).",
+                    { score: trace.local.score, model: trace.local.model },
+                  )}
                 </p>
               )}
             </div>
             <p className="text-[13px]">
               {owner && (
                 <>
-                  Owner: <b className="mr-3 text-accent">{owner}</b>
+                  {t("Owner:")} <b className="me-3 text-accent">{owner}</b>
                 </>
               )}
-              Involved:{" "}
+              {t("Involved:")}{" "}
               {[...new Set(involved)].map((n) => (
-                <span key={n} className="mr-2 inline-block rounded border border-line px-1.5 py-px">
+                <span key={n} className="me-2 inline-block rounded border border-line px-1.5 py-px">
                   {n}
                 </span>
               ))}
@@ -264,18 +300,29 @@ export default async function TracePage({
                       ? behind.conflicts
                           .map(
                             (k) =>
-                              `${k.status === "open" ? "Conflict" : `Conflict resolved (${k.resolvedReason})`} on ${k.resource}, ${k.overlap}${
+                              `${
+                                k.status === "open"
+                                  ? t("Conflict on {resource}, {overlap}", { resource: k.resource, overlap: k.overlap })
+                                  : t("Conflict resolved ({reason}) on {resource}, {overlap}", {
+                                      reason: String(k.resolvedReason),
+                                      resource: k.resource,
+                                      overlap: k.overlap,
+                                    })
+                              }${
                                 k.escalatedTo && k.status === "open"
-                                  ? ` · escalated to ${k.escalatedTo} (common manager) ${k.escalatedAt?.toISOString().slice(5, 16).replace("T", " ")}`
+                                  ? ` · ${t("escalated to {who} (common manager) {time}", {
+                                      who: k.escalatedTo,
+                                      time: String(k.escalatedAt?.toISOString().slice(5, 16).replace("T", " ")),
+                                    })}`
                                   : ""
                               }`,
                           )
                           .join(" · ")
-                      : "from the commitment register"}
+                      : t("from the commitment register")}
                   </span>
                 }
               >
-                {behind.conflicts.length ? "The plans that collide" : "The commitment behind this"}
+                {behind.conflicts.length ? t("The plans that collide") : t("The commitment behind this")}
               </SectionTitle>
               <div className={`grid gap-4 ${behind.commitments.length > 1 ? "xl:grid-cols-2" : ""}`}>
                 {behind.commitments.map((c) => (
@@ -288,16 +335,17 @@ export default async function TracePage({
           {lessons.length > 0 && (
             <Card className="flex flex-col gap-2 border-good/50">
               <SectionTitle
-                aside={<span className="text-xs text-muted">reviewed outcomes of the same kind of action</span>}
+                aside={<span className="text-xs text-muted">{t("reviewed outcomes of the same kind of action")}</span>}
               >
-                Last time we did this
+                {t("Last time we did this")}
               </SectionTitle>
               {lessons.map((l) => (
                 <p key={l.id} className="text-sm">
                   <span className="font-semibold">{l.actionTitle}</span>{" "}
-                  <span className="text-muted">({l.verdict?.replaceAll("_", " ")})</span>: “{l.lesson}”{" "}
+                  <span className="text-muted">({l.verdict ? t(l.verdict.replaceAll("_", " ")) : l.verdict})</span>: “
+                  {l.lesson}”{" "}
                   <a href={`/insights/${l.insightId}`} className="text-xs text-accent">
-                    see it →
+                    {t("see it →")}
                   </a>
                 </p>
               ))}
@@ -306,24 +354,27 @@ export default async function TracePage({
 
           {decision && (
             <Card className="flex flex-col gap-4">
-              <h2 className="text-lg font-semibold">What should happen</h2>
+              <h2 className="text-lg font-semibold">{t("What should happen")}</h2>
               <p className="text-sm">
-                <b>Decision:</b> {decision.statement}.{" "}
+                <b>{t("Decision:")}</b> {decision.statement}.{" "}
                 <span className="text-muted">
-                  {decision.status === "recommended" && "Recommended by VECTOR · waiting for a human decision"}
+                  {decision.status === "recommended" && t("Recommended by VECTOR · waiting for a human decision")}
                   {decision.status === "decided" &&
                     (decision.autoRule
-                      ? `Decided automatically by rule ${decision.autoRule}`
-                      : `Recommended by VECTOR · accepted by ${personName(decision.decidedBy)}`)}
+                      ? t("Decided automatically by rule {rule}", { rule: decision.autoRule })
+                      : t("Recommended by VECTOR · accepted by {name}", { name: personName(decision.decidedBy) }))}
                   {decision.status === "declined" &&
-                    `Declined by ${personName(decision.decidedBy)}: ${decision.rationale}`}
+                    t("Declined by {name}: {rationale}", {
+                      name: personName(decision.decidedBy),
+                      rationale: String(decision.rationale),
+                    })}
                 </span>
               </p>
-              {t.actions.map((a) => {
+              {trace.actions.map((a) => {
                 const req = a.approvalRequirement as ApprovalRequirement | null;
                 const matched = req?.rules.filter((r) => r.matched) ?? [];
-                const ap = t.approvals.filter((x) => x.actionId === a.id).at(-1);
-                const out = t.outcomes.find((o) => o.actionId === a.id);
+                const ap = trace.approvals.filter((x) => x.actionId === a.id).at(-1);
+                const out = trace.outcomes.find((o) => o.actionId === a.id);
                 return (
                   <div key={a.id} className="flex flex-col gap-1.5 rounded-lg border border-line px-4 py-3 text-sm">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -335,37 +386,44 @@ export default async function TracePage({
                             a.status === "pending_approval" ? "strong" : a.status === "executed" ? "good" : "neutral"
                           }
                         >
-                          {ACTION_STATUS[a.status]}
+                          {ACTION_STATUS[a.status] ? t(ACTION_STATUS[a.status]) : ACTION_STATUS[a.status]}
                         </Pill>
                       </span>
                     </div>
                     <div className="font-mono text-xs text-muted">
-                      Owner {personName(a.ownerUserId)} · cost ₪{Number(a.estimatedCost).toLocaleString("en-US")} ·{" "}
-                      {a.executor === "internal_task" ? "internal task" : "outbox message"}
+                      {t("Owner {name} · cost {cost} · {executor}", {
+                        name: personName(a.ownerUserId),
+                        cost: `₪${Number(a.estimatedCost).toLocaleString(intlOf(locale))}`,
+                        executor: a.executor === "internal_task" ? t("internal task") : t("outbox message"),
+                      })}
                     </div>
                     {req && !req.required && (
                       <div className="text-[13px] text-muted">
-                        No approval needed: rules AP-1…AP-7 evaluated, none matched.
+                        {t("No approval needed: rules AP-1…AP-7 evaluated, none matched.")}
                       </div>
                     )}
                     {matched.length > 0 && (
                       <div className="text-[13px]">
-                        Needs approval: {matched.map((r) => `${r.rule} ${r.name.toLowerCase()}`).join(", ")}. Eligible:{" "}
-                        {[
-                          ...new Set(
-                            matched.flatMap((r) =>
-                              r.eligible.map((o) => `${ROLE_LABEL[o.role]} · ${unitName(o.unit.id)}`),
+                        {t("Needs approval: {rules}. Eligible: {eligible} (must satisfy every rule).", {
+                          rules: matched.map((r) => `${r.rule} ${r.name.toLowerCase()}`).join(", "),
+                          eligible: [
+                            ...new Set(
+                              matched.flatMap((r) =>
+                                r.eligible.map(
+                                  (o) =>
+                                    `${ROLE_LABEL[o.role] ? t(ROLE_LABEL[o.role]) : ROLE_LABEL[o.role]} · ${unitName(o.unit.id)}`,
+                                ),
+                              ),
                             ),
-                          ),
-                        ].join(" or ")}{" "}
-                        (must satisfy every rule).
+                          ].join(` ${t("or")} `),
+                        })}
                       </div>
                     )}
                     {ap && (
                       <div className="text-[13px]">
-                        Approval {ap.status}
-                        {ap.approverUserId && ` by ${personName(ap.approverUserId)}`}
-                        {ap.decidedAt && ` at ${fmtTime(ap.decidedAt)}`}
+                        {t("Approval {status}", { status: t(ap.status) })}
+                        {ap.approverUserId && ` ${t("by {name}", { name: personName(ap.approverUserId) })}`}
+                        {ap.decidedAt && ` ${t("at {time}", { time: fmtTime(ap.decidedAt) })}`}
                         {ap.rationale && `: “${ap.rationale}”`}
                       </div>
                     )}
@@ -379,20 +437,20 @@ export default async function TracePage({
                               <input type="hidden" name="insightId" value={ins.id} />
                               <input type="hidden" name="actionId" value={a.id} />
                               <button className="rounded-lg border border-accent px-3 py-1 text-[13px] text-accent">
-                                Retry
+                                {t("Retry")}
                               </button>
                             </form>
                           )}
                           {c.amend && (
                             <details>
                               <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
-                                Amend…
+                                {t("Amend…")}
                               </summary>
                               <form action={amendActionAction} className="mt-2 flex flex-wrap items-end gap-2 text-sm">
                                 <input type="hidden" name="insightId" value={ins.id} />
                                 <input type="hidden" name="actionId" value={a.id} />
                                 <label className="flex flex-col gap-1 text-[13px]">
-                                  Cost (₪)
+                                  {t("Cost (₪)")}
                                   <input
                                     type="number"
                                     name="estimatedCost"
@@ -403,15 +461,16 @@ export default async function TracePage({
                                   />
                                 </label>
                                 <label className="flex grow flex-col gap-1 text-[13px]">
-                                  What changes
-                                  <input name="note" className="field" placeholder="e.g. half the volume" />
+                                  {t("What changes")}
+                                  <input name="note" className="field" placeholder={t("e.g. half the volume")} />
                                 </label>
                                 <button className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-accent-ink">
-                                  Save revision {a.revision + 1}
+                                  {t("Save revision {n}", { n: a.revision + 1 })}
                                 </button>
                                 <span className="basis-full text-xs text-muted">
-                                  A new revision withdraws any pending or granted approval; the policy is re-run for the
-                                  new one.
+                                  {t(
+                                    "A new revision withdraws any pending or granted approval; the policy is re-run for the new one.",
+                                  )}
                                 </span>
                               </form>
                             </details>
@@ -419,7 +478,7 @@ export default async function TracePage({
                           {c.cancel && (
                             <details>
                               <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
-                                Cancel…
+                                {t("Cancel…")}
                               </summary>
                               <form
                                 action={cancelActionAction}
@@ -431,11 +490,11 @@ export default async function TracePage({
                                   name="rationale"
                                   required
                                   minLength={3}
-                                  placeholder="Why"
+                                  placeholder={t("Why")}
                                   className="field min-w-56"
                                 />
                                 <button className="rounded-lg border border-p1 px-3 py-1 font-semibold text-p1">
-                                  Cancel action
+                                  {t("Cancel action")}
                                 </button>
                               </form>
                             </details>
@@ -445,25 +504,31 @@ export default async function TracePage({
                     })()}
                     {out && (
                       <div className="text-[13px]">
-                        Outcome:{" "}
+                        {t("Outcome:")}{" "}
                         {out.status === "observing"
-                          ? `watching OSA until ${fmtTime(out.windowEnd)}`
-                          : `${out.verdict?.replaceAll("_", " ")} (OSA ${(out.observed as { baselineMean: number; windowMean: number }).baselineMean.toFixed(1)}% → ${(out.observed as { windowMean: number }).windowMean.toFixed(1)}%)`}
-                        {out.lesson && ` · Lesson: ${out.lesson}`}
+                          ? t("watching OSA until {time}", { time: fmtTime(out.windowEnd) })
+                          : t("{verdict} (OSA {from}% → {to}%)", {
+                              verdict: out.verdict ? t(out.verdict.replaceAll("_", " ")) : String(out.verdict),
+                              from: (out.observed as { baselineMean: number; windowMean: number }).baselineMean.toFixed(
+                                1,
+                              ),
+                              to: (out.observed as { windowMean: number }).windowMean.toFixed(1),
+                            })}
+                        {out.lesson && ` · ${t("Lesson: {lesson}", { lesson: out.lesson })}`}
                         {out.status === "evaluated" && (
                           <form action={reviewOutcomeAction} className="mt-2 flex flex-wrap gap-2">
                             <input type="hidden" name="insightId" value={ins.id} />
                             <input type="hidden" name="outcomeId" value={out.id} />
                             <label htmlFor={`lesson-${out.id}`} className="sr-only">
-                              Lesson learned
+                              {t("Lesson learned")}
                             </label>
                             <input
                               id={`lesson-${out.id}`}
                               name="lesson"
-                              placeholder="What should we learn?"
+                              placeholder={t("What should we learn?")}
                               className="min-w-60 grow rounded-md border border-line px-3 py-1.5"
                             />
-                            <button className="rounded-md border border-ink px-3 py-1.5">Record lesson</button>
+                            <button className="rounded-md border border-ink px-3 py-1.5">{t("Record lesson")}</button>
                           </form>
                         )}
                       </div>
@@ -473,7 +538,9 @@ export default async function TracePage({
               })}
               {decision.status === "recommended" && !mayDecide && (
                 <p className="text-[13px] text-muted">
-                  Waiting for a decision by the manager of {unitName(ins.primaryUnitId)} (or someone above them).
+                  {t("Waiting for a decision by the manager of {unit} (or someone above them).", {
+                    unit: unitName(ins.primaryUnitId),
+                  })}
                 </p>
               )}
               {decision.status === "recommended" && mayDecide && (
@@ -482,32 +549,32 @@ export default async function TracePage({
                     <input type="hidden" name="insightId" value={ins.id} />
                     <input type="hidden" name="decisionId" value={decision.id} />
                     <label htmlFor="accept-note" className="sr-only">
-                      Note
+                      {t("Note")}
                     </label>
                     <input
                       id="accept-note"
                       name="rationale"
-                      placeholder="Note (optional)"
+                      placeholder={t("Note (optional)")}
                       className="min-w-60 grow rounded-md border border-line bg-panel px-3 py-2"
                     />
                     <button className="rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
-                      Accept recommendation
+                      {t("Accept recommendation")}
                     </button>
                   </form>
                   <form action={declineDecisionAction} className="flex flex-wrap items-center gap-3">
                     <input type="hidden" name="insightId" value={ins.id} />
                     <input type="hidden" name="decisionId" value={decision.id} />
                     <label htmlFor="decline-note" className="sr-only">
-                      Reason for declining
+                      {t("Reason for declining")}
                     </label>
                     <input
                       id="decline-note"
                       name="rationale"
                       required
-                      placeholder="Reason (required to decline)"
+                      placeholder={t("Reason (required to decline)")}
                       className="min-w-60 grow rounded-md border border-line bg-panel px-3 py-2"
                     />
-                    <button className="rounded-md border border-ink bg-panel px-4 py-2">Decline</button>
+                    <button className="rounded-md border border-ink bg-panel px-4 py-2">{t("Decline")}</button>
                   </form>
                 </div>
               )}
@@ -517,41 +584,43 @@ export default async function TracePage({
 
         <aside className="flex flex-col gap-4">
           <Card>
-            <SectionTitle>Audit trail · {t.audit.length} events</SectionTitle>
+            <SectionTitle>{t("Audit trail · {n} events", { n: trace.audit.length })}</SectionTitle>
             <ol className="mt-3 flex flex-col gap-2.5 text-[13px] leading-snug">
-              {t.audit.map((e) => (
+              {trace.audit.map((e) => (
                 <li key={e.id}>
                   <span className="font-mono text-xs text-muted">
                     #{e.seq} {fmtTime(e.occurredAt)}
                   </span>
                   <br />
                   <b>{e.operation}</b> · {personName(e.actorId)}
-                  {e.viaDemoSwitcher && <span className="text-muted"> (via demo switcher)</span>}
+                  {e.viaDemoSwitcher && <span className="text-muted"> {t("(via demo switcher)")}</span>}
                   {e.reason && <span className="text-muted"> · {e.reason}</span>}
                 </li>
               ))}
             </ol>
           </Card>
-          {t.tasks.length + t.messages.length > 0 && (
+          {trace.tasks.length + trace.messages.length > 0 && (
             <Card>
-              <SectionTitle>Executed (simulated)</SectionTitle>
+              <SectionTitle>{t("Executed (simulated)")}</SectionTitle>
               <ul className="mt-3 flex flex-col gap-2 text-[13px]">
-                {t.tasks.map((x) => (
+                {trace.tasks.map((x) => (
                   <li key={x.id}>
-                    Task for {personName(x.assigneeUserId)}: {x.title} <Simulated />
+                    {t("Task for {name}: {title}", { name: personName(x.assigneeUserId), title: x.title })}{" "}
+                    <Simulated />
                   </li>
                 ))}
-                {t.messages.map((m) => (
+                {trace.messages.map((m) => (
                   <li key={m.id}>
-                    Outbox → {m.recipients}: {m.subject} <Simulated />
+                    {t("Outbox → {recipients}: {subject}", { recipients: String(m.recipients), subject: m.subject })}{" "}
+                    <Simulated />
                   </li>
                 ))}
               </ul>
             </Card>
           )}
           <Card>
-            <SectionTitle>Signal</SectionTitle>
-            {t.signals.map((sg) => {
+            <SectionTitle>{t("Signal")}</SectionTitle>
+            {trace.signals.map((sg) => {
               const m = sg.measurements as Record<string, unknown> & {
                 kpi?: string;
                 change?: number;
@@ -563,28 +632,34 @@ export default async function TracePage({
               const isKpi = m.kpi === "net_sales";
               return (
                 <dl key={sg.id} className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
-                  <dt className="text-muted">Type</dt>
-                  <dd>{SIGNAL_LABEL[sg.type] ?? sg.type}</dd>
-                  <dt className="text-muted">Source</dt>
+                  <dt className="text-muted">{t("Type")}</dt>
+                  <dd>{SIGNAL_LABEL[sg.type] ? t(SIGNAL_LABEL[sg.type]) : sg.type}</dd>
+                  <dt className="text-muted">{t("Source")}</dt>
                   <dd>
                     {sg.detector} v{sg.detectorVersion} · {sg.source.replace(/_/g, " ")}
                   </dd>
                   {isKpi ? (
                     <>
-                      <dt className="text-muted">Net sales</dt>
+                      <dt className="text-muted">{t("Net sales")}</dt>
                       <dd>
-                        {((m.change ?? 0) * 100).toFixed(1)}% vs usual (z {m.z?.toFixed(1)})
+                        {t("{pct}% vs usual (z {z})", {
+                          pct: ((m.change ?? 0) * 100).toFixed(1),
+                          z: m.z?.toFixed(1) ?? "",
+                        })}
                       </dd>
                       {m.osaChangePts !== undefined && (
                         <>
-                          <dt className="text-muted">On-shelf avail.</dt>
+                          <dt className="text-muted">{t("On-shelf avail.")}</dt>
                           <dd>
-                            {m.osaChangePts.toFixed(1)} pts vs usual (z {m.osaZ?.toFixed(1)})
+                            {t("{pts} pts vs usual (z {z})", {
+                              pts: m.osaChangePts.toFixed(1),
+                              z: m.osaZ?.toFixed(1) ?? "",
+                            })}
                           </dd>
                         </>
                       )}
-                      <dt className="text-muted">Window</dt>
-                      <dd>{m.window?.join(" → ")}</dd>
+                      <dt className="text-muted">{t("Window")}</dt>
+                      <dd className="num">{m.window?.join(" → ")}</dd>
                     </>
                   ) : (
                     Object.entries(m).map(([k, val]) => (

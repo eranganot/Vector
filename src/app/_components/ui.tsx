@@ -1,5 +1,6 @@
 /** Shared presentational pieces (dark theme). No data access here. */
 import Link from "next/link";
+import { getT } from "../_lib/locale";
 
 const BAND_STYLE: Record<string, string> = {
   P1: "bg-p1 text-ground border border-p1",
@@ -60,26 +61,31 @@ export function SectionTitle({ children, aside }: { children: React.ReactNode; a
   );
 }
 
-export function Notice({ error, done }: { error?: string; done?: string }) {
+/**
+ * A one-line result of a server action. The text arrives in English (the translation key, e.g. from the URL) and is
+ * translated here at display time; text with no translation (e.g. a domain error) shows as given.
+ */
+export async function Notice({ error, done }: { error?: string; done?: string }) {
+  if (!error && !done) return null;
+  const t = await getT();
   if (error)
     return (
       <p role="alert" className="rounded-md border border-p1 bg-p1/10 px-4 py-3 text-sm text-p1">
-        {error}
+        {t(error)}
       </p>
     );
-  if (done)
-    return (
-      <p role="status" className="rounded-md border border-good bg-good/10 px-4 py-3 text-sm text-good">
-        {done}
-      </p>
-    );
-  return null;
+  return (
+    <p role="status" className="rounded-md border border-good bg-good/10 px-4 py-3 text-sm text-good">
+      {t(done!)}
+    </p>
+  );
 }
 
-export function Simulated() {
+export async function Simulated() {
+  const t = await getT();
   return (
     <span className="rounded border border-dashed border-muted px-1.5 text-[11px] uppercase tracking-wide text-muted">
-      simulated
+      {t("simulated")}
     </span>
   );
 }
@@ -105,7 +111,7 @@ export function fmtKpi(value: number, unit: string): string {
 export const fmtIls = (v: number) => fmtKpi(v, "ILS");
 
 /** A line chart of actual vs. expected (target or usual level), drawn from stored values. */
-export function LineChart({
+export async function LineChart({
   days,
   unit,
   expectedLabel = "usual level for that weekday",
@@ -121,6 +127,8 @@ export function LineChart({
   compact?: boolean;
 }) {
   if (days.length === 0) return null;
+  const t = await getT();
+  const label = t(expectedLabel);
   const W = width;
   const H = height;
   const top = compact ? 6 : 20;
@@ -141,7 +149,12 @@ export function LineChart({
       className="w-full"
       style={{ height: H }}
       role="img"
-      aria-label={`Actual ${fmtKpi(last.actual, unit)} vs ${expectedLabel} ${fmtKpi(last.expected, unit)} on ${last.day}`}
+      aria-label={t("Actual {actual} vs {label} {expected} on {day}", {
+        actual: fmtKpi(last.actual, unit),
+        label,
+        expected: fmtKpi(last.expected, unit),
+        day: last.day,
+      })}
     >
       <defs>
         <linearGradient id={id} x1="0" x2="0" y1="0" y2="1">
@@ -156,13 +169,13 @@ export function LineChart({
       {!compact && (
         <>
           <text x="8" y="12" fontSize="11" fill="#8fa1bc">
-            dashed = {expectedLabel}
+            {t("dashed = {label}", { label })}
           </text>
           <text x="8" y={H - 6} fontSize="11" fill="#8fa1bc">
             {days[0].day.slice(5)}
           </text>
           <text x={W - 8} y={H - 6} fontSize="11" textAnchor="end" fill="#e6edf7">
-            {last.day.slice(5)}: {fmtKpi(last.actual, unit)} vs {fmtKpi(last.expected, unit)}
+            {last.day.slice(5)}: {fmtKpi(last.actual, unit)} {t("vs")} {fmtKpi(last.expected, unit)}
           </text>
         </>
       )}
@@ -184,12 +197,27 @@ export function EvidenceChart({
 }
 
 /** A health ring (0–100). */
-export function Ring({ value, tone, size = 64 }: { value: number; tone: "good" | "watch" | "bad"; size?: number }) {
+export async function Ring({
+  value,
+  tone,
+  size = 64,
+}: {
+  value: number;
+  tone: "good" | "watch" | "bad";
+  size?: number;
+}) {
+  const t = await getT();
   const r = size / 2 - 5;
   const c = 2 * Math.PI * r;
   const color = tone === "good" ? "#34d399" : tone === "watch" ? "#fbbf24" : "#f87171";
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`health ${value} of 100`}>
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label={t("health {value} of 100", { value })}
+    >
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#22334f" strokeWidth="5" />
       <circle
         cx={size / 2}

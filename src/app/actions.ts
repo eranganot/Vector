@@ -9,8 +9,15 @@ import { redirect } from "next/navigation";
 import { api, parseInput, seededPeople } from "@/application/facade";
 import { DomainError } from "@/domain/errors";
 import { auth } from "@/infra/auth";
+import { isLocale, LOCALE_COOKIE } from "@/i18n/locale";
 import { seedPassword } from "@/infra/seed/password";
 import { demoPersonasEnabled, requireActor, SWITCHER_COOKIE } from "./_lib/session";
+
+/**
+ * Marks a notice literal as a translation key (a no-op): the English text travels in the URL and the page's `Notice`
+ * translates it at display time. Keeps every notice findable by the translation scanner.
+ */
+const tk = (s: string) => s;
 
 /** Where to send the person back to: their insight's trace, built only from a validated id. */
 const backTo = (f: FormData) => {
@@ -27,7 +34,7 @@ export async function signIn(form: FormData) {
     const { email, password } = parseInput("signIn", form);
     await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
   } catch {
-    redirect("/login?error=" + encodeURIComponent("Email or password is incorrect"));
+    redirect("/login?error=" + encodeURIComponent(tk("Email or password is incorrect")));
   }
   (await cookies()).delete(SWITCHER_COOKIE);
   redirect("/");
@@ -36,22 +43,22 @@ export async function signIn(form: FormData) {
 /** Demo persona switcher (AZ-5): signs in as a seeded person through the normal auth path. */
 export async function switchPersona(form: FormData) {
   if (!demoPersonasEnabled())
-    redirect("/login?error=" + encodeURIComponent("Persona switching is off in this environment"));
+    redirect("/login?error=" + encodeURIComponent(tk("Persona switching is off in this environment")));
   let input: ReturnType<typeof parseInput<"switchPersona">>;
   try {
     input = parseInput("switchPersona", form);
   } catch {
-    redirect("/login?error=" + encodeURIComponent("Unknown persona"));
+    redirect("/login?error=" + encodeURIComponent(tk("Unknown persona")));
   }
   const email = input.email;
   const people = await seededPeople();
-  if (!people.some((p) => p.email === email)) redirect("/login?error=" + encodeURIComponent("Unknown persona"));
+  if (!people.some((p) => p.email === email)) redirect("/login?error=" + encodeURIComponent(tk("Unknown persona")));
   const password = seedPassword() ?? "";
   try {
     await auth.api.signOut({ headers: await headers() }).catch(() => undefined);
     await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
   } catch {
-    redirect("/login?error=" + encodeURIComponent("Persona sign-in failed: check SEED_USER_PASSWORD"));
+    redirect("/login?error=" + encodeURIComponent(tk("Persona sign-in failed: check SEED_USER_PASSWORD")));
   }
   (await cookies()).set(SWITCHER_COOKIE, "1", {
     httpOnly: true,
@@ -258,4 +265,30 @@ export async function amendActionAction(form: FormData) {
 }
 export async function retryActionAction(form: FormData) {
   await onTrace(form, (a) => api.retryAction(a, parseInput("actionRef", form).actionId));
+}
+
+// ── Language (Eran, 2026-10-05: Hebrew, RTL, chosen by the user) ──
+export async function setLanguageAction(form: FormData) {
+  const lang = String(form.get("lang") ?? "");
+  if (!isLocale(lang)) redirect("/");
+  (await cookies()).set(LOCALE_COOKIE, lang, {
+    httpOnly: false,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+  // Back to the same page: the referer's path only (never another site).
+  const ref = (await headers()).get("referer");
+  let back = "/";
+  try {
+    if (ref) {
+      const u = new URL(ref);
+      const candidate = u.pathname + u.search;
+      if (/^\/(?!\/)[A-Za-z0-9\-._~/?=&%]*$/.test(candidate)) back = candidate;
+    }
+  } catch {
+    back = "/";
+  }
+  redirect(back);
 }
