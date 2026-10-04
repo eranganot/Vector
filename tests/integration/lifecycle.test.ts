@@ -381,6 +381,102 @@ describe("approval lifecycle edge cases", () => {
     await expectDenied(executeAction(later, transferId), /IllegalTransition|cannot execute/);
   });
 
+  it("known issue #5: an action of an unknown type is refused as a domain error and the refusal is audited", async () => {
+    const r = await seed(ownerDb, { password: "test-password" });
+    const ctx = await at(r.orgId, "2026-10-22T05:00:00Z");
+    const det = await recordDetection(ctx, haifaDetection(r));
+    // e.g. a playbook removed in a newer version while older actions still reference it
+    await ownerDb.update(s.action).set({ type: "retired_playbook" }).where(eq(s.action.id, det.actionIds![0]));
+    const [dec] = await appDb.select().from(s.decision).where(eq(s.decision.insightId, det.insightId));
+    await expectDenied(acceptDecision(ctx, await person(r, "avi"), dec.id), /unknown action type/);
+    const denied = await appDb
+      .select()
+      .from(s.auditEvent)
+      .where(and(eq(s.auditEvent.orgId, r.orgId), eq(s.auditEvent.operation, "decision.accept.denied")));
+    expect(denied.map((e) => e.reason)).toEqual([expect.stringMatching(/unknown action type retired_playbook/)]);
+  });
+
+  it("known issue #4: the trace only resolves people involved in this insight, never other organizations' users", async () => {
+    const r = await seed(ownerDb, { password: "test-password" });
+    const ctx = await at(r.orgId, "2026-10-22T05:00:00Z");
+    const det = await recordDetection(ctx, haifaDetection(r));
+    const [otherOrg] = await ownerDb
+      .insert(s.organization)
+      .values({ name: "Another tenant", seedVersion: "test", isActive: false })
+      .returning();
+    const outsider = `outsider-${otherOrg.id}`;
+    await ownerDb.insert(s.user).values({
+      id: outsider,
+      name: "Outsider Person",
+      email: `${outsider}@elsewhere.example`,
+      emailVerified: true,
+      orgId: otherOrg.id,
+      isSeeded: false,
+    });
+    const t = (await getInsightTrace(appDb, r.orgId, await person(r, "dana"), det.insightId))!;
+    expect(t.people.map((p) => p.name)).not.toContain("Outsider Person");
+    expect(t.people.map((p) => p.name)).toEqual(expect.arrayContaining(["Noa Friedman", "Avi Mizrahi"]));
+  });
+
+  it("known issue #3: a write from a session older than 12 h is refused (AZ-3), a fresh one is allowed", async () => {
+    const r = await seed(ownerDb, { password: "test-password" });
+    const ctx = await at(r.orgId, "2026-10-22T05:00:00Z");
+    const det = await recordDetection(ctx, haifaDetection(r));
+    const [dec] = await appDb.select().from(s.decision).where(eq(s.decision.insightId, det.insightId));
+    const avi = (hours: number) =>
+      loadUserActor(appDb, r.orgId, r.userIds.avi, {
+        sessionId: "old",
+        viaDemoSwitcher: false,
+        sessionAgeHours: hours,
+      });
+    await expectDenied(acceptDecision(ctx, await avi(12.5), dec.id), /AZ-3/);
+    await acceptDecision(ctx, await avi(0.5), dec.id);
+  });
+
+  it("known issue #2: if the policy now asks for more (the insight escalated to P1), execution stops and approval is re-requested (A7b)", async () => {
+    const { r, ctx, transferId } = await pending();
+    await grantApproval(ctx, await person(r, "yossi"), transferId); // AP-4 only (insight is P2)
+    // Before execution, a new signal escalates the insight to P1: AP-5 now applies too.
+    const worse = haifaDetection(r);
+    worse.insight.priority = { ...worse.insight.priority!, impactIls: 900_000, hoursToImpact: 12, z: 4 };
+    const att = await recordDetection(ctx, worse);
+    expect(att.outcome).toBe("attached");
+    const [ins] = await appDb.select().from(s.insight).where(eq(s.insight.id, att.insightId));
+    expect(ins.priorityBand).toBe("P1");
+    expect(await executeAction(ctx, transferId)).toEqual({ reRequested: true, added: ["AP-5"] });
+    const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
+    expect(a.status).toBe("pending_approval");
+    const req = a.approvalRequirement as { rules: { rule: string; matched: boolean }[] };
+    expect(req.rules.filter((x) => x.matched).map((x) => x.rule)).toEqual(["AP-4", "AP-5"]);
+    const aps = await appDb.select().from(s.approval).where(eq(s.approval.actionId, transferId));
+    expect(aps.map((x) => x.status).sort()).toEqual(["requested", "withdrawn"]);
+  });
+
+  it("known issue #2: an unchanged requirement executes as before", async () => {
+    const { r, ctx, transferId } = await pending();
+    await grantApproval(ctx, await person(r, "yossi"), transferId);
+    expect(await executeAction(ctx, transferId)).toMatchObject({ simulated: true });
+  });
+
+  it("known issue #1: a lapse leaves no hidden transition: the action's move back is audited, the re-request by system:policy", async () => {
+    const { r, ctx, transferId } = await pending();
+    await grantApproval(ctx, await person(r, "yossi"), transferId);
+    await runClockJobs(await at(r.orgId, "2026-10-29T06:00:00Z"));
+    const rows = (
+      await appDb
+        .select()
+        .from(s.auditEvent)
+        .where(and(eq(s.auditEvent.orgId, r.orgId)))
+    ).sort((x, y) => Number(x.seq) - Number(y.seq)); // chain order: a query without ORDER BY returns rows in any order
+    const actionRows = rows.filter((e) => e.entityId === transferId);
+    expect(actionRows.some((e) => e.fromState === "ready" && e.toState === "pending_approval")).toBe(true);
+    const reRequest = rows.filter((e) => e.operation === "approval.requested").at(-1)!;
+    expect(reRequest.actorId).toBe("system:policy");
+    // Every action state change on record matches the action's current state.
+    const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
+    expect(actionRows.filter((e) => e.toState).at(-1)!.toState).toBe(a.status);
+  });
+
   it("denying requires a rationale and rejects the action", async () => {
     const { r, ctx, transferId } = await pending();
     await expectDenied(denyApproval(ctx, await person(r, "yossi"), transferId, ""), /rationale/);

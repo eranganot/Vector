@@ -185,10 +185,12 @@ stateDiagram-v2
 `executeAction` performs A7 and A8 (or A9) in one transaction, so `executing` is recorded in the audit trail but is
 never left persisted on the row.
 
-**Known gap (scheduled for Phase 3):** approval is **not** re-evaluated at execution time. A7 checks that the
-approval is still granted, for the same revision, and not lapsed; it does not re-run the approval policy, so the
-A7b row has no code path. Changes that go through `amendAction` are safe because amending re-submits the action
-and re-evaluates the policy. What is not caught is a policy or org change between approval and execution.
+**A7b (implemented 2026-10-04, known issue #2):** at execution the approval policy is re-run with today's facts
+(insight band, org, owning department). If it now matches a rule the approval did not cover (e.g. the insight escalated
+to P1), the granted approval is withdrawn (P5b), the action returns to `pending_approval` with the new requirement, and a
+new request is raised, each step audited by `system:policy`; execution returns `{ reRequested }` instead of running.
+A7 then checks the approval is still granted, for the same revision, and not lapsed. On a lapse (P6b) the action's move
+back is audited (`action.approval_lapsed`) and the re-request is made by `system:policy`.
 
 Executors in the prototype (D7) are **simulated and labelled**: `internal_task` creates a task visible in VECTOR,
 and `outbox_message` writes a message to the visible outbox instead of sending it. Action types and their executor,

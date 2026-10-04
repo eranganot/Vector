@@ -12,7 +12,12 @@ export async function requireActor() {
   const s = await auth.api.getSession({ headers: await headers() });
   if (!s) redirect("/login");
   const via = (await cookies()).get(SWITCHER_COOKIE)?.value === "1";
-  const actor = await actorFor({ userId: s.user.id, sessionId: s.session.id, viaDemoSwitcher: via });
+  const actor = await actorFor({
+    userId: s.user.id,
+    sessionId: s.session.id,
+    viaDemoSwitcher: via,
+    sessionStartedAt: new Date(s.session.createdAt),
+  });
   return { actor, me: await profile(s.user.id), via };
 }
 

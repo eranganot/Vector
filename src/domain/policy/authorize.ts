@@ -55,7 +55,8 @@ export function authorizeUser(actor: Actor, capability: Capability, ctx: AuthzCo
   if (actor.kind !== "user") return deny("AZ-4", "system actors cannot use user capabilities");
   const granting = actor.assignments.filter((a) => hasPermission(a.role, capability));
   if (granting.length === 0) return deny("PermissionDenied", `no role grants ${capability}`);
-  if (ctx.isWrite && (ctx.sessionAgeHours ?? 0) > 12) return deny("AZ-3", "session too old for a write; sign in again");
+  const sessionAge = ctx.sessionAgeHours ?? actor.sessionAgeHours ?? 0;
+  if (ctx.isWrite && sessionAge > 12) return deny("AZ-3", "session too old for a write; sign in again");
   for (const unit of ctx.targetUnits) {
     if (!granting.some((a) => inSubtree(unit, a.unit.id)))
       return deny("AZ-1", `unit ${unit.id} is outside your scope for ${capability}`);

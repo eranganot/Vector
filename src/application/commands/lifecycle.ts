@@ -131,6 +131,29 @@ export async function dismissInsight(ctx: AppContext, actor: Actor, insightId: s
   );
 }
 
+/** The approval requirement for an action under the current policy and the current facts (insight band, org). */
+async function requirementFor(
+  tx: Tx,
+  orgId: string,
+  a: typeof action.$inferSelect,
+  ins: typeof insight.$inferSelect,
+): Promise<ApprovalRequirement> {
+  const [primary] = await unitsByIds(tx, orgId, [ins.primaryUnitId]);
+  const pb = playbook(a.type);
+  return evaluateApprovalPolicy(
+    {
+      type: a.type,
+      executor: a.executor as "internal_task" | "outbox_message",
+      audience: (a.params as { audience?: "internal" | "external" }).audience,
+      targetUnits: await unitsByIds(tx, orgId, a.targetUnitIds),
+      estimatedCost: Number(a.estimatedCost),
+      insightBand: ins.priorityBand,
+      insightPrimaryUnit: primary,
+    },
+    await orgFacts(tx, orgId, pb.budgetDepartmentCode, ins.ownerDepartmentId),
+  );
+}
+
 // ── Decision (D3, D4, D5) and submission (A2/A3 + P1) ────────────────────────
 /** Submits a decided decision's proposed actions as system:policy, evaluating the approval policy for each. */
 async function submitActions(scope: CommandScope, decisionId: string) {
@@ -145,21 +168,8 @@ async function submitActions(scope: CommandScope, decisionId: string) {
     .select()
     .from(insight)
     .where(eq(insight.id, (await lockDecision(tx, ctx.orgId, decisionId)).insightId));
-  const [primary] = await unitsByIds(tx, ctx.orgId, [ins.primaryUnitId]);
   for (const a of actions) {
-    const pb = playbook(a.type);
-    const req = evaluateApprovalPolicy(
-      {
-        type: a.type,
-        executor: a.executor as "internal_task" | "outbox_message",
-        audience: (a.params as { audience?: "internal" | "external" }).audience,
-        targetUnits: await unitsByIds(tx, ctx.orgId, a.targetUnitIds),
-        estimatedCost: Number(a.estimatedCost),
-        insightBand: ins.priorityBand,
-        insightPrimaryUnit: primary,
-      },
-      await orgFacts(tx, ctx.orgId, pb.budgetDepartmentCode, ins.ownerDepartmentId),
-    );
+    const req = await requirementFor(tx, ctx.orgId, a, ins);
     const t = transition("action", a.status, req.required ? "submit_requires_approval" : "submit_no_approval");
     await tx
       .update(action)
@@ -413,7 +423,7 @@ export async function runClockJobs(ctx: AppContext) {
     actor,
     "clock.tick",
     { entityType: "organization", entityId: ctx.orgId },
-    async ({ tx, now, audit }) => {
+    async ({ tx, now, audit, auditAs }) => {
       let expired = 0;
       let lapsed = 0;
       const open = await tx
@@ -467,6 +477,15 @@ export async function runClockJobs(ctx: AppContext) {
             .update(action)
             .set({ status: at.to as "pending_approval", updatedAt: now, version: act.version + 1 })
             .where(eq(action.id, act.id));
+          await audit({
+            operation: "action.approval_lapsed",
+            entityType: "action",
+            entityId: act.id,
+            fromState: act.status,
+            toState: at.to,
+          });
+          // Requesting approval is the policy actor's job (as at submission), not the clock's.
+          assertAuthorized(authorizeSystem(SYSTEM.policy, "action.submit"));
           const [re] = await tx
             .insert(approval)
             .values({
@@ -478,7 +497,7 @@ export async function runClockJobs(ctx: AppContext) {
               status: "requested",
             })
             .returning();
-          await audit({
+          await auditAs(SYSTEM.policy, {
             operation: "approval.requested",
             entityType: "approval",
             entityId: re.id,
@@ -534,7 +553,7 @@ export async function executeAction(ctx: AppContext, actionId: string, actor: Ac
     actor,
     "action.execute",
     { entityType: "action", entityId: actionId },
-    async ({ tx, now, audit }) => {
+    async ({ tx, now, audit, auditAs }) => {
       const act = await lockAction(tx, ctx.orgId, actionId);
       if (actor.kind === "system") assertAuthorized(authorizeSystem(actor, "action.execute"));
       else
@@ -542,8 +561,75 @@ export async function executeAction(ctx: AppContext, actionId: string, actor: Ac
           authorizeUser(actor, "action.execute", writeCtx(await unitsByIds(tx, ctx.orgId, act.targetUnitIds))),
         );
 
-      // A7 run-time re-authorization: approval still valid for this revision.
+      // A7b: re-evaluate the policy with today's facts. If it now asks for more than was approved (e.g. the insight
+      // escalated to P1), the action goes back for approval instead of executing.
       const req = act.approvalRequirement as ApprovalRequirement | null;
+      if (act.status === "ready" && act.insightId) {
+        const [ins] = await tx.select().from(insight).where(eq(insight.id, act.insightId));
+        const current = await requirementFor(tx, ctx.orgId, act, ins);
+        const before = new Set((req?.rules ?? []).filter((r) => r.matched).map((r) => r.rule));
+        const added = current.rules.filter((r) => r.matched && !before.has(r.rule)).map((r) => r.rule);
+        if (added.length > 0) {
+          assertAuthorized(authorizeSystem(SYSTEM.policy, "action.submit"));
+          const granted = await openApproval(tx, act.id, ["granted"]);
+          if (granted) {
+            const w = transition("approval", "granted", "withdraw");
+            await tx
+              .update(approval)
+              .set({ status: w.to as "withdrawn", version: granted.version + 1 })
+              .where(eq(approval.id, granted.id));
+            await auditAs(SYSTEM.policy, {
+              operation: "approval.withdrawn",
+              entityType: "approval",
+              entityId: granted.id,
+              fromState: "granted",
+              toState: w.to,
+              reason: `policy now also requires ${added.join(", ")}`,
+            });
+          }
+          const t = transition("action", act.status, "requirement_grew");
+          await tx
+            .update(action)
+            .set({
+              status: t.to as "pending_approval",
+              approvalRequirement: current,
+              updatedAt: now,
+              version: act.version + 1,
+            })
+            .where(eq(action.id, act.id));
+          await auditAs(SYSTEM.policy, {
+            operation: "action.requirement_grew",
+            entityType: "action",
+            entityId: act.id,
+            fromState: act.status,
+            toState: t.to,
+            reason: `policy now also requires ${added.join(", ")}`,
+            policy: current,
+          });
+          const [re] = await tx
+            .insert(approval)
+            .values({
+              orgId: ctx.orgId,
+              actionId: act.id,
+              actionRevision: act.revision,
+              requirement: current,
+              requestedAt: now,
+              status: "requested",
+            })
+            .returning();
+          await auditAs(SYSTEM.policy, {
+            operation: "approval.requested",
+            entityType: "approval",
+            entityId: re.id,
+            toState: "requested",
+            reason: "policy requirement grew before execution",
+            policy: current,
+          });
+          return { reRequested: true as const, added };
+        }
+      }
+
+      // A7 run-time re-authorization: approval still valid for this revision.
       if (req?.required) {
         const granted = await openApproval(tx, act.id, ["granted"]);
         const usable = approvalUsableForExecution(granted, act.revision, now);
@@ -665,8 +751,8 @@ export async function executeReadyActions(ctx: AppContext) {
   const done: string[] = [];
   for (const a of ready) {
     try {
-      await executeAction(ctx, a.id);
-      done.push(a.id);
+      const r = await executeAction(ctx, a.id);
+      if (!(r && typeof r === "object" && "reRequested" in r)) done.push(a.id); // A7b: back for approval
     } catch (err) {
       if (!(err instanceof DomainError)) throw err; // a refused execution is audited and stays put
     }

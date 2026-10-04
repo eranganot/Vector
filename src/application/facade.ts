@@ -30,12 +30,14 @@ import type { Db } from "./db";
 
 const db = () => getDb() as unknown as Db;
 
-export type SessionInfo = { userId: string; sessionId: string; viaDemoSwitcher: boolean };
+export type SessionInfo = { userId: string; sessionId: string; viaDemoSwitcher: boolean; sessionStartedAt: Date };
 
 export async function actorFor(s: SessionInfo): Promise<Actor> {
   return loadUserActor(db(), await activeOrgId(db()), s.userId, {
     sessionId: s.sessionId,
     viaDemoSwitcher: s.viaDemoSwitcher,
+    // AZ-3 is about real time (how long ago the person signed in), never the demo clock.
+    sessionAgeHours: (Date.now() - s.sessionStartedAt.getTime()) / 3_600_000,
   });
 }
 

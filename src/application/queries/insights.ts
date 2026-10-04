@@ -94,9 +94,14 @@ export async function getInsightTrace(db: DbOrTx, orgId: string, actor: Actor, i
     // All units of the org: approval rules name approver scopes (e.g. the group) beyond the affected units.
     db.select({ id: orgUnit.id, name: orgUnit.name, type: orgUnit.type }).from(orgUnit).where(eq(orgUnit.orgId, orgId)),
   ]);
+  // Keep the order the insight recorded (a query without ORDER BY may return them in any order).
+  const byStoredOrder = <T extends { id: string }>(rows: T[], ids: string[]) =>
+    [...rows].sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+  signals.splice(0, signals.length, ...byStoredOrder(signals, ins.signalIds));
+  evidences.splice(0, evidences.length, ...byStoredOrder(evidences, ins.evidenceIds));
   const actionIds = actions.map((a) => a.id);
   const none = ["00000000-0000-0000-0000-000000000000"];
-  const [approvals, outcomes, tasks, messages, people, audit] = await Promise.all([
+  const [approvals, outcomes, tasks, messages, audit] = await Promise.all([
     db
       .select()
       .from(approval)
@@ -111,9 +116,22 @@ export async function getInsightTrace(db: DbOrTx, orgId: string, actor: Actor, i
       .select()
       .from(outboxMessage)
       .where(inArray(outboxMessage.actionId, actionIds.length ? actionIds : none)),
-    db.select({ id: user.id, name: user.name, title: user.title }).from(user),
     auditTrailForInsight(db, orgId, ins.id),
   ]);
+  // Only the people this insight's record refers to (never the whole user table, which spans organizations).
+  const personIds = [
+    ...decisions.map((d) => d.decidedBy),
+    ...actions.flatMap((a) => [a.ownerUserId, a.proposedBy]),
+    ...approvals.map((a) => a.approverUserId),
+    ...tasks.map((x) => x.assigneeUserId),
+    ...audit.map((e) => e.actorId),
+  ].filter((id): id is string => !!id && !id.startsWith("system:") && !id.startsWith("policy:"));
+  const people = personIds.length
+    ? await db
+        .select({ id: user.id, name: user.name, title: user.title })
+        .from(user)
+        .where(inArray(user.id, [...new Set(personIds)]))
+    : [];
   const local = (await localPriorities(db, orgId, actor, [ins])).get(ins.id) ?? null;
   return {
     insight: ins,

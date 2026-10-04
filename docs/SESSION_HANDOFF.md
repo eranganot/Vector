@@ -61,15 +61,13 @@ a hash-chained audit, on a realistic synthetic organization, with both workstrea
 - D1-n: Postgres "16 or later" wording (16 in the sandbox, 18 on CI/Railway).
 - AI provider (Claude vs Gemini) at the Phase 5 gate.
 
-## Open issues found during the doc audit (inferred from code reading, not yet investigated)
+## Known issues from the Phase 2 gate: all five fixed (Eran: "fix them all before the next phase")
 
-Per the investigation rule these are reported, not fixed:
-
-1. Approval lapse (P6b) moves an action back to `pending_approval` without an `action.*` audit row.
-2. Approval policy is not re-evaluated at execution (A7b has no code path) — documented as a Phase 3 gap.
-3. AZ-3 (stale session) is enforced only by the 12 h session lifetime; commands never pass the session age.
-4. The trace's people lookup is not filtered by organization (all users are in the active org today).
-5. `playbook()` throws a plain Error for an unknown action type (a 500, not an audited denial).
+Each was reproduced by a failing integration test first, then fixed (root causes in STATUS.md): (1) approval lapse now
+audits the action's move back and re-requests as `system:policy`; (2) the approval policy is re-run at execution (A7b);
+(3) AZ-3 checks the session's real age on every write; (4) the trace resolves only the people its record references;
+(5) an unknown action type is an audited domain refusal. Found on the way: trace evidence order was nondeterministic
+(fixed). An invariant test now checks that every action's last audited state is its current state.
 
 ## Known limitations / deliberate deferrals
 

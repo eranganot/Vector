@@ -11,7 +11,15 @@ export type SystemActorId =
   "system:detector" | "system:policy" | "system:executor" | "system:outcome-evaluator" | "system:clock" | "system:ai";
 
 export type Actor =
-  | { kind: "user"; userId: string; assignments: RoleAssignment[]; sessionId: string; viaDemoSwitcher: boolean }
+  | {
+      kind: "user";
+      userId: string;
+      assignments: RoleAssignment[];
+      sessionId: string;
+      viaDemoSwitcher: boolean;
+      /** Real-time age of the sign-in session when the request arrived (AZ-3). Absent for non-request actors. */
+      sessionAgeHours?: number;
+    }
   | { kind: "system"; id: SystemActorId };
 
 export const actorId = (a: Actor): string => (a.kind === "user" ? a.userId : a.id);
