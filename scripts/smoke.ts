@@ -26,6 +26,8 @@ const checks: Check[] = [
       const body = JSON.parse(text);
       if (res.status !== 200 || body.status !== "ok") throw new Error(`${res.status} ${text}`);
       if (!body.db.ok || body.migrations.pending !== 0) throw new Error(text);
+      if (body.migrations.applied < 3)
+        throw new Error(`expected the Phase 2 schema (>= 3 migrations), got ${body.migrations.applied}`);
       return `env=${body.env} sha=${body.build.shortSha} migrations=${body.migrations.applied}`;
     },
   },
@@ -47,6 +49,31 @@ const checks: Check[] = [
       const { res, text } = await get(base, "/");
       if (res.status !== 200 || !text.includes("VECTOR")) throw new Error(`status ${res.status}`);
       return "200";
+    },
+  },
+  {
+    phase: 2,
+    name: "signed-out visitors are sent to sign-in; no insight data leaks",
+    run: async (base) => {
+      const res = await fetch(new URL("/", base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+      const loc = res.headers.get("location") ?? "";
+      if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+        throw new Error(`status ${res.status} location ${loc}`);
+      const login = await get(base, "/login");
+      if (login.res.status !== 200 || !login.text.includes("Sign in"))
+        throw new Error(`login status ${login.res.status}`);
+      if (/net sales/i.test(login.text)) throw new Error("insight text on the sign-in page");
+      return `redirect ${res.status} → /login`;
+    },
+  },
+  {
+    phase: 2,
+    name: "auth API answers and reports no session without a cookie",
+    run: async (base) => {
+      const { res, text } = await get(base, "/api/auth/get-session");
+      if (res.status !== 200 || !(text === "null" || text === ""))
+        throw new Error(`${res.status} ${text.slice(0, 80)}`);
+      return "no session";
     },
   },
 ];

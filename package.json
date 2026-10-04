@@ -15,11 +15,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env scripts/migrate.ts",
     "doctor": "tsx --env-file-if-exists=.env scripts/doctor.ts",
-    "start:railway": "pnpm db:migrate && pnpm start",
+    "start:railway": "pnpm db:migrate && pnpm db:roles --if-configured && pnpm demo:reset --if-empty && pnpm start",
     "smoke": "tsx scripts/smoke.ts",
     "format:check": "prettier --check .",
     "db:roles": "tsx --env-file-if-exists=.env scripts/db-roles.ts",
-    "db:seed": "tsx --env-file-if-exists=.env scripts/seed.ts"
+    "db:seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+    "demo:reset": "tsx --env-file-if-exists=.env scripts/demo-reset.ts"
   },
   "dependencies": {
     "better-auth": "^1.7.7",
@@ -29,6 +30,7 @@
     "pino": "^10.4.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "tsx": "^4.23.15",
     "zod": "^4.6.5"
   },

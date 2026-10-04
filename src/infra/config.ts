@@ -15,7 +15,9 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 export function parseConfig(env: Record<string, string | undefined>): Config {
-  const result = ConfigSchema.safeParse(env);
+  // Treat empty values (KEY= in an env file) as unset.
+  const cleaned = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ""));
+  const result = ConfigSchema.safeParse(cleaned);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
     throw new Error(`Invalid configuration: ${issues}`);

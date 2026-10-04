@@ -16,3 +16,9 @@ describe("parseConfig", () => {
     expect(() => parseConfig({ DATABASE_URL: "postgres://x", VECTOR_ENV: "prod" })).toThrow(/VECTOR_ENV/);
   });
 });
+
+describe("parseConfig empty values", () => {
+  it("treats KEY= as unset", () => {
+    expect(parseConfig({ DATABASE_URL: "postgres://x", APP_DATABASE_URL: "" }).APP_DATABASE_URL).toBeUndefined();
+  });
+});
