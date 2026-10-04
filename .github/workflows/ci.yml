@@ -37,6 +37,10 @@ jobs:
       VECTOR_ENV: test
       LOG_LEVEL: warn
       GIT_SHA: ${{ github.sha }}
+      DEMO_PERSONAS: "on"
+      DEMO_CONTROLS: "on"
+      BETTER_AUTH_SECRET: ci-only-secret-0123456789abcdefghijklmnopqrstuv
+      BETTER_AUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,6 +55,7 @@ jobs:
       - run: pnpm test
       - run: pnpm db:migrate
       - run: pnpm test:integration
+      - run: pnpm demo:reset
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

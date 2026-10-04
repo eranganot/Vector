@@ -6,11 +6,10 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../src/infra/db/schema";
 import { seed } from "../src/infra/seed/seed";
+import { seedPassword } from "../src/infra/seed/password";
 
 async function main() {
-  const env = process.env.VECTOR_ENV ?? "local";
-  const password =
-    process.env.SEED_USER_PASSWORD ?? (env === "local" || env === "test" ? "vector-local-only" : undefined);
+  const password = seedPassword();
   if (!password) throw new Error("SEED_USER_PASSWORD is required outside local/test");
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
