@@ -4,13 +4,16 @@ _Last updated: 2026-10-04_
 
 ## Current phase
 
-Phase 0 — Foundation: complete, awaiting Eran's sign-off
+Phase 1 — Product & architecture: specs complete, awaiting Eran's gate (Phase 0 signed off 2026-10-04)
 
 ## Objective
 
-A deployable, tested, documented empty shell on Railway Dev. No product features.
+Turn the charter into approved specs before core code: domain model, authorization/approval, audit, priority, security, AI governance, tests, data, demo, IA + wireframes.
 
 ## Completed
+
+- Phase 1 specs in `docs/specs/` (domain-model, authorization, security, priority + calibration, synthetic-data, demo-narrative, ai-governance, testing, information-architecture), `docs/architecture.md`, ADR-003/004/005, wireframes (design canvas + `docs/specs/wireframes/`)
+- Priority calibration: 10 scenarios, all expected bands reproduced (`pnpm exec tsx scripts/calibrate-priority.ts`)
 
 - Repo scaffold: Next.js 16, TypeScript strict, ESLint with layer-boundary rules, Prettier, Vitest, Playwright
 - Postgres via Drizzle: `app_meta` table, migration `0000_init`, `scripts/migrate.ts`
@@ -34,7 +37,7 @@ A deployable, tested, documented empty shell on Railway Dev. No product features
 
 ## Open decisions
 
-- Delete the duplicate `Postgres-3SaR` service on Dev (created by mistake, unused) — Eran's call
+- Phase 1 gate: approve domain model + state machines, roles/approval rules AP-1..AP-6, priority model v1 + bands, wireframes/IA, demo narrative, ADR-003/004/005
 
 - AI provider (Claude vs Gemini) — at Phase 5 gate
 
@@ -50,7 +53,7 @@ A deployable, tested, documented empty shell on Railway Dev. No product features
 
 ## Next recommended action
 
-Eran signs off Phase 0 → start Phase 1 (product & architecture specs).
+Eran approves the Phase 1 gate → start Phase 2 (core VECTOR chain, deterministic).
 
 ## Reproducible commands
 

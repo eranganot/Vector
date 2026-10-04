@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Department view: Supply Chain</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F1F1D}a:hover{color:#5E5E59}
+</style>
+</helmet>
+<div style="width: 1280px; height: 900px; box-sizing: border-box; background: #F4F4F2; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1F1F1D; display: flex; flex-direction: column">
+<header style="height: 56px; box-sizing: border-box; padding: 0 32px; background: #FFFFFF; border-bottom: 1px solid #D6D6D2; display: flex; align-items: center; gap: 32px">
+<div style="font-weight: 600; letter-spacing: 0.12em; font-size: 15px">VECTOR</div>
+<nav style="display: flex; gap: 24px; font-size: 14px">
+<a href="#" style="font-weight: 600; text-decoration: none; border-bottom: 2px solid #1F1F1D; padding: 17px 0">Supply Chain</a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Approvals</a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Actions</a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Audit</a>
+</nav>
+<div style="flex-grow: 1"></div>
+<button style="font: inherit; font-size: 13px; background: #F4F4F2; border: 1px solid #D6D6D2; border-radius: 18px; padding: 6px 14px; color: #1F1F1D">Viewing as <b>Noa Friedman</b> · VP Supply Chain · demo ▾</button>
+</header>
+<main style="padding: 28px 32px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; align-items: baseline; gap: 16px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 600">Supply Chain: 14 branches are waiting on you</h1>
+<div style="font-size: 13px; color: #5E5E59">as of Thu 22 Oct, 08:30</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<section style="grid-column: span 2; display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Insights affecting Supply Chain</h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 18px; display: flex; gap: 14px; align-items: center">
+<span style="background: #9A3412; color: #FFFFFF; font-weight: 600; font-size: 13px; border-radius: 6px; padding: 4px 8px">P1</span>
+<div style="flex-grow: 1"><div style="font-weight: 600">DC delivery delays cascading to 14 branches</div><div style="font-size: 13px; color: #5E5E59">You own it · CEO decision pending</div></div>
+</div>
+<a href="Trace.dc.html" style="text-decoration: none; background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 18px; display: flex; gap: 14px; align-items: center">
+<span style="background: #9A3412; color: #FFFFFF; font-weight: 600; font-size: 13px; border-radius: 6px; padding: 4px 8px">P1</span>
+<div style="flex-grow: 1"><div style="font-weight: 600">Stock-out risk on top-50 SKUs, 9 North branches</div><div style="font-size: 13px; color: #5E5E59">You own the transfer · awaiting Yossi Cohen's approval</div></div>
+</a>
+<h2 style="margin: 12px 0 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Who depends on you <span style="font-weight: 400; text-transform: none; letter-spacing: 0">(Phase 4)</span></h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; font-size: 13px">
+<thead><tr style="text-align: left; color: #5E5E59"><th style="padding: 10px 16px; font-weight: 500">Downstream</th><th style="padding: 10px 16px; font-weight: 500">Depends on</th><th style="padding: 10px 16px; font-weight: 500">Status</th><th style="padding: 10px 16px; font-weight: 500">Impact if late</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #E8E8E5"><td style="padding: 10px 16px; font-weight: 600">14 branches, North + Center</td><td style="padding: 10px 16px">Daily DC deliveries</td><td style="padding: 10px 16px">Delayed 1–2 days</td><td style="padding: 10px 16px; font-family: 'IBM Plex Mono', monospace">₪450k/week</td></tr>
+<tr style="border-top: 1px solid #E8E8E5"><td style="padding: 10px 16px; font-weight: 600">Marketing: holiday promo</td><td style="padding: 10px 16px">Promo stock at 60 branches by Wed</td><td style="padding: 10px 16px">On track</td><td style="padding: 10px 16px; font-family: 'IBM Plex Mono', monospace">₪300k</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<aside style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Your actions</h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; font-size: 13px; display: flex; flex-direction: column; gap: 10px">
+<div><b>Inventory transfer to North</b><br><span style="color: #5E5E59">Pending approval · due Thu 18:00</span></div>
+<div><b>Reroute 2 trucks via Center DC</b><br><span style="color: #5E5E59">Proposed · waiting for CEO decision</span></div>
+</div>
+<h2 style="margin: 12px 0 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Commitments <span style="font-weight: 400; text-transform: none; letter-spacing: 0">(Phase 4)</span></h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; font-size: 13px; display: flex; flex-direction: column; gap: 8px">
+<div><b>Fix DC routing config</b> · from ops meeting 18 Oct<br><span style="color: #9A3412; font-weight: 600">2 days overdue</span></div>
+</div>
+<h2 style="margin: 12px 0 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Did it work?</h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; font-size: 13px">Last 30 days: 4 transfers · 3 worked · 1 inconclusive</div>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

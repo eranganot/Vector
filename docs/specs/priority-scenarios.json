@@ -1,0 +1,121 @@
+{
+  "note": "Calibration set for priority model v1. 'expected' was written from product judgment BEFORE computing scores. Phase 2 reuses these as golden fixtures.",
+  "bands": {
+    "P1": "Act today; executive attention",
+    "P2": "Act this week",
+    "P3": "Plan or monitor",
+    "P4": "Informational"
+  },
+  "scenarios": [
+    {
+      "id": "S01",
+      "title": "Haifa Grand Canyon net sales -18% week on week",
+      "z": 2.8,
+      "impactIls": 120000,
+      "breadth": "isolated",
+      "hoursToImpact": null,
+      "strategicWeight": 0.8,
+      "confidence": 0.9,
+      "expected": "P2"
+    },
+    {
+      "id": "S02",
+      "title": "Top-50 SKU stock-outs across 9 North branches, holiday weekend in 2 days",
+      "z": 3.5,
+      "impactIls": 600000,
+      "breadth": "regional",
+      "hoursToImpact": 48,
+      "strategicWeight": 0.9,
+      "confidence": 0.85,
+      "expected": "P1"
+    },
+    {
+      "id": "S03",
+      "title": "Single branch NPS down 4 points",
+      "z": 1.6,
+      "impactIls": 15000,
+      "breadth": "isolated",
+      "hoursToImpact": 720,
+      "strategicWeight": 0.6,
+      "confidence": 0.7,
+      "expected": "P4"
+    },
+    {
+      "id": "S04",
+      "title": "DC delivery delay cascading to 14 branches in 2 regions, within 24h",
+      "z": 3.0,
+      "impactIls": 450000,
+      "breadth": "systemic",
+      "hoursToImpact": 24,
+      "strategicWeight": 0.9,
+      "confidence": 0.9,
+      "expected": "P1"
+    },
+    {
+      "id": "S05",
+      "title": "Labor cost 6% over plan in Center region (12 branches)",
+      "z": 2.2,
+      "impactIls": 90000,
+      "breadth": "regional",
+      "hoursToImpact": 168,
+      "strategicWeight": 0.5,
+      "confidence": 0.85,
+      "expected": "P3"
+    },
+    {
+      "id": "S06",
+      "title": "Marketing promo assets for all 60 branches 3 days late; launch in 2 days",
+      "z": 2.5,
+      "impactIls": 300000,
+      "breadth": "systemic",
+      "hoursToImpact": 48,
+      "strategicWeight": 0.8,
+      "confidence": 0.95,
+      "expected": "P1"
+    },
+    {
+      "id": "S07",
+      "title": "Promo on item X while Merchandising delists X, 5 branches, in 10 days",
+      "z": 2.0,
+      "impactIls": 80000,
+      "breadth": "local",
+      "hoursToImpact": 240,
+      "strategicWeight": 0.7,
+      "confidence": 0.8,
+      "expected": "P3"
+    },
+    {
+      "id": "S08",
+      "title": "Heatwave forecast for 8 South branches in 3 days (beverage opportunity)",
+      "z": 2.0,
+      "impactIls": 150000,
+      "breadth": "regional",
+      "hoursToImpact": 72,
+      "strategicWeight": 0.7,
+      "confidence": 0.7,
+      "expected": "P2"
+    },
+    {
+      "id": "S09",
+      "title": "Single-branch shrinkage spike",
+      "z": 3.5,
+      "impactIls": 40000,
+      "breadth": "isolated",
+      "hoursToImpact": null,
+      "strategicWeight": 0.6,
+      "confidence": 0.8,
+      "expected": "P3"
+    },
+    {
+      "id": "S10",
+      "title": "2-hour POS outage at one branch, already resolved",
+      "z": 4.0,
+      "impactIls": 8000,
+      "breadth": "isolated",
+      "hoursToImpact": 2000,
+      "strategicWeight": 0.4,
+      "confidence": 0.95,
+      "expected": "P4"
+    }
+  ]
+}

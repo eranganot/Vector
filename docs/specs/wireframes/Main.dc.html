@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Command Center</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F1F1D}a:hover{color:#5E5E59}
+</style>
+</helmet>
+<div style="width: 1280px; height: 900px; box-sizing: border-box; background: #F4F4F2; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1F1F1D; display: flex; flex-direction: column">
+<header style="height: 56px; box-sizing: border-box; padding: 0 32px; background: #FFFFFF; border-bottom: 1px solid #D6D6D2; display: flex; align-items: center; gap: 32px">
+<div style="font-weight: 600; letter-spacing: 0.12em; font-size: 15px">VECTOR</div>
+<nav style="display: flex; gap: 24px; font-size: 14px">
+<a href="#" style="font-weight: 600; text-decoration: none; border-bottom: 2px solid #1F1F1D; padding: 17px 0">Command Center</a>
+<a href="Approvals.dc.html" style="text-decoration: none; padding: 17px 0">Approvals <span style="background: #1F1F1D; color: #FFFFFF; border-radius: 10px; padding: 1px 7px; font-size: 12px">2</span></a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Actions</a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Audit</a>
+</nav>
+<div style="flex-grow: 1"></div>
+<button style="font: inherit; font-size: 13px; background: #F4F4F2; border: 1px solid #D6D6D2; border-radius: 18px; padding: 6px 14px; color: #1F1F1D">Viewing as <b>Dana Levi</b> · CEO · demo ▾</button>
+</header>
+<main style="padding: 28px 32px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; align-items: baseline; gap: 16px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 600">North needs attention. Everything else is on track.</h1>
+<div style="font-size: 13px; color: #5E5E59">As of Thu 22 Oct, 08:30 · synthetic data</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<section style="grid-column: span 2; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Top priorities</h2>
+<a href="Trace.dc.html" style="text-decoration: none; background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start">
+<span style="background: #9A3412; color: #FFFFFF; font-weight: 600; font-size: 13px; border-radius: 6px; padding: 4px 8px">P1</span>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+<div style="font-size: 17px; font-weight: 600">Stock-out risk on top-50 SKUs in 9 North branches before the holiday weekend</div>
+<div style="font-size: 13px; color: #5E5E59; font-family: 'IBM Plex Mono', monospace">₪600k/week at stake · 9 branches · impact in 48 h · score 79</div>
+<div style="font-size: 13px">Owner: Noa Friedman · <b>Awaiting approval from Yossi Cohen</b></div>
+</div>
+<span style="font-size: 13px; text-decoration: underline">Why am I seeing this?</span>
+</a>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start">
+<span style="background: #9A3412; color: #FFFFFF; font-weight: 600; font-size: 13px; border-radius: 6px; padding: 4px 8px">P1</span>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+<div style="font-size: 17px; font-weight: 600">DC delivery delays cascading to 14 branches in North and Center</div>
+<div style="font-size: 13px; color: #5E5E59; font-family: 'IBM Plex Mono', monospace">₪450k/week at stake · 2 regions · impact in 24 h · score 85</div>
+<div style="font-size: 13px">Owner: Noa Friedman · <b>Decision waiting on you</b></div>
+</div>
+<span style="font-size: 13px; text-decoration: underline">Why am I seeing this?</span>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start">
+<span style="background: #FFFFFF; color: #9A3412; border: 1.5px solid #9A3412; font-weight: 600; font-size: 13px; border-radius: 6px; padding: 3px 7px">P2</span>
+<div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1">
+<div style="font-size: 17px; font-weight: 600">Haifa Grand Canyon net sales −18% week on week</div>
+<div style="font-size: 13px; color: #5E5E59; font-family: 'IBM Plex Mono', monospace">₪120k/week at stake · 1 branch · ongoing · score 60</div>
+<div style="font-size: 13px">Owner: Avi Mizrahi · Transfer executed · outcome due 29 Oct</div>
+</div>
+<span style="font-size: 13px; text-decoration: underline">Why am I seeing this?</span>
+</div>
+</section>
+<aside style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Waiting on you</h2>
+<div style="background: #FFFFFF; border: 1px solid #1F1F1D; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; color: #5E5E59">DECISION · P1</div>
+<div style="font-size: 15px; font-weight: 600">Respond to DC delivery delays</div>
+<div style="font-size: 13px">VECTOR recommends rerouting 2 trucks via the Center DC.</div>
+<div style="display: flex; gap: 8px"><button style="font: inherit; font-size: 13px; background: #1F1F1D; color: #FFFFFF; border: 0; border-radius: 6px; padding: 8px 12px">Review</button></div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #1F1F1D; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 12px; color: #5E5E59">APPROVAL · AP-3 cost ≥ ₪50k</div>
+<div style="font-size: 15px; font-weight: 600">Weekend staffing uplift, 9 North branches</div>
+<div style="font-size: 13px; font-family: 'IBM Plex Mono', monospace">₪54,000 · requested by Yossi Cohen</div>
+<div style="display: flex; gap: 8px"><a href="Approvals.dc.html" style="font-size: 13px; background: #1F1F1D; color: #FFFFFF; text-decoration: none; border-radius: 6px; padding: 8px 12px">Review</a></div>
+</div>
+<h2 style="margin: 12px 0 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Risks and opportunities</h2>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 12px 16px; font-size: 14px; display: flex; flex-direction: column; gap: 10px">
+<div><b>P2 opportunity</b> · Heatwave forecast, 8 South branches, in 3 days</div>
+<div><b>P3</b> · Labor cost 6% over plan, Center region</div>
+</div>
+</aside>
+</div>
+<section style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #5E5E59">Health by region</h2>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+<a href="Region.dc.html" style="text-decoration: none; background: #FFFFFF; border: 1.5px solid #9A3412; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 600">North</div>
+<div style="font-size: 13px; color: #9A3412; font-weight: 600">At risk · 2 priorities</div>
+<div style="font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">OSA 91% (▼6 pts)<br>Sales −6% WoW</div>
+</a>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 600">Haifa &amp; Coast</div>
+<div style="font-size: 13px; color: #5E5E59">On track</div>
+<div style="font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">OSA 97%<br>Sales +2% WoW</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 600">Center</div>
+<div style="font-size: 13px; color: #1F1F1D; font-weight: 500">Watch · 1 item</div>
+<div style="font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">OSA 96%<br>Labor 14.8% (plan 14.0)</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 600">Jerusalem</div>
+<div style="font-size: 13px; color: #5E5E59">On track</div>
+<div style="font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">OSA 97%<br>Sales +1% WoW</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="font-weight: 600">South</div>
+<div style="font-size: 13px; color: #5E5E59">On track · 1 opportunity</div>
+<div style="font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">OSA 98%<br>Sales +3% WoW</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
