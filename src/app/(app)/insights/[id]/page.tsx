@@ -3,6 +3,7 @@ import { api } from "@/application/facade";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { BANDS, OPPORTUNITY_BANDS, type PriorityBreakdown } from "@/domain/priority";
 import { acceptDecisionAction, declineDecisionAction, reviewOutcomeAction } from "../../../actions";
+import { CommitmentCard } from "../../../_components/commitments";
 import { BackLink, Band, Card, EvidenceChart, Notice, Pill, SectionTitle, Simulated } from "../../../_components/ui";
 import { requireActor } from "../../../_lib/session";
 
@@ -38,7 +39,9 @@ const sourceLabel = (g: string) =>
     ? `Rule-generated · ${g.slice(5)}`
     : g.startsWith("scenario-catalog")
       ? "Scenario catalog · synthetic feed"
-      : g;
+      : g.startsWith("commitment-monitor") || g.startsWith("conflict-rules")
+        ? `Rule-generated · ${g} · commitment register`
+        : g;
 
 export default async function TracePage({
   params,
@@ -52,7 +55,10 @@ export default async function TracePage({
   const { actor } = await requireActor();
   const t = await api.trace(actor, id);
   if (!t) notFound(); // out of scope looks exactly like missing (authorization.md §1)
-  const mayDecide = await api.canDecide(actor, id); // cosmetic; acceptDecision re-checks
+  const [mayDecide, behind] = await Promise.all([
+    api.canDecide(actor, id), // cosmetic; acceptDecision re-checks
+    api.commitmentsForInsight(actor, id), // Phase 4: the promises and plans behind this insight
+  ]);
   const { insight: ins } = t;
   const unitName = (uid: string) => t.units.find((u) => u.id === uid)?.name ?? "unknown unit";
   const personName = (pid: string | null) =>
@@ -192,6 +198,32 @@ export default async function TracePage({
               ))}
             </p>
           </Card>
+
+          {behind && behind.commitments.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <SectionTitle
+                aside={
+                  <span className="text-xs text-muted">
+                    {behind.conflicts.length
+                      ? behind.conflicts
+                          .map(
+                            (k) =>
+                              `${k.status === "open" ? "Conflict" : `Conflict resolved (${k.resolvedReason})`} on ${k.resource}, ${k.overlap}`,
+                          )
+                          .join(" · ")
+                      : "from the commitment register"}
+                  </span>
+                }
+              >
+                {behind.conflicts.length ? "The plans that collide" : "The commitment behind this"}
+              </SectionTitle>
+              <div className={`grid gap-4 ${behind.commitments.length > 1 ? "xl:grid-cols-2" : ""}`}>
+                {behind.commitments.map((c) => (
+                  <CommitmentCard key={c.id} c={c} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {decision && (
             <Card className="flex flex-col gap-4">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { api } from "@/application/facade";
-import { Band, Card, Pill, SectionTitle } from "./ui";
+import { Band, Card, SectionTitle } from "./ui";
 
 type Approvals = Awaited<ReturnType<typeof api.myApprovals>>;
 type Decisions = Awaited<ReturnType<typeof api.myDecisions>>;
@@ -106,61 +106,6 @@ export function WaitingCard({
           </ul>
           {total > max && <p className="mt-2 text-xs text-muted">+{total - max} more in Waiting on you</p>}
         </>
-      )}
-    </Card>
-  );
-}
-
-type Dep = {
-  id: string;
-  title: string;
-  status: string;
-  owner: string;
-  department: string;
-  departmentId: string | null;
-  insightId: string | null;
-  overdue: boolean;
-};
-
-/** Open work in this scope, by the department that owns it: who everyone is waiting on. */
-export function DependencySummary({ items, title = "Dependencies" }: { items: Dep[]; title?: string }) {
-  const by = new Map<string, { id: string | null; name: string; open: number; approval: number; overdue: number }>();
-  for (const a of items) {
-    const row = by.get(a.department) ?? { id: a.departmentId, name: a.department, open: 0, approval: 0, overdue: 0 };
-    row.open++;
-    if (a.status === "pending_approval") row.approval++;
-    if (a.overdue) row.overdue++;
-    by.set(a.department, row);
-  }
-  const rows = [...by.values()].sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
-  return (
-    <Card className="min-w-0">
-      <SectionTitle aside={<span className="text-xs text-muted">by owning department</span>}>
-        {title} · {items.length}
-      </SectionTitle>
-      {rows.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">No open actions here.</p>
-      ) : (
-        <ul className="mt-3 flex flex-col divide-y divide-line/60">
-          {rows.map((r) => (
-            <li key={r.name} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-              {r.id ? (
-                <Link href={`/units/${r.id}`} className="font-semibold no-underline hover:underline">
-                  {r.name}
-                </Link>
-              ) : (
-                <span className="font-semibold">{r.name}</span>
-              )}
-              <span className="text-muted">
-                {r.open} open action{r.open === 1 ? "" : "s"}
-              </span>
-              <span className="ml-auto flex gap-2">
-                {r.approval > 0 && <Pill tone="warn">{r.approval} awaiting approval</Pill>}
-                {r.overdue > 0 && <Pill tone="bad">{r.overdue} overdue</Pill>}
-              </span>
-            </li>
-          ))}
-        </ul>
       )}
     </Card>
   );

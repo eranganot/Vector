@@ -11,6 +11,15 @@ import {
   grantApproval,
 } from "./commands/lifecycle";
 import { reviewOutcome } from "./commands/outcomes";
+import {
+  cancelCommitment,
+  completeCommitment,
+  recordCommitment,
+  type RecordCommitmentInput,
+  renegotiateCommitment,
+} from "./commands/commitments";
+import { commitmentFormOptions, commitmentsForInsight, commitmentsView } from "./queries/commitments";
+import type { CommitmentEffect } from "@/domain/commitments";
 import { activeOrgId, createContext, loadUserActor } from "./context";
 import {
   canDecide,
@@ -91,6 +100,18 @@ export const api = {
   },
   deny: async (a: Actor, actionId: string, rationale: string) => denyApproval(await ctx(), a, actionId, rationale),
   review: async (a: Actor, outcomeId: string, lesson: string) => reviewOutcome(await ctx(), a, outcomeId, { lesson }),
+  commitments: async (a: Actor, unitId?: string) => commitmentsView(db(), await activeOrgId(db()), a, unitId),
+  commitmentsForInsight: async (a: Actor, insightId: string) =>
+    commitmentsForInsight(db(), await activeOrgId(db()), a, insightId),
+  commitmentFormOptions: async (a: Actor) => commitmentFormOptions(db(), await activeOrgId(db()), a),
+  recordCommitment: async (a: Actor, input: RecordCommitmentInput) => recordCommitment(await ctx(), a, input),
+  completeCommitment: async (a: Actor, id: string) => completeCommitment(await ctx(), a, id),
+  renegotiateCommitment: async (
+    a: Actor,
+    id: string,
+    input: { dueAt: Date; rationale: string; effects?: CommitmentEffect[] },
+  ) => renegotiateCommitment(await ctx(), a, id, input),
+  cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };

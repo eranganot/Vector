@@ -19,6 +19,7 @@ import {
 import { createContext, loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
 import { advanceClock, resetDemo } from "@/application/scenario";
+import { commitmentsForInsight, commitmentsView } from "@/application/queries/commitments";
 import { cascade, dependencyStatus } from "@/domain/commitments";
 import * as s from "@/infra/db/schema";
 import { DEMO_DAIRY_PROMO } from "@/infra/seed/commitments";
@@ -258,5 +259,54 @@ describe("commitment-monitor-v1 on clock advance", () => {
   it("every audit chain still verifies", async () => {
     const r = await verifyAuditChain(appDb, orgId);
     expect(r.ok).toBe(true);
+  });
+});
+
+describe("commitments read model (scope, both directions, bottlenecks)", () => {
+  it("the CEO sees every commitment; the top bottleneck is the unit others wait on most (₪)", async () => {
+    const v = (await commitmentsView(appDb, orgId, await as("dana")))!;
+    expect(v.scope.name).toBe("VECTOR Retail Group");
+    expect(v.owe.length + v.overdue.length).toBeGreaterThan(10);
+    // One day in: Marketing's overdue signage holds ₪300k/week (Store Ops); HR's pay tables ₪120k. The North DC
+    // recovery is due in an hour but not late yet, so Supply Chain is not a bottleneck.
+    expect(v.bottlenecks.map((b) => b.unitName).slice(0, 2)).toEqual(["Marketing", "HR"]);
+    expect(v.summary.onTimeRate).not.toBeNull();
+    // The CEO is not offered the owners' buttons (cosmetic; the command allows her).
+    expect([...v.owe, ...v.overdue].every((c) => !c.canUpdate)).toBe(true);
+  });
+
+  it("Finance waits on HR and Trade; Marketing's own promises are not shown to Finance as 'owed'", async () => {
+    const v = (await commitmentsView(appDb, orgId, await as("michal")))!;
+    expect(v.waitingOn.map((d) => d.ownerUnitName).sort()).toEqual(["HR", "Trade & Commercial"]);
+    expect(v.owed.map((c) => c.title)).not.toContain("Holiday promo signage and shelf talkers for 60 branches");
+    const dairy = v.waitingOn.find((d) => d.ownerUnitName === "Trade & Commercial")!;
+    expect(dairy.status).toBe("at_risk");
+  });
+
+  it("owners get their buttons; a branch manager does not see other units' promises", async () => {
+    const ronit = (await commitmentsView(appDb, orgId, await as("ronit")))!;
+    expect(
+      [...ronit.owe, ...ronit.overdue].filter((c) => c.ownerUnitName === "Marketing").every((c) => c.canUpdate),
+    ).toBe(true);
+    const avi = (await commitmentsView(appDb, orgId, await as("avi")))!;
+    const titles = [...avi.owe, ...avi.owed, ...avi.overdue, ...avi.delivered].map((c) => c.title);
+    expect(titles).not.toContain("Holiday promo signage and shelf talkers for 60 branches");
+    expect(titles).toContain("Replenishment request to the North DC (Haifa Grand Canyon)");
+    // A unit outside your scope looks missing.
+    expect(await commitmentsView(appDb, orgId, await as("avi"), (await unit("D-MKT")).id)).toBeNull();
+  });
+
+  it("an insight's trace shows the plans behind it, only to those who may read them", async () => {
+    const r7 = (await appDb.select().from(s.insight).where(eq(s.insight.orgId, orgId))).find((i) =>
+      i.title.startsWith("Finance spend freeze"),
+    )!;
+    const forMichal = (await commitmentsForInsight(appDb, orgId, await as("michal"), r7.id))!;
+    expect(forMichal.commitments.map((c) => c.title).sort()).toEqual([
+      "Freeze Q4 discretionary spend",
+      "Q4 campaign: ₪350k media and in-store",
+    ]);
+    expect(forMichal.conflicts).toHaveLength(1);
+    const forAvi = (await commitmentsForInsight(appDb, orgId, await as("avi"), r7.id))!;
+    expect(forAvi.commitments).toHaveLength(0);
   });
 });

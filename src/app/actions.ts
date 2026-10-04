@@ -141,3 +141,80 @@ export async function resetDemoAction() {
   // Sessions survive (same people); actors re-resolve against the new epoch.
   redirect("/admin/demo?done=reset");
 }
+
+// ── Commitments (Phase 4) ────────────────────────────────────────────────────
+const COMMITMENTS_PATH = "/commitments";
+
+export async function recordCommitmentAction(form: FormData) {
+  const { actor } = await requireActor();
+  let conflictInsight: string | null = null;
+  try {
+    const raw = Object.fromEntries(
+      [...form.entries()].filter(([k, v]) => !k.startsWith("$") && v !== "" && k !== "beneficiaryUnitIds"),
+    );
+    const i = parseInput("recordCommitment", {
+      ...raw,
+      beneficiaryUnitIds: form.getAll("beneficiaryUnitIds").map(String),
+    });
+    const r = await api.recordCommitment(actor, {
+      title: i.title,
+      ownerUserId: i.ownerUserId,
+      ownerUnitId: i.ownerUnitId,
+      beneficiaryUnitIds: i.beneficiaryUnitIds,
+      source: i.source,
+      dueAt: i.dueAt,
+      impactIls: i.impactIls,
+      compliance: i.compliance,
+      effects:
+        i.resource && i.effect && i.windowStart && i.windowEnd
+          ? [{ resource: i.resource, effect: i.effect, windowStart: i.windowStart, windowEnd: i.windowEnd }]
+          : [],
+    });
+    conflictInsight = r.conflicts[0]?.insightId ?? null;
+  } catch (e) {
+    fail(COMMITMENTS_PATH, e);
+  }
+  revalidatePath(COMMITMENTS_PATH);
+  redirect(`${COMMITMENTS_PATH}?done=${conflictInsight ? `conflict&insight=${conflictInsight}` : "recorded"}`);
+}
+
+export async function completeCommitmentAction(form: FormData) {
+  const { actor } = await requireActor();
+  try {
+    await api.completeCommitment(actor, parseInput("commitment", form).commitmentId);
+  } catch (e) {
+    fail(COMMITMENTS_PATH, e);
+  }
+  revalidatePath(COMMITMENTS_PATH);
+  redirect(`${COMMITMENTS_PATH}?done=completed`);
+}
+
+export async function renegotiateCommitmentAction(form: FormData) {
+  const { actor } = await requireActor();
+  try {
+    const i = parseInput("renegotiateCommitment", form);
+    const current = (await api.commitments(actor))?.owe.find((c) => c.id === i.commitmentId);
+    // A new window moves the commitment's effects with it (e.g. a promotion moved out of a conflict).
+    const effects =
+      i.windowStart && i.windowEnd && current
+        ? current.effects.map((e) => ({ ...e, windowStart: i.windowStart!, windowEnd: i.windowEnd! }))
+        : undefined;
+    await api.renegotiateCommitment(actor, i.commitmentId, { dueAt: i.dueAt, rationale: i.rationale, effects });
+  } catch (e) {
+    fail(COMMITMENTS_PATH, e);
+  }
+  revalidatePath(COMMITMENTS_PATH);
+  redirect(`${COMMITMENTS_PATH}?done=renegotiated`);
+}
+
+export async function cancelCommitmentAction(form: FormData) {
+  const { actor } = await requireActor();
+  try {
+    const i = parseInput("cancelCommitment", form);
+    await api.cancelCommitment(actor, i.commitmentId, i.rationale);
+  } catch (e) {
+    fail(COMMITMENTS_PATH, e);
+  }
+  revalidatePath(COMMITMENTS_PATH);
+  redirect(`${COMMITMENTS_PATH}?done=cancelled`);
+}

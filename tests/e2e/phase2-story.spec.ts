@@ -119,7 +119,7 @@ test("every home is a dashboard: KPIs, actions, risk and opportunity summary, de
   await expect(page.getByText(/^Waiting on you · \d+$/)).toBeVisible();
   await expect(page.getByText(/^Risks · \d+$/)).toBeVisible();
   await expect(page.getByText(/^Opportunities · 5$/)).toBeVisible();
-  await expect(page.getByText(/^Dependencies · \d+$/)).toBeVisible();
+  await expect(page.getByText("Dependencies", { exact: true })).toBeVisible();
   // Summaries only: the full lists are the Risks and Opportunities tabs.
   await page.getByRole("link", { name: /^All \d+ risks →$/ }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Risks · VECTOR Retail Group" })).toBeVisible();
@@ -136,7 +136,7 @@ test("every home is a dashboard: KPIs, actions, risk and opportunity summary, de
 
   await as(page, "Lior Ben-Ami");
   await expect(page.getByText(/Lior · Tel Aviv Dizengoff$/)).toBeVisible();
-  await expect(page.getByText(/^Dependencies · \d+$/)).toBeVisible();
+  await expect(page.getByText("Dependencies", { exact: true })).toBeVisible();
 
   await as(page, "Noa Friedman");
   await expect(page.getByText(/Noa · Supply Chain$/)).toBeVisible();

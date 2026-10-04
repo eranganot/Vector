@@ -72,7 +72,7 @@ async function lockCommitment(tx: Tx, orgId: string, id: string) {
 function validEffects(effects: CommitmentEffect[]) {
   for (const e of effects) {
     if (!e.resource || !/^[a-z0-9:_-]{3,80}$/.test(e.resource))
-      throw new DomainError("Invalid", `effect resource "${e.resource}" must be a key like sku-set:coast-14`);
+      throw new DomainError("Invalid", `effect resource "${e.resource}" must be a resource name like sku-set:coast-14`);
     if (!EFFECTS.includes(e.effect)) throw new DomainError("Invalid", `unknown effect ${e.effect}`);
     if (
       !/^\d{4}-\d{2}-\d{2}$/.test(e.windowStart) ||
@@ -704,20 +704,35 @@ export async function detectConflicts(ctx: AppContext, commitmentId: string): Pr
           })
           .onConflictDoNothing()
           .returning({ id: conflict.id });
-        if (row)
-          await audit({
-            operation: "conflict.detected",
-            entityType: "conflict",
-            entityId: row.id,
-            fromState: null,
-            toState: t.to,
-            changes: {
-              commitments: [a.id, b.id],
-              resource: overlap.resource,
-              overlap: [overlap.start, overlap.end],
-              insightId,
-            },
-          });
+        if (!row) return;
+        // Each side of a conflict can see the plan it collides with (the deciding unit needs both, Q1).
+        const [ua, ub] = await unitsByIds(tx, ctx.orgId, [a.ownerUnitId, b.ownerUnitId]);
+        for (const [c, other] of [
+          [a, ub],
+          [b, ua],
+        ] as const) {
+          const [cur] = await tx
+            .select({ v: commitment.visibleUnitIds })
+            .from(commitment)
+            .where(eq(commitment.id, c.id));
+          await tx
+            .update(commitment)
+            .set({ visibleUnitIds: [...new Set([...cur.v, ...other.pathIds])] })
+            .where(eq(commitment.id, c.id));
+        }
+        await audit({
+          operation: "conflict.detected",
+          entityType: "conflict",
+          entityId: row.id,
+          fromState: null,
+          toState: t.to,
+          changes: {
+            commitments: [a.id, b.id],
+            resource: overlap.resource,
+            overlap: [overlap.start, overlap.end],
+            insightId,
+          },
+        });
       },
     );
   }

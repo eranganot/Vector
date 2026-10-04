@@ -7,7 +7,7 @@ import { headlineFor } from "@/application/facade";
 import type { KpiStat } from "@/application/facade";
 import { ActionList, Breadcrumb, ChildTable, DepartmentPulse, HEALTH, type View } from "./unit";
 import { Band, Card, Dot, fmtIls, fmtKpi, LineChart, Pill, Ring, SectionTitle } from "./ui";
-import { DependencySummary } from "./waiting";
+import { DependenciesCard, type CommitmentsView } from "./commitments";
 
 type Item = View["items"][number];
 
@@ -258,11 +258,14 @@ export function Dashboard({
   greeting,
   waiting,
   changes,
+  deps,
 }: {
   v: View;
   greeting?: string;
   waiting?: React.ReactNode;
   changes?: Changes;
+  /** Phase 4: real dependencies on commitments for this scope. */
+  deps?: CommitmentsView | null;
 }) {
   const { headline, subline } = headlineFor(v);
   const own = !!greeting;
@@ -332,7 +335,7 @@ export function Dashboard({
                 <ChildTable rows={v.children} unitLabel="Region" />
               </div>
             </Card>
-            <DependencySummary items={v.dependencies} />
+            {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
           </div>
           {changes && <WhatChanged changes={changes} />}
           <DepartmentPulse pulse={v.departmentPulse} />
@@ -349,54 +352,70 @@ export function Dashboard({
               <ChildTable rows={v.children} unitLabel="Branch" />
             </div>
           </Card>
-          <DependencySummary items={v.dependencies} />
+          {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
         </div>
       )}
 
       {"children" in v && v.position === "branch" && (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <Card className="min-w-0">
-            <SectionTitle>Net sales by day vs usual level · 4 weeks</SectionTitle>
-            <div className="mt-3">
-              <LineChart
-                days={v.kpis.find((k) => k.code === "net_sales")!.series}
-                unit="ILS"
-                height={200}
-                width={760}
-              />
-            </div>
-          </Card>
+        <>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+            <Card className="min-w-0">
+              <SectionTitle>Net sales by day vs usual level · 4 weeks</SectionTitle>
+              <div className="mt-3">
+                <LineChart
+                  days={v.kpis.find((k) => k.code === "net_sales")!.series}
+                  unit="ILS"
+                  height={200}
+                  width={760}
+                />
+              </div>
+            </Card>
+            {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
+          </div>
           <Card className="min-w-0">
             <SectionTitle
-              aside={<span className="text-xs text-muted">who this branch&apos;s open items depend on</span>}
+              aside={<span className="text-xs text-muted">who owns the work on this branch&apos;s items</span>}
             >
-              Dependencies · {v.dependencies.length}
+              Open actions · {v.dependencies.length}
             </SectionTitle>
             <ActionList items={v.dependencies} empty="No open actions on this branch's items." />
           </Card>
-        </div>
+        </>
       )}
 
       {"pulse" in v && (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)]">
-          <Card className="flex flex-col items-center justify-center gap-2 text-center">
-            <SectionTitle>Department health</SectionTitle>
-            <Ring
-              value={v.pulse.health}
-              size={110}
-              tone={HEALTH[v.pulse.status]?.tone ?? (v.pulse.status === "at_risk" ? "bad" : "watch")}
-            />
-            <span className="text-xs text-muted">100 − open risks it owns and must act on, weighted by band</span>
-          </Card>
-          <Card className="min-w-0">
-            <SectionTitle>We depend on · {v.weDependOn.length}</SectionTitle>
-            <ActionList items={v.weDependOn} empty="This department's items don't wait on other departments." />
-          </Card>
-          <Card className="min-w-0">
-            <SectionTitle>Others depend on us · {v.dependOnUs.length}</SectionTitle>
-            <ActionList items={v.dependOnUs} empty="No other department is waiting on this one." />
-          </Card>
-        </div>
+        <>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,3fr)]">
+            <Card className="flex flex-col items-center justify-center gap-2 text-center">
+              <SectionTitle>Department health</SectionTitle>
+              <Ring
+                value={v.pulse.health}
+                size={110}
+                tone={HEALTH[v.pulse.status]?.tone ?? (v.pulse.status === "at_risk" ? "bad" : "watch")}
+              />
+              <span className="text-xs text-muted">100 − open risks it owns and must act on, weighted by band</span>
+            </Card>
+            {deps ? <DependenciesCard v={deps} unitId={unitId} /> : null}
+          </div>
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card className="min-w-0">
+              <SectionTitle
+                aside={<span className="text-xs text-muted">actions other departments own on our items</span>}
+              >
+                We depend on · {v.weDependOn.length}
+              </SectionTitle>
+              <ActionList items={v.weDependOn} empty="This department's items don't wait on other departments." />
+            </Card>
+            <Card className="min-w-0">
+              <SectionTitle
+                aside={<span className="text-xs text-muted">our actions on other departments&apos; items</span>}
+              >
+                Others depend on us · {v.dependOnUs.length}
+              </SectionTitle>
+              <ActionList items={v.dependOnUs} empty="No other department is waiting on this one." />
+            </Card>
+          </div>
+        </>
       )}
     </>
   );

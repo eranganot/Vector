@@ -18,8 +18,21 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf                  | #18      |
 | 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                              | #21      |
 | 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor) | #23, #24 |
+| 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces    | #25      |
 
 ## Root-cause records
+
+### 2026-10-04 · The deciding unit could not see the plan its own collides with (caught by a new test before shipping, P4d)
+
+- **Symptom:** in the integration test "an insight's trace shows the plans behind it", Michal (Finance, who decides the
+  R7 conflict) saw only Finance's spend freeze, not Marketing's ₪350k campaign it collides with.
+- **Proven cause:** a commitment's `visible_unit_ids` covered its owner and beneficiaries (and their ancestors) only.
+  Marketing's campaign is owed to Trade & Commercial and Store Operations, not to Finance, so the read filter
+  (`canRead`) correctly hid it from Finance. Nothing widened visibility when a conflict paired the two.
+- **Ruled out:** the trace query only (it was also building from position-relative lists, fixed too, but the commitment
+  was unreadable for Finance at the source); a scope bug in `canRead` (it behaved as specified).
+- **Fix:** when a conflict is detected (K1), each side becomes visible to the other side's unit, in the same audited
+  transaction; the trace uses every commitment the viewer may read. Test: `tests/integration/phase4.test.ts`.
 
 ### 2026-10-04 · Prod: persona sign-in failed ("Persona sign-in failed: check SEED_USER_PASSWORD") after the secrets were rotated
 
