@@ -190,6 +190,16 @@ describe("Phase 2 demo scenario", () => {
     expect(after.outcomes[0].verdict).toBe("worked");
     expect(after.insight.status).toBe("resolved");
     expect((await verifyAuditChain(appDb, orgId)).ok).toBe(true);
+    // No hidden transitions: for every action in the epoch, the last audited state is its current state.
+    const actions = await appDb.select().from(s.action).where(eq(s.action.orgId, orgId));
+    const audit = await appDb.select().from(s.auditEvent).where(eq(s.auditEvent.orgId, orgId));
+    for (const a of actions) {
+      const last = audit
+        .filter((e) => e.entityId === a.id && e.toState)
+        .sort((x, y) => Number(x.seq) - Number(y.seq))
+        .at(-1);
+      expect(last?.toState, `${a.title}`).toBe(a.status);
+    }
   });
 
   it("only Admin may drive the demo", async () => {

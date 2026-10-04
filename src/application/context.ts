@@ -68,7 +68,7 @@ export async function loadUserActor(
   db: DbOrTx,
   orgId: string,
   userId: string,
-  session: { sessionId: string; viaDemoSwitcher: boolean },
+  session: { sessionId: string; viaDemoSwitcher: boolean; sessionAgeHours?: number },
 ): Promise<Actor> {
   const rows = await db
     .select({ role: roleAssignment.role, unit: orgUnit })
@@ -76,7 +76,14 @@ export async function loadUserActor(
     .innerJoin(orgUnit, eq(roleAssignment.orgUnitId, orgUnit.id))
     .where(and(eq(roleAssignment.userId, userId), eq(roleAssignment.orgId, orgId)));
   const assignments: RoleAssignment[] = rows.map((r) => ({ role: r.role, unit: toUnitRef(r.unit) }));
-  return { kind: "user", userId, assignments, sessionId: session.sessionId, viaDemoSwitcher: session.viaDemoSwitcher };
+  return {
+    kind: "user",
+    userId,
+    assignments,
+    sessionId: session.sessionId,
+    viaDemoSwitcher: session.viaDemoSwitcher,
+    ...(session.sessionAgeHours !== undefined ? { sessionAgeHours: session.sessionAgeHours } : {}),
+  };
 }
 
 export type CommandScope = {
@@ -114,7 +121,11 @@ export async function runCommand<T>(
       }),
     );
   } catch (err) {
-    if (err instanceof DomainError && ["PermissionDenied", "NotAuthorized", "IllegalTransition"].includes(err.code)) {
+    // Every refused attempt is on the record, including invalid ones (e.g. an unknown action type).
+    if (
+      err instanceof DomainError &&
+      ["PermissionDenied", "NotAuthorized", "IllegalTransition", "Invalid"].includes(err.code)
+    ) {
       await ctx.db.transaction((tx) =>
         appendAudit(tx, meta, { operation: `${operation}.denied`, ...target, reason: `${err.code}: ${err.message}` }),
       );

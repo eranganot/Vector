@@ -17,8 +17,8 @@ org-tree scope, separation of duties, or approval as a recorded human act.
   AZ-1..AZ-6.
 - **Approval requirements** are pure, versioned rules (AP-1..AP-7) evaluated at submit time, and again when an
   amended action is re-submitted. An approval is an entity with its own state machine, bound to one action revision.
-  At execution the approval is re-checked (still granted, same revision, not lapsed), but the rules are not
-  re-evaluated yet: the A7b path has no code in Phase 2 and is scheduled for Phase 3.
+  At execution the rules are re-evaluated with current facts (A7b: if they now ask for more, the approval is withdrawn
+  and re-requested), and the approval is re-checked (still granted, same revision, not lapsed).
 - Every command calls `authorize` before the domain transition. Insight list and trace queries are scoped in SQL.
 - AZ-3 (fresh session for writes) is enforced in Phase 2 by the 12 h session lifetime; the domain rule exists but
   commands do not pass the session age yet.

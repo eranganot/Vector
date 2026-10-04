@@ -3,6 +3,7 @@
  * their outcome is measured.
  * Executors are simulated and labelled (D7).
  */
+import { DomainError } from "@/domain/errors";
 export type Playbook = {
   type: string;
   executor: "internal_task" | "outbox_message";
@@ -39,6 +40,7 @@ export const PLAYBOOKS: Record<string, Playbook> = {
 
 export function playbook(type: string): Playbook {
   const p = PLAYBOOKS[type];
-  if (!p) throw new Error(`unknown action type ${type}`);
+  // A domain refusal (audited by runCommand), not a crash: e.g. a playbook retired while older actions still use it.
+  if (!p) throw new DomainError("Invalid", `unknown action type ${type}`);
   return p;
 }

@@ -79,14 +79,14 @@ A scoped audit explorer arrives in Phase 4.
 
 ## 3. Authorization rules (context)
 
-| Code | Rule                                                                                                                                                                                                                                                                           |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| AZ-1 | The target entity's primary unit (or, for actions and outcomes, **every** target unit) must be inside the actor's scope for that capability                                                                                                                                    |
-| AZ-2 | Separation of duties: approver ≠ action proposer, approver ≠ action owner                                                                                                                                                                                                      |
-| AZ-3 | Writes require a fresh session (≤ 12 h). Phase 2 enforces this through the session lifetime: Better Auth sessions expire 12 h after sign-in and are not extended. The domain check (`sessionAgeHours`) exists and is unit-tested, but commands do not pass the session age yet |
-| AZ-4 | System actors cannot hold user roles; users cannot act as system actors                                                                                                                                                                                                        |
-| AZ-5 | The persona switcher signs in as a seeded user through the normal sign-in path. Every audit row records `via_demo_switcher = true` and the session id. The switcher works only when `DEMO_PERSONAS=on` (checked at run time) and lists the people of the active organization   |
-| AZ-6 | Run-time check (A7): when execution starts, the approval must still be granted, for the current action revision, and not lapsed. The approval policy itself is not re-evaluated yet (known gap, Phase 3; see domain-model.md §4.3)                                             |
+| Code | Rule                                                                                                                                                                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AZ-1 | The target entity's primary unit (or, for actions and outcomes, **every** target unit) must be inside the actor's scope for that capability                                                                                                                                             |
+| AZ-2 | Separation of duties: approver ≠ action proposer, approver ≠ action owner                                                                                                                                                                                                               |
+| AZ-3 | Writes require a fresh session (≤ 12 h, real time). Enforced twice: Better Auth sessions expire 12 h after sign-in and are not extended (observed 2026-10-04), and every write checks the session's age, which the request carries into the actor (`sessionAgeHours`; integration test) |
+| AZ-4 | System actors cannot hold user roles; users cannot act as system actors                                                                                                                                                                                                                 |
+| AZ-5 | The persona switcher signs in as a seeded user through the normal sign-in path. Every audit row records `via_demo_switcher = true` and the session id. The switcher works only when `DEMO_PERSONAS=on` (checked at run time) and lists the people of the active organization            |
+| AZ-6 | Run-time check (A7/A7b): when execution starts, the approval policy is re-run; if it now asks for more, the action goes back for approval. Otherwise the approval must still be granted, for the current action revision, and not lapsed                                                |
 
 ## 4. Approval policy rules
 
@@ -124,7 +124,7 @@ Not matched by any rule means no approval is needed. That applies to, for exampl
 manager within the proposer's own scope. The evaluation result, including the list of rules evaluated and not
 matched, is stored on the action and in the audit row, so "why didn't this need approval?" has an answer.
 
-Thresholds and rules are **versioned configuration** (`approval-policy-v2`, stored with every evaluation; v1 before 2026-10-04). In the
+Thresholds and rules are **versioned configuration** (`approval-policy-v2`, stored with every evaluation and re-run at execution; v1 before 2026-10-04). In the
 MVP, rule changes ship as code, through a PR; an audited `admin.policy` operation to change them arrives later.
 
 ## 5. Approval is never inferred

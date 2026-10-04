@@ -15,6 +15,33 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Root-cause records
 
+### 2026-10-04 · The five known issues from the Phase 2 gate (Eran: fix all before Phase 3)
+
+Each was reproduced by an integration test that failed before the fix (`tests/integration/lifecycle.test.ts`, "known issue #n").
+
+1. **Lapse left a hidden transition.** Observed: after a granted approval lapsed, no audit row recorded the action's
+   `ready → pending_approval`; the re-request was written as `system:clock`. Cause: `runClockJobs` updated the action without
+   `audit()` and audited the request under its own actor. Fix: `action.approval_lapsed` row; re-request by `system:policy`
+   (authorized as `action.submit`). Sibling search: every other `update(action)` already audits; a new invariant test checks
+   each action's last audited state equals its state. Why silent: no test compared the audit trail with action states.
+2. **Policy not re-run at execution.** Observed: a transfer approved under AP-4 executed after its insight escalated to P1
+   (AP-5 newly applied). Cause: `executeAction` checked only the approval's validity; A7b had no code. Fix: re-evaluate at
+   execution; if rules were added, withdraw the approval (P5b), return the action to `pending_approval` with the new
+   requirement, request approval again (all audited by `system:policy`), and report `{ reRequested }` (not counted as
+   executed). Ruled out: amend path (it already re-submits). Why silent: actions normally execute right after approval.
+3. **AZ-3 check never ran.** Observed with the real auth library: a session is valid at 11h59m and not extended, rejected at
+   12h01m, so the rule held only through expiry; commands never passed the session age, so the explicit check was dead.
+   Fix: the request carries the session's real-time age into the actor; every write checks it (test: 12.5 h refused, 0.5 h
+   allowed). Ruled out: rolling refresh extending sessions (observed: expiry unchanged after use).
+4. **Trace read the whole user table.** Observed: a user of another organization appeared in the trace's people. Cause:
+   unfiltered `select … from user`. Fix: resolve only the people the insight's record references.
+5. **Unknown action type was a crash.** Observed: `acceptDecision` on an action whose type has no playbook threw a plain
+   `Error` (a 500) and nothing was audited. Fix: `DomainError("Invalid")`, and `runCommand` audits `Invalid` refusals too.
+
+Found on the way: the trace returned its evidence (and signals) in database order, not the recorded order (an intermittent
+integration failure: [availability, sales] instead of [sales, availability]). Fix: keep the insight's stored order. A new test
+of mine had the same flaw (`.at(-1)` on unordered audit rows) and now sorts by `seq`.
+
 ### 2026-10-04 · CI failed on `main` after PRs #13 and #14 (e2e: Noa's inbox not empty) (reported by Eran)
 
 - **Symptom:** runs #28 (a248652) and #30 (8c7b8de) on `main` failed at "the Haifa story": Noa's Waiting on you showed an
