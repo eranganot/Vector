@@ -2,6 +2,8 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { seed } from "@/infra/seed/seed";
+import { reseedReason } from "@/infra/seed/reseed";
+import type { Db } from "@/application/db";
 import { setupDb } from "./helpers";
 
 let owner: Pool;
@@ -63,5 +65,21 @@ describe("audit_event integrity (ADR-004)", () => {
   it("the app role can still read and write domain tables", async () => {
     const r = await app.query("select count(*)::int as n from organization");
     expect(r.rows[0].n).toBeGreaterThan(0);
+  });
+});
+
+describe("boot-time reseed decision (regression: Prod persona sign-in failed after secrets were rotated)", () => {
+  it("reseeds when SEED_USER_PASSWORD no longer matches the seeded people, and not otherwise", async () => {
+    const { ownerDb, owner, app } = await setupDb();
+    try {
+      await seed(ownerDb as Db, { password: "first-password" });
+      expect(await reseedReason(ownerDb as Db, "first-password")).toBeNull();
+      expect(await reseedReason(ownerDb as Db, "rotated-password")).toMatch(/SEED_USER_PASSWORD changed/);
+      await seed(ownerDb as Db, { password: "rotated-password" });
+      expect(await reseedReason(ownerDb as Db, "rotated-password")).toBeNull();
+    } finally {
+      await app.end();
+      await owner.end();
+    }
   });
 });

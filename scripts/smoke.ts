@@ -18,6 +18,8 @@ async function get(base: URL, path: string) {
 }
 
 const expectSha = arg("--expect-sha");
+/** Run only the checks up to this phase, for an environment still on an earlier phase (Prod before a promotion). */
+const maxPhase = Number(arg("--phase") ?? Infinity);
 
 const checks: Check[] = [
   {
@@ -103,10 +105,11 @@ const checks: Check[] = [
 
 async function main() {
   const url = arg("--url");
-  if (!url) throw new Error("usage: pnpm smoke --url <base url> [--expect-sha <sha>]");
+  if (!url) throw new Error("usage: pnpm smoke --url <base url> [--expect-sha <sha>] [--phase <n>]");
   const base = new URL(url);
   let failed = 0;
-  for (const c of checks) {
+  const run = checks.filter((c) => c.phase <= maxPhase);
+  for (const c of run) {
     try {
       console.log(`PASS  P${c.phase}  ${c.name}  — ${await c.run(base)}`);
     } catch (err) {
@@ -114,7 +117,11 @@ async function main() {
       console.log(`FAIL  P${c.phase}  ${c.name}  — ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  console.log(failed ? `\n${failed} smoke check(s) failed` : `\nsmoke passed (${checks.length} checks)`);
+  console.log(
+    failed
+      ? `\n${failed} smoke check(s) failed`
+      : `\nsmoke passed (${run.length} checks${run.length < checks.length ? `, phases ≤ ${maxPhase}` : ""})`,
+  );
   process.exit(failed ? 1 : 0);
 }
 
