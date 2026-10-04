@@ -498,21 +498,23 @@ export async function performanceView(db: DbOrTx, orgId: string, actor: Actor, u
           ? units.filter((u) => u.parentId === pos.unit.id && u.type === "branch")
           : []
     ).sort((a, b) => a.name.localeCompare(b.name));
-    // Branch: the actions on its insights, grouped by the department that owns each (cross-department dependencies).
-    const dependencies =
-      pos.position === "branch" || pos.position === "region"
-        ? myActions
-            .filter((a) => !["cancelled"].includes(a.status))
-            .map((a) => ({
-              id: a.id,
-              title: a.title,
-              status: a.status,
-              owner: personName(a.ownerUserId),
-              department:
-                deptOfUser(a.ownerUserId)?.name ?? (pos.position === "branch" ? "This branch" : "Regions & branches"),
-              insightId: a.insightId,
-            }))
-        : [];
+    // Who the open work in this scope depends on: each action with the department of the person who owns it
+    // (cross-department dependencies). The group sees every department's load (Eran: dependencies on every home).
+    const dependencies = myActions
+      .filter((a) => !["cancelled", "rejected", "executed"].includes(a.status))
+      .map((a) => {
+        const d = deptOfUser(a.ownerUserId);
+        return {
+          id: a.id,
+          title: a.title,
+          status: a.status,
+          owner: personName(a.ownerUserId),
+          departmentId: d?.id ?? null,
+          department: d?.name ?? (pos.position === "branch" ? "This branch" : "Regions & branches"),
+          insightId: a.insightId,
+          overdue: !!a.dueAt && a.dueAt.toISOString().slice(0, 10) < asOf,
+        };
+      });
     return {
       ...base,
       kpis: kpiCards,
@@ -596,6 +598,51 @@ const CHANGE_VERBS: Record<string, string> = {
  * The Executive Command Center: the group view plus a one-sentence health headline, what changed in the last
  * 24 hours (demo clock), and the biggest KPI moves across branches this week.
  */
+export type PerformanceView = NonNullable<Awaited<ReturnType<typeof performanceView>>>;
+
+const listNames = (xs: string[], noun: string) =>
+  xs.length > 3
+    ? `${xs.length} ${noun}`
+    : xs.length <= 1
+      ? xs.join("")
+      : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
+
+/**
+ * The one-sentence headline at the top of every dashboard (Phase 3, Eran 2026-10-04: "a clean and clear dashboard").
+ * Group and region: which child units need attention. Branch and department: P1 risks and key results off target.
+ */
+export function headlineFor(v: PerformanceView) {
+  const risks = v.items.filter((i) => i.workstream === "risk");
+  const p1 = risks.filter((i) => i.band === "P1").length;
+  const o1 = v.items.filter((i) => i.workstream === "opportunity" && i.band === "O1").length;
+  const off = v.kpis.filter((k) => k.status === "bad").map((k) => k.name.toLowerCase());
+  let headline: string;
+  if ("children" in v && v.children.length > 0) {
+    const noun = v.position === "group" ? "regions" : "branches";
+    const atRisk = v.children.filter((c) => c.health === "at_risk").map((c) => c.name);
+    const watch = v.children.filter((c) => c.health === "watch").map((c) => c.name);
+    const verb = (xs: string[]) => (xs.length === 1 ? "needs" : "need");
+    headline =
+      atRisk.length > 0
+        ? `${listNames(atRisk, noun)} ${verb(atRisk)} attention${watch.length ? `; ${listNames(watch, noun)} to watch` : ""}.`
+        : watch.length > 0
+          ? `Nothing critical; ${listNames(watch, noun)} to watch.`
+          : "Everything is on track.";
+  } else if (p1 > 0) {
+    headline = `${p1} P1 risk${p1 === 1 ? " needs" : "s need"} attention${off.length ? `; ${listNames(off, "key results")} off target` : ""}.`;
+  } else if (off.length > 0) {
+    headline = `No P1 risk; ${listNames(off, "key results")} off target.`;
+  } else {
+    headline = "Everything is on track.";
+  }
+  const scope = v.position === "group" ? "across the group" : `in ${v.scope.name}`;
+  const subline =
+    `${p1} P1 risk${p1 === 1 ? "" : "s"} ${scope} · ${o1} opportunit${o1 === 1 ? "y" : "ies"} to pursue now · ` +
+    `${v.execution.pendingApproval} action${v.execution.pendingApproval === 1 ? "" : "s"} awaiting approval` +
+    (v.execution.overdue ? ` · ${v.execution.overdue} overdue` : "");
+  return { headline, subline };
+}
+
 export async function commandCenter(db: DbOrTx, orgId: string, actor: Actor) {
   const units = await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId));
   const group = units.find((u) => u.type === "group");
@@ -603,18 +650,7 @@ export async function commandCenter(db: DbOrTx, orgId: string, actor: Actor) {
   const v = await performanceView(db, orgId, actor, group.id);
   if (!v || !("children" in v)) return null;
 
-  // Headline: which regions need attention, in plain words.
-  const atRisk = v.children.filter((c) => c.health === "at_risk").map((c) => c.name);
-  const watch = v.children.filter((c) => c.health === "watch").map((c) => c.name);
-  const list = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`);
-  const p1 = v.items.filter((i) => i.workstream === "risk" && i.band === "P1").length;
-  const headline =
-    atRisk.length > 0
-      ? `${list(atRisk)} need${atRisk.length === 1 ? "s" : ""} attention${watch.length ? `; ${list(watch)} to watch` : ""}.`
-      : watch.length > 0
-        ? `Nothing critical; ${list(watch)} to watch.`
-        : "Everything is on track.";
-  const subline = `${p1} P1 risk${p1 === 1 ? "" : "s"} across the group, ${v.items.filter((i) => i.workstream === "opportunity" && i.band === "O1").length} opportunity to pursue now.`;
+  const { headline, subline } = headlineFor(v);
 
   // What changed: audited events of the last 24 h on insights the viewer can see.
   const asOfNow = (await db.select().from(demoClock).where(eq(demoClock.orgId, orgId)))[0]?.now ?? new Date();

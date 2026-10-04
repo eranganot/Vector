@@ -22,29 +22,29 @@ async function aboveFold(l: Locator) {
   expect(box!.y + Math.min(box!.height, 24), "visible without scrolling").toBeLessThan(900);
 }
 
-test("CEO: the Command Center says what, how bad and what to do without scrolling", async ({ page }) => {
-  await as(page, "Dana Levi");
-  await aboveFold(page.getByRole("heading", { level: 1 }).filter({ hasText: /need attention|to watch|on track/ }));
-  const first = page.locator("main a[href^='/insights/']").filter({ hasText: /Why:/ }).first();
-  await aboveFold(first);
-  await aboveFold(first.getByText(/^P[1-4] · \d+$/));
-  await aboveFold(page.getByText(/Waiting on you · \d+/));
-});
-
+// what = the headline; how bad = the KPI row and the band of the top item; what to do = Waiting on you (decisions,
+// approvals, your tasks) or the recommendation on the top item.
 for (const [who, where] of [
+  ["Dana Levi", "VECTOR Retail Group"],
   ["Yossi Cohen", "North"],
   ["Avi Mizrahi", "Haifa Grand Canyon"],
   ["Noa Friedman", "Supply Chain"],
 ] as const) {
-  test(`${who}: home is ${where}, and the top item explains itself above the fold`, async ({ page }) => {
+  test(`${who}: the home dashboard (${where}) says what, how bad and what to do without scrolling`, async ({
+    page,
+  }) => {
     await as(page, who);
-    await aboveFold(page.getByRole("heading", { level: 1, name: where }));
-    const first = page.locator("main a[href^='/insights/']").filter({ hasText: /Why:/ }).first();
-    await aboveFold(first);
-    await aboveFold(first.getByText(/^(P[1-4]|O[1-3]) · \d+$/));
-    // What to do: a recommendation on the card, or something waiting on this person.
-    const todo = first.getByText(/Recommended:|Play:/).or(page.getByText(/Waiting on you · \d+/));
-    await aboveFold(todo.first());
+    await aboveFold(page.getByText(new RegExp(`· ${where}$`)));
+    await aboveFold(
+      page.getByRole("heading", { level: 1 }).filter({ hasText: /attention|to watch|on track|off target/ }),
+    );
+    await aboveFold(page.getByText(/^(Key results|Department results)$/));
+    const firstKpi = page
+      .locator("main")
+      .getByText(/^(Target|Usual) /)
+      .first();
+    await aboveFold(firstKpi);
+    await aboveFold(page.getByText(/^Waiting on you · \d+$/));
   });
 }
 

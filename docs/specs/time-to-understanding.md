@@ -16,12 +16,17 @@ A person understands their part of the organization when they can say, unprompte
 `tests/e2e/00-time-to-understanding.spec.ts` opens each role's home at **1440×900** (a laptop) and checks that all three
 answers are visible **above the fold**, without scrolling:
 
-| Role                     | Home               | What                             | How bad                     | What to do                                  |
-| ------------------------ | ------------------ | -------------------------------- | --------------------------- | ------------------------------------------- |
-| CEO (Dana)               | Command Center     | headline naming the regions      | first card's band and "Why" | the "Waiting on you" card or "Recommended:" |
-| Regional manager (Yossi) | North              | the unit name and the first card | band and "Why"              | "Recommended:" or the waiting chip          |
-| Branch manager (Avi)     | Haifa Grand Canyon | the sales-drop card              | P1 for the branch, "Why"    | "Waiting on you: Decide"                    |
-| Department head (Noa)    | Supply Chain       | the first card                   | band and "Why"              | "Recommended:" or the waiting chip          |
+Since G-P3a (Eran, 2026-10-04), every home is a dashboard of the person's scope:
+
+| Role                     | Home (scope)        | What                                  | How bad                       | What to do                                     |
+| ------------------------ | ------------------- | ------------------------------------- | ----------------------------- | ---------------------------------------------- |
+| CEO (Dana)               | VECTOR Retail Group | headline naming the regions           | the KPI row (status + change) | "Waiting on you" (decisions, approvals, tasks) |
+| Regional manager (Yossi) | North               | headline naming the branches          | the KPI row                   | "Waiting on you"                               |
+| Branch manager (Avi)     | Haifa Grand Canyon  | headline: P1 risk, results off target | the KPI row                   | "Waiting on you: Decide" and his own task      |
+| Department head (Noa)    | Supply Chain        | headline: P1 risks it owns or acts on | its department results        | "Waiting on you": her decision and her 4 tasks |
+
+The risk summary (top item with "Why:" and "Recommended:") follows the KPI row; on the CEO's screen it starts just
+below the fold.
 
 It is a proxy: it proves the answer is on screen, not that a person reads it.
 

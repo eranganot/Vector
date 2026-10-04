@@ -45,17 +45,18 @@ on every call.
 
 Dark theme, sidebar navigation (top bar on small screens). Every page requires sign-in.
 
-| Route            | What it shows                                                                                                                            | Who                                          |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `/login`         | Sign-in form; demo persona list when `DEMO_PERSONAS=on`                                                                                  | everyone                                     |
-| `/`              | Role-routed: Command Center (headline, waiting on you, lanes, what changed, biggest moves, health by region, pulse); managers → own unit | anyone with `insight.read`                   |
-| `/units/[id]`    | Unit view (group, region, branch, department): breadcrumb, KPIs linked to insights, lanes by local priority, actions, dependencies       | anyone whose scope covers the unit; else 404 |
-| `/org`           | Hierarchy in scope, with each unit's worst band and counts; departments owns / involved                                                  | anyone with `insight.read`                   |
-| `/performance`   | Redirect to your own unit view                                                                                                           | anyone with `insight.read`                   |
-| `/insights/[id]` | Trace: signals, evidence, priority breakdown, decision, actions, approvals, outcome, and the insight's audit trail. Out of scope = 404   | anyone who can read it                       |
-| `/approvals`     | Waiting on you: decisions to make, approvals the viewer is routed (grant or deny), the viewer's own actions                              | anyone                                       |
-| `/audit`         | Hash-chain status of the active epoch                                                                                                    | Executive, Admin                             |
-| `/admin/demo`    | Advance the demo clock; reset the demo into a new epoch                                                                                  | Admin (`demo.control`)                       |
+| Route                      | What it shows                                                                                                                          | Who                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `/login`                   | Sign-in form; demo persona list when `DEMO_PERSONAS=on`                                                                                | everyone                                     |
+| `/`                        | Home dashboard of your scope (G-P3a): headline, waiting on you, KPIs, risk/opportunity summary, dependencies, position extras          | anyone with `insight.read`                   |
+| `/risks`, `/opportunities` | The workstream's full ranked list for your scope or `?unit=` (out of scope → 404), band filter, recently resolved                      | anyone with `insight.read`                   |
+| `/units/[id]`              | Unit view (group, region, branch, department): breadcrumb, KPIs linked to insights, lanes by local priority, actions, dependencies     | anyone whose scope covers the unit; else 404 |
+| `/org`                     | Hierarchy in scope, with each unit's worst band and counts; departments owns / involved                                                | anyone with `insight.read`                   |
+| `/performance`             | Redirect to Home                                                                                                                       | anyone with `insight.read`                   |
+| `/insights/[id]`           | Trace: signals, evidence, priority breakdown, decision, actions, approvals, outcome, and the insight's audit trail. Out of scope = 404 | anyone who can read it                       |
+| `/approvals`               | Waiting on you: decisions to make, approvals the viewer is routed (grant or deny), the viewer's own actions                            | anyone                                       |
+| `/audit`                   | Hash-chain status of the active epoch                                                                                                  | Executive, Admin                             |
+| `/admin/demo`              | Advance the demo clock; reset the demo into a new epoch                                                                                | Admin (`demo.control`)                       |
 
 Every server action validates its input with Zod (`src/application/inputs.ts`) before calling a command; invalid input is
 an audited-style domain refusal (`Invalid`). The UI exposes accept/decline decision, grant/deny approval and review outcome. The other human commands

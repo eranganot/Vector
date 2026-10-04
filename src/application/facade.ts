@@ -94,6 +94,7 @@ export const api = {
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
-export type { KpiStat } from "./queries/performance";
+export type { KpiStat, PerformanceView } from "./queries/performance";
+export { headlineFor } from "./queries/performance";
 
 export { parseInput } from "./inputs";

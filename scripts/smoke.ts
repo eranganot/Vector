@@ -103,9 +103,16 @@ const checks: Check[] = [
   },
   {
     phase: 3,
-    name: "Phase 3 screens (Command Center, unit views, organization, Waiting on you) require sign-in",
+    name: "Phase 3 screens (home dashboards, unit views, Risks, Opportunities, organization, Waiting on you) require sign-in",
     run: async (base) => {
-      const paths = ["/units/00000000-0000-4000-8000-000000000000", "/org", "/performance", "/approvals"];
+      const paths = [
+        "/units/00000000-0000-4000-8000-000000000000",
+        "/org",
+        "/performance",
+        "/approvals",
+        "/risks",
+        "/opportunities",
+      ];
       for (const p of paths) {
         const res = await fetch(new URL(p, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
         const loc = res.headers.get("location") ?? "";

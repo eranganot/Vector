@@ -16,6 +16,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                             | #16     |
 | 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU   | #17     |
 | 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf               | #18     |
+| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                           | #21     |
 
 ## Root-cause records
 

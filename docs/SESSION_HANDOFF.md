@@ -19,6 +19,16 @@ Make the organization understandable at a glance for each role (docs/phases/PHAS
 
 ## Completed (Phase 3, branch `feat/phase3`)
 
+- **G-P3a (Eran, 22:14 / 22:17): Home is a dashboard for every persona** (PR #21). Each home shows:
+  - a headline;
+  - Waiting on you, including the tasks you own;
+  - KPI tiles linked to their insights;
+  - risk and opportunity summaries;
+  - dependencies by department;
+  - what the position needs.
+
+  Risks and Opportunities are now sidebar tabs (`/risks`, `/opportunities`, with `?unit=` and `?band=`), and unit pages use the same dashboard. The list below describes the first Phase 3 build; where they differ, this entry wins.
+
 - **Executive Command Center** (`/` for Executive, Viewer and Admin):
   - a one-sentence headline;
   - Waiting on you;
