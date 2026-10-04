@@ -621,7 +621,10 @@ export async function executeAction(ctx: AppContext, actionId: string, actor: Ac
           .sort((a, b) => (a.day < b.day ? 1 : -1))
           .slice(0, 7 * units.length);
         const baselineMean = lastWeek.reduce((s, o) => s + o.value, 0) / Math.max(lastWeek.length, 1);
-        const windowEnd = new Date(now.getTime() + pb.outcome.windowDays * 86_400_000);
+        // The window is whole days: from the day after execution, for windowDays days (UTC day boundaries).
+        const windowStart = new Date(`${today}T00:00:00Z`);
+        windowStart.setUTCDate(windowStart.getUTCDate() + 1);
+        const windowEnd = new Date(windowStart.getTime() + pb.outcome.windowDays * 86_400_000);
         const [o] = await tx
           .insert(outcome)
           .values({
@@ -633,7 +636,7 @@ export async function executeAction(ctx: AppContext, actionId: string, actor: Ac
             expectedDirection: pb.outcome.direction,
             expectedThreshold: pb.outcome.threshold,
             baseline: { mean: baselineMean, days: lastWeek.length / units.length, until: today },
-            windowStart: now,
+            windowStart,
             windowEnd,
             status: transition("outcome", null, "start_watch").to as "observing",
             createdAt: now,
@@ -651,6 +654,24 @@ export async function executeAction(ctx: AppContext, actionId: string, actor: Ac
       return result;
     },
   );
+}
+
+/** The executor picks up every ready action (simulated execution, D7). Called after approvals and on clock ticks. */
+export async function executeReadyActions(ctx: AppContext) {
+  const ready = await ctx.db
+    .select({ id: action.id })
+    .from(action)
+    .where(and(eq(action.orgId, ctx.orgId), eq(action.status, "ready")));
+  const done: string[] = [];
+  for (const a of ready) {
+    try {
+      await executeAction(ctx, a.id);
+      done.push(a.id);
+    } catch (err) {
+      if (!(err instanceof DomainError)) throw err; // a refused execution is audited and stays put
+    }
+  }
+  return done;
 }
 
 export async function cancelAction(ctx: AppContext, actor: Actor, actionId: string, rationale: string) {

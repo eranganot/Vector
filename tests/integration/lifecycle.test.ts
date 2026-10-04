@@ -225,7 +225,7 @@ describe("Phase 2 story: Haifa sales drop, Signal → Outcome", () => {
       .from(s.kpi)
       .where(and(eq(s.kpi.orgId, r.orgId), eq(s.kpi.code, "osa")));
     for (let i = 0; i < 7; i++) {
-      const d = addDays("2026-10-22", i);
+      const d = addDays("2026-10-23", i);
       await ownerDb.insert(s.kpiObservation).values({
         orgId: r.orgId,
         kpiId: osa.id,
@@ -235,7 +235,7 @@ describe("Phase 2 story: Haifa sales drop, Signal → Outcome", () => {
         source: "synthetic:store-feed",
       });
     }
-    const later = await at(r.orgId, "2026-10-29T06:00:00Z");
+    const later = await at(r.orgId, "2026-10-30T06:00:00Z");
     const results = await evaluateDueOutcomes(later);
     expect(results).toEqual([expect.objectContaining({ verdict: "worked" })]);
     const [ins] = await appDb.select().from(s.insight).where(eq(s.insight.id, insightId));
