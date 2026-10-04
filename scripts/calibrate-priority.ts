@@ -1,10 +1,11 @@
 /**
  * Priority model v1 calibration (Phase 1). Computes scores for the hand-written scenario set and
- * finds band thresholds that reproduce the expected bands. The formula here moves into
- * src/domain/priority in Phase 2 unchanged, with these scenarios as golden fixtures.
+ * finds band thresholds that reproduce the expected bands. The formula lives in
+ * src/domain/priority.ts; these scenarios are its golden fixtures (src/domain/priority.test.ts).
  *   pnpm tsx scripts/calibrate-priority.ts
  */
 import { readFileSync } from "node:fs";
+import { computePriority } from "../src/domain/priority";
 
 type Breadth = "isolated" | "local" | "regional" | "systemic";
 type Scenario = {
@@ -19,32 +20,9 @@ type Scenario = {
   expected: "P1" | "P2" | "P3" | "P4";
 };
 
-export const WEIGHTS_V1 = { magnitude: 0.2, impact: 0.3, breadth: 0.15, urgency: 0.2, strategic: 0.15 } as const;
-
-const IMPACT_FLOOR = 5_000; // ₪/week below which impact ≈ 0
-const IMPACT_CEIL = 1_000_000; // ₪/week at which impact = 1
-
-export function factors(s: Omit<Scenario, "id" | "title" | "expected">) {
-  const magnitude = Math.min(Math.abs(s.z), 4) / 4;
-  const impact = Math.min(
-    1,
-    Math.max(0, Math.log10(s.impactIls / IMPACT_FLOOR) / Math.log10(IMPACT_CEIL / IMPACT_FLOOR)),
-  );
-  const breadth = { isolated: 0.25, local: 0.5, regional: 0.75, systemic: 1 }[s.breadth];
-  const h = s.hoursToImpact;
-  const urgency = h === null ? 0.75 : h <= 24 ? 1 : h <= 72 ? 0.75 : h <= 168 ? 0.5 : h <= 720 ? 0.25 : 0.1;
-  return { magnitude, impact, breadth, urgency, strategic: s.strategicWeight };
-}
-
-export function score(s: Omit<Scenario, "id" | "title" | "expected">) {
-  const f = factors(s);
-  const weighted =
-    WEIGHTS_V1.magnitude * f.magnitude +
-    WEIGHTS_V1.impact * f.impact +
-    WEIGHTS_V1.breadth * f.breadth +
-    WEIGHTS_V1.urgency * f.urgency +
-    WEIGHTS_V1.strategic * f.strategic;
-  return { factors: f, score: Math.round(100 * weighted * (0.6 + 0.4 * s.confidence) * 10) / 10 };
+function score(s: Omit<Scenario, "id" | "title" | "expected">) {
+  const p = computePriority(s);
+  return { factors: p.factors, score: p.score };
 }
 
 function main() {
