@@ -11,13 +11,14 @@ import { can, requireActor } from "../_lib/session";
 export default async function Home() {
   const { actor, me } = await requireActor();
   const group = can(actor, "executive") || can(actor, "viewer") || can(actor, "admin");
-  const [cc, own, approvals, decisions, actions, now] = await Promise.all([
+  const [cc, own, approvals, decisions, actions, now, deps] = await Promise.all([
     group ? api.commandCenter(actor) : Promise.resolve(null),
     group ? Promise.resolve(null) : api.performance(actor),
     api.myApprovals(actor),
     api.myDecisions(actor),
     api.myActions(actor),
     demoNow(),
+    api.commitments(actor),
   ]);
   const v = cc ?? own;
   if (!v) return <p className="text-sm text-muted">Nothing in your scope yet.</p>;
@@ -28,6 +29,7 @@ export default async function Home() {
       v={v}
       greeting={`${greet}, ${me.name.split(" ")[0]}${cc ? " · Executive Command Center" : ""}`}
       changes={cc?.changes}
+      deps={deps}
       waiting={
         <WaitingCard
           approvals={approvals}

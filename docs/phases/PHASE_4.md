@@ -169,6 +169,12 @@ seeded insights. There is no commitment or dependency the system can track, so n
 - **Nav growth.** Mitigation: Commitments and "Actions & outcomes" are the only new tabs; the audit explorer replaces
   the existing Audit page.
 
+## Progress
+
+- P4a plan and specs (#23). P4b commitments, dependencies, conflicts: schema, commands, seed `p4-v1`, monitor (#24).
+- P4c/P4d: live detection on Dev; Commitments tab; the Dependencies card on every home (bottlenecks, on-time rate,
+  conflicts, who waits on whom); the plans behind an insight on its trace (#25).
+
 ## Choices made by Claude, to confirm at the Phase 4 gate
 
 - **Q1 · Who decides a conflict:** the manager of the unit whose commitment came second (it introduced the
