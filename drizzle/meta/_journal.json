@@ -29,6 +29,13 @@
       "when": 1791121892287,
       "tag": "0003_insight_workstream",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791123560914,
+      "tag": "0004_kpi_level_insight_owner",
+      "breakpoints": true
     }
   ]
 }

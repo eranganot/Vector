@@ -25,7 +25,9 @@ async function as(page: Page, name: string) {
 
 test("the Haifa story runs end to end", async ({ page }) => {
   await as(page, "Avi Mizrahi");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("1 insight needs attention");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Avi");
+  await expect(page.getByText(/1 risk .*in your scope/)).toBeVisible();
+  await expect(page.getByText("P1 for Haifa Grand Canyon")).toBeVisible(); // local priority (group-wide P2)
   await page.getByRole("link", { name: /Haifa Grand Canyon net sales/ }).click();
   await page.waitForURL(/\/insights\//);
   await expect(page.getByRole("heading", { name: "Why am I seeing this?" })).toBeVisible();
@@ -44,8 +46,9 @@ test("the Haifa story runs end to end", async ({ page }) => {
 
   await as(page, "Yossi Cohen");
   await page.goto("/approvals");
-  await expect(page.getByText(/AP-4 Inventory transfer/)).toBeVisible();
-  await page.getByRole("button", { name: "Approve" }).click();
+  const card = page.locator("section").filter({ hasText: /Transfer top-category stock .*Haifa Grand Canyon/ });
+  await expect(card.getByText(/AP-4 Inventory transfer/)).toBeVisible();
+  await card.getByRole("button", { name: "Approve" }).click();
   await expect(page.getByText("Approved. Execution started (simulated).")).toBeVisible();
 
   await as(page, "Ops Admin");
@@ -84,4 +87,30 @@ test("out-of-scope insights look missing (404), and viewers get no decision butt
   await as(page, "Tal Ben-David");
   await page.goto(trace);
   await expect(page.getByRole("button", { name: "Accept recommendation" })).toHaveCount(0);
+});
+
+test("both workstreams, local priority and the performance dashboards by position", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await expect(page.getByText(/1\d risks \(4 P1\) and 5 opportunities/)).toBeVisible();
+  await expect(page.getByText(/Opportunities · 5/)).toBeVisible();
+  await page.goto("/performance");
+  await expect(page.getByRole("heading", { name: "Group performance" })).toBeVisible();
+  await expect(page.getByText("Health by region")).toBeVisible();
+  await expect(page.getByText("Organization pulse")).toBeVisible();
+
+  await as(page, "Maya Azulay");
+  await expect(page.getByText("P2 for Center")).toBeVisible(); // R11: P3 group-wide, P2 for the region (Eran, 2026-10-04)
+  await page.goto("/performance");
+  await expect(page.getByRole("heading", { name: "Region performance" })).toBeVisible();
+  await expect(page.getByText("Branches in Center")).toBeVisible();
+
+  await as(page, "Lior Ben-Ami");
+  await page.goto("/performance");
+  await expect(page.getByRole("heading", { name: "Branch performance" })).toBeVisible();
+  await expect(page.getByText("Dependencies on other departments")).toBeVisible();
+
+  await as(page, "Noa Friedman");
+  await page.goto("/performance");
+  await expect(page.getByRole("heading", { name: "Department performance" })).toBeVisible();
+  await expect(page.getByText(/Others depend on us/)).toBeVisible();
 });

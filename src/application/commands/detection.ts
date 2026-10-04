@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { and, arrayOverlaps, eq, inArray } from "drizzle-orm";
 import { assertAuthorized, authorizeSystem } from "@/domain/policy/authorize";
 import { transition } from "@/domain/lifecycle/machines";
-import { computePriority, type PriorityInput } from "@/domain/priority";
+import { computeOpportunity, computePriority, type OpportunityInput, type PriorityInput } from "@/domain/priority";
 import { action, decision, evidence, insight, signal } from "@/infra/db/schema";
 import { canonicalJson } from "../audit";
 import { type AppContext, runCommand } from "../context";
@@ -29,13 +29,20 @@ export type DetectionInput = {
   };
   evidence: EvidenceInput[];
   insight: {
+    /** Defaults to "risk". Opportunities are scored with opportunity-v1 and never ranked against risks (ADR-006). */
+    workstream?: "risk" | "opportunity";
+    /** The department that owns the response (scenarios.md ●). */
+    ownerDepartmentId?: string;
     title: string;
     whatHappened: string;
     whyItMatters: string;
     primaryUnitId: string;
     affectedUnitIds: string[];
     confidence: number;
-    priority: PriorityInput;
+    /** Risk inputs (priority-v2). Required for risks. */
+    priority?: PriorityInput;
+    /** Opportunity inputs (opportunity-v1). Required for opportunities. */
+    opportunity?: OpportunityInput;
     generatedBy: string;
   };
   recommendation: {
@@ -92,7 +99,11 @@ export async function recordDetection(ctx: AppContext, input: DetectionInput): P
           .returning({ id: evidence.id });
         evidenceIds.push(row.id);
       }
-      const priority = computePriority({ ...input.insight.priority, confidence: input.insight.confidence });
+      const workstream = input.insight.workstream ?? "risk";
+      const priority =
+        workstream === "opportunity"
+          ? computeOpportunity({ ...input.insight.opportunity!, confidence: input.insight.confidence })
+          : computePriority({ ...input.insight.priority!, confidence: input.insight.confidence });
 
       // Dedupe: an open/acknowledged insight already carrying a signal with this key absorbs the new one.
       const sameKey = await tx
@@ -158,6 +169,8 @@ export async function recordDetection(ctx: AppContext, input: DetectionInput): P
         .insert(insight)
         .values({
           orgId: ctx.orgId,
+          workstream,
+          ownerDepartmentId: input.insight.ownerDepartmentId,
           title: input.insight.title,
           whatHappened: input.insight.whatHappened,
           whyItMatters: input.insight.whyItMatters,
@@ -182,7 +195,12 @@ export async function recordDetection(ctx: AppContext, input: DetectionInput): P
         entityType: "insight",
         entityId: ins.id,
         toState: t.to,
-        changes: { title: ins.title, priority: { score: priority.score, band: priority.band }, signalId: sig.id },
+        changes: {
+          title: ins.title,
+          workstream,
+          priority: { model: priority.model, score: priority.score, band: priority.band },
+          signalId: sig.id,
+        },
         evidenceIds,
       });
 

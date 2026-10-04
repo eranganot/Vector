@@ -26,8 +26,8 @@ const checks: Check[] = [
       const body = JSON.parse(text);
       if (res.status !== 200 || body.status !== "ok") throw new Error(`${res.status} ${text}`);
       if (!body.db.ok || body.migrations.pending !== 0) throw new Error(text);
-      if (body.migrations.applied < 3)
-        throw new Error(`expected the Phase 2 schema (>= 3 migrations), got ${body.migrations.applied}`);
+      if (body.migrations.applied < 5)
+        throw new Error(`expected the Phase 2 schema (>= 5 migrations), got ${body.migrations.applied}`);
       return `env=${body.env} sha=${body.build.shortSha} migrations=${body.migrations.applied}`;
     },
   },
@@ -74,6 +74,27 @@ const checks: Check[] = [
       if (res.status !== 200 || !(text === "null" || text === ""))
         throw new Error(`${res.status} ${text.slice(0, 80)}`);
       return "no session";
+    },
+  },
+  {
+    phase: 2,
+    name: "demo epoch is the current synthetic org with both workstreams loaded",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      const d = body.demo;
+      if (!d || d.seedVersion !== "p2-v2") throw new Error(`seed ${d?.seedVersion}; expected p2-v2`);
+      if (d.risks < 14 || d.opportunities < 5) throw new Error(`risks ${d.risks}, opportunities ${d.opportunities}`);
+      return `seed ${d.seedVersion} · ${d.risks} risks · ${d.opportunities} opportunities`;
+    },
+  },
+  {
+    phase: 2,
+    name: "sign-in page is the dark theme",
+    run: async (base) => {
+      const { text } = await get(base, "/login");
+      const css = [...text.matchAll(/href="([^"]+\.css)"/g)].map((m) => m[1]);
+      for (const href of css) if ((await get(base, href)).text.includes("#08111f")) return "dark tokens served";
+      throw new Error("dark theme tokens not found in the served CSS");
     },
   },
 ];

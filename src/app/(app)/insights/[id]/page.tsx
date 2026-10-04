@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { api } from "@/application/facade";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
-import { BANDS, type PriorityBreakdown } from "@/domain/priority";
+import { BANDS, OPPORTUNITY_BANDS, type PriorityBreakdown } from "@/domain/priority";
 import { acceptDecisionAction, declineDecisionAction, reviewOutcomeAction } from "../../../actions";
 import { BackLink, Band, Card, EvidenceChart, Notice, Pill, SectionTitle, Simulated } from "../../../_components/ui";
 import { requireActor } from "../../../_lib/session";
@@ -24,6 +24,21 @@ const ACTION_STATUS: Record<string, string> = {
   cancelled: "Cancelled",
 };
 const fmtTime = (d: Date) => d.toISOString().slice(0, 16).replace("T", " ");
+const SIGNAL_LABEL: Record<string, string> = {
+  kpi_deviation: "KPI deviation",
+  external_event: "external event",
+  dependency_delay: "dependency delay",
+  commitment_overdue: "overdue commitment",
+  decision_conflict: "decision conflict",
+  incident: "incident",
+  facility_review: "facility review",
+};
+const sourceLabel = (g: string) =>
+  g.startsWith("rule:")
+    ? `Rule-generated · ${g.slice(5)}`
+    : g.startsWith("scenario-catalog")
+      ? "Scenario catalog · synthetic feed"
+      : g;
 
 export default async function TracePage({
   params,
@@ -43,8 +58,12 @@ export default async function TracePage({
     t.people.find((p) => p.id === pid)?.name ??
     (pid?.startsWith("system:") || pid?.startsWith("policy:") ? pid : "unknown");
   const pb = ins.priorityBreakdown as PriorityBreakdown;
+  const isOpp = ins.workstream === "opportunity";
   const decision = t.decisions[0];
-  const affected = ins.affectedUnitIds.map(unitName);
+  const owner = ins.ownerDepartmentId ? unitName(ins.ownerDepartmentId) : null;
+  const involved = [ins.primaryUnitId, ...ins.affectedUnitIds]
+    .filter((id) => id !== ins.ownerDepartmentId)
+    .map(unitName);
 
   return (
     <>
@@ -54,9 +73,15 @@ export default async function TracePage({
         <div className="flex flex-col gap-5 lg:col-span-2">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Band band={ins.priorityBand} score={ins.priorityScore} />
+              <Band band={t.local?.band ?? ins.priorityBand} score={t.local?.score ?? ins.priorityScore} />
+              {t.local && t.local.band !== ins.priorityBand && (
+                <Pill>
+                  {t.local.band} for {t.local.scopeName} · group-wide {ins.priorityBand}
+                </Pill>
+              )}
+              <Pill tone={isOpp ? "good" : "neutral"}>{isOpp ? "Opportunity workstream" : "Risk workstream"}</Pill>
               <Pill tone={ins.status === "resolved" ? "good" : "neutral"}>{ins.status}</Pill>
-              <Pill>Rule-generated · {ins.generatedBy.replace("rule:", "")}</Pill>
+              <Pill>{sourceLabel(ins.generatedBy)}</Pill>
             </div>
             <h1 className="text-[26px] font-semibold leading-tight">{ins.title}</h1>
             <p className="leading-relaxed">
@@ -71,10 +96,10 @@ export default async function TracePage({
             <h2 className="text-lg font-semibold">Why am I seeing this?</h2>
             <ol className="flex flex-wrap items-center gap-2 text-[13px]">
               {[
-                `Signal: ${t.signals.length} × KPI deviation`,
+                `Signal: ${t.signals.length} × ${SIGNAL_LABEL[t.signals[0]?.type] ?? t.signals[0]?.type}`,
                 `Evidence: ${t.evidence.length} frozen snapshots`,
                 "Insight",
-                `Priority ${Math.round(pb.score)} = ${pb.band}`,
+                `${isOpp ? "Opportunity score" : "Priority"} ${Math.round(pb.score)} = ${pb.band}`,
                 "Recommendation",
               ].map((s, i) => (
                 <li key={s} className="flex items-center gap-2">
@@ -85,11 +110,30 @@ export default async function TracePage({
             </ol>
             <div className="grid gap-4 md:grid-cols-2">
               {t.evidence.map((e) => {
-                const p = e.payload as { unit: string; days?: { day: string; actual: number; expected: number }[] };
+                const p = e.payload as {
+                  unit?: string;
+                  expectedIs?: string;
+                  days?: { day: string; actual: number; expected: number }[];
+                } & Record<string, unknown>;
                 return (
                   <figure key={e.id} className="m-0 flex flex-col gap-2 rounded-lg border border-line p-3">
                     <figcaption className="text-[13px] font-semibold">{e.title}</figcaption>
-                    <EvidenceChart days={p.days ?? []} unit={p.unit} />
+                    {p.days ? (
+                      <EvidenceChart
+                        days={p.days}
+                        unit={p.unit ?? ""}
+                        expectedLabel={p.expectedIs ?? "usual level for that weekday"}
+                      />
+                    ) : (
+                      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
+                        {Object.entries(p).map(([k, val]) => (
+                          <div key={k} className="contents">
+                            <dt className="text-muted">{k}</dt>
+                            <dd className="font-mono">{String(val)}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
                     <div className="text-xs text-muted">
                       Source: {e.sourceRef} (synthetic) · captured {fmtTime(e.capturedAt)} · frozen · sha256{" "}
                       {e.payloadHash.slice(0, 10)}…
@@ -100,7 +144,8 @@ export default async function TracePage({
             </div>
             <div className="rounded-lg border border-line p-3 text-[13px]">
               <div className="mb-2 font-semibold">
-                Priority breakdown · {pb.model}, {pb.weightsVersion}
+                {isOpp ? "Opportunity score" : "Priority breakdown"} · {pb.model}
+                {pb.weightsVersion ? `, ${pb.weightsVersion}` : ""}
               </div>
               <div className="grid grid-cols-[120px_minmax(0,1fr)_48px] items-center gap-x-3 gap-y-1.5 font-mono text-xs">
                 {(Object.keys(pb.factors) as (keyof typeof pb.factors)[]).map((k) => (
@@ -110,7 +155,7 @@ export default async function TracePage({
                     </span>
                     <span className="h-2 rounded bg-soft">
                       <span
-                        className="block h-2 rounded bg-ink"
+                        className="block h-2 rounded bg-accent"
                         style={{ width: `${Math.round(pb.factors[k] * 100)}%` }}
                       />
                     </span>
@@ -119,16 +164,29 @@ export default async function TracePage({
                 ))}
               </div>
               <p className="mt-2 text-muted">
-                Confidence {ins.confidence.toFixed(2)} → ×{pb.confidenceMultiplier.toFixed(2)} · score {pb.score} ·
-                bands P1 ≥ {BANDS.P1}, P2 ≥ {BANDS.P2}, P3 ≥ {BANDS.P3}
+                Confidence {ins.confidence.toFixed(2)} → ×{pb.confidenceMultiplier.toFixed(2)} · score {pb.score} ·{" "}
+                {isOpp
+                  ? `bands O1 ≥ ${OPPORTUNITY_BANDS.O1} pursue now, O2 ≥ ${OPPORTUNITY_BANDS.O2} plan, else O3 watch`
+                  : `bands P1 ≥ ${BANDS.P1}, P2 ≥ ${BANDS.P2}, P3 ≥ ${BANDS.P3}`}
               </p>
+              {t.local && (
+                <p className="mt-1">
+                  For you ({t.local.scopeName}): <b>{t.local.band}</b> · {t.local.score} with {t.local.model} (impact
+                  and breadth measured against your own scope; local priority only ever raises an item).
+                </p>
+              )}
             </div>
             <p className="text-[13px]">
-              Affected:{" "}
-              {[unitName(ins.primaryUnitId), ...affected].map((n) => (
-                <b key={n} className="mr-2">
+              {owner && (
+                <>
+                  Owner: <b className="mr-3 text-accent">{owner}</b>
+                </>
+              )}
+              Involved:{" "}
+              {[...new Set(involved)].map((n) => (
+                <span key={n} className="mr-2 inline-block rounded border border-line px-1.5 py-px">
                   {n}
-                </b>
+                </span>
               ))}
             </p>
           </Card>
@@ -240,7 +298,7 @@ export default async function TracePage({
                       placeholder="Note (optional)"
                       className="min-w-60 grow rounded-md border border-line bg-panel px-3 py-2"
                     />
-                    <button className="rounded-md bg-ink px-4 py-2 font-semibold text-white">
+                    <button className="rounded-md bg-accent px-4 py-2 font-semibold text-accent-ink">
                       Accept recommendation
                     </button>
                   </form>
@@ -302,7 +360,7 @@ export default async function TracePage({
           <Card>
             <SectionTitle>Signal</SectionTitle>
             {t.signals.map((sg) => {
-              const m = sg.measurements as {
+              const m = sg.measurements as Record<string, unknown> & {
                 kpi?: string;
                 change?: number;
                 z?: number;
@@ -310,26 +368,40 @@ export default async function TracePage({
                 osaChangePts?: number;
                 osaZ?: number;
               };
+              const isKpi = m.kpi === "net_sales";
               return (
                 <dl key={sg.id} className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]">
-                  <dt className="text-muted">Detector</dt>
+                  <dt className="text-muted">Type</dt>
+                  <dd>{SIGNAL_LABEL[sg.type] ?? sg.type}</dd>
+                  <dt className="text-muted">Source</dt>
                   <dd>
-                    {sg.detector} v{sg.detectorVersion}
+                    {sg.detector} v{sg.detectorVersion} · {sg.source.replace(/_/g, " ")}
                   </dd>
-                  <dt className="text-muted">Net sales</dt>
-                  <dd>
-                    {((m.change ?? 0) * 100).toFixed(1)}% vs usual (z {m.z?.toFixed(1)})
-                  </dd>
-                  {m.osaChangePts !== undefined && (
+                  {isKpi ? (
                     <>
-                      <dt className="text-muted">On-shelf avail.</dt>
+                      <dt className="text-muted">Net sales</dt>
                       <dd>
-                        {m.osaChangePts.toFixed(1)} pts vs usual (z {m.osaZ?.toFixed(1)})
+                        {((m.change ?? 0) * 100).toFixed(1)}% vs usual (z {m.z?.toFixed(1)})
                       </dd>
+                      {m.osaChangePts !== undefined && (
+                        <>
+                          <dt className="text-muted">On-shelf avail.</dt>
+                          <dd>
+                            {m.osaChangePts.toFixed(1)} pts vs usual (z {m.osaZ?.toFixed(1)})
+                          </dd>
+                        </>
+                      )}
+                      <dt className="text-muted">Window</dt>
+                      <dd>{m.window?.join(" → ")}</dd>
                     </>
+                  ) : (
+                    Object.entries(m).map(([k, val]) => (
+                      <div key={k} className="contents">
+                        <dt className="text-muted">{k}</dt>
+                        <dd className="font-mono">{String(val)}</dd>
+                      </div>
+                    ))
                   )}
-                  <dt className="text-muted">Window</dt>
-                  <dd>{m.window?.join(" → ")}</dd>
                 </dl>
               );
             })}

@@ -1,5 +1,5 @@
 /**
- * Seeds a fresh organization epoch with the Phase 2 synthetic organization. Never deletes:
+ * Seeds a fresh organization epoch with the synthetic organization (org.ts). Never deletes:
  * previous organizations are deactivated so their audit history stays intact (ADR-004).
  */
 import { eq, ne } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { hashPassword } from "better-auth/crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { addDays } from "@/domain/calendar";
 import * as s from "@/infra/db/schema";
-import { generateDay } from "./generator";
+import { generateDay, generateDepartmentDay } from "./generator";
 import { HISTORY_DAYS, KPIS, ORG_NAME, SEED_VERSION, STORY_DAY, UNITS, USERS } from "./org";
 
 type Db = NodePgDatabase<typeof s>;
@@ -97,23 +97,39 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
           higherIsBetter: k.higherIsBetter,
           strategicWeight: k.strategicWeight,
           ownerDepartmentId: unitIds[k.owner],
+          level: k.level,
+          target: k.target,
         })
         .returning();
       kpiIds[k.code] = row.id;
     }
 
     const rows: (typeof s.kpiObservation.$inferInsert)[] = [];
+    const branchKpis = KPIS.filter((k) => k.level === "branch");
+    for (let i = HISTORY_DAYS; i >= 1; i--) {
+      const day = addDays(STORY_DAY, -i);
+      for (const k of KPIS.filter((x) => x.level === "department")) {
+        rows.push({
+          orgId: org.id,
+          kpiId: kpiIds[k.code],
+          orgUnitId: unitIds[k.owner],
+          day,
+          value: generateDepartmentDay(k.code, day),
+          source: "synthetic:department-feed",
+        });
+      }
+    }
     for (const b of UNITS.filter((u) => u.type === "branch")) {
       for (let i = HISTORY_DAYS; i >= 1; i--) {
         const day = addDays(STORY_DAY, -i);
         const v = generateDay(b, day);
-        for (const k of KPIS) {
+        for (const k of branchKpis) {
           rows.push({
             orgId: org.id,
             kpiId: kpiIds[k.code],
             orgUnitId: unitIds[b.code],
             day,
-            value: v[k.code],
+            value: v[k.code as keyof typeof v],
             source: "synthetic:store-feed",
           });
         }

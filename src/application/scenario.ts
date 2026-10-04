@@ -9,14 +9,15 @@ import { DomainError } from "@/domain/errors";
 import { assertAuthorized, authorizeUser } from "@/domain/policy/authorize";
 import type { Actor } from "@/domain/types";
 import { action, demoClock, kpi, kpiObservation, orgUnit } from "@/infra/db/schema";
-import { generateDay, P2S1, type Interventions } from "@/infra/seed/generator";
-import { UNITS } from "@/infra/seed/org";
+import { generateDay, generateDepartmentDay, P2S1, type Interventions } from "@/infra/seed/generator";
+import { SEED_VERSION, UNITS } from "@/infra/seed/org";
 import { seed } from "@/infra/seed/seed";
 import { appendAudit } from "./audit";
 import { evaluateDueOutcomes } from "./commands/outcomes";
 import { executeReadyActions, runClockJobs } from "./commands/lifecycle";
 import { createContext, type AppContext } from "./context";
 import type { Db } from "./db";
+import { seedCatalog } from "./catalog";
 import { runDetector } from "./detector";
 
 const dayOf = (d: Date) => d.toISOString().slice(0, 10);
@@ -44,9 +45,20 @@ async function generateDays(ctx: AppContext, fromDay: string, toDay: string) {
     .select()
     .from(orgUnit)
     .where(and(eq(orgUnit.orgId, ctx.orgId), eq(orgUnit.type, "branch")));
-  const kpis = await ctx.db.select().from(kpi).where(eq(kpi.orgId, ctx.orgId));
+  const allKpis = await ctx.db.select().from(kpi).where(eq(kpi.orgId, ctx.orgId));
+  const kpis = allKpis.filter((k) => k.level === "branch");
   const rows: (typeof kpiObservation.$inferInsert)[] = [];
   for (let d = fromDay; d < toDay; d = addDays(d, 1)) {
+    for (const k of allKpis.filter((x) => x.level === "department" && x.ownerDepartmentId)) {
+      rows.push({
+        orgId: ctx.orgId,
+        kpiId: k.id,
+        orgUnitId: k.ownerDepartmentId!,
+        day: d,
+        value: generateDepartmentDay(k.code, d),
+        source: "synthetic:department-feed",
+      });
+    }
     for (const u of units) {
       const seedUnit = UNITS.find((x) => x.code === u.code);
       if (!seedUnit) continue;
@@ -102,10 +114,22 @@ export async function advanceClock(db: Db, actor: Actor, hours: number) {
   return { from, to, generated, clock, outcomes, detections };
 }
 
-/** Starts a fresh demo epoch (new organization; history of the old one stays intact) and runs the detector. */
+/**
+ * Seeds a new epoch, runs the live detector (the Haifa story) and loads the scenario catalog. Used by
+ * the demo reset control and by `pnpm demo:reset` (deploy bootstrap).
+ */
+export async function bootstrapEpoch(db: Db, password: string) {
+  const r = await seed(db, { password });
+  const ctx = await createContext(db, { orgId: r.orgId });
+  const detections = await runDetector(ctx);
+  const catalog = await seedCatalog(await createContext(db, { orgId: r.orgId }));
+  return { orgId: r.orgId, detections, catalog };
+}
+
+/** Starts a fresh demo epoch (new organization; history of the old one stays intact). */
 export async function resetDemo(db: Db, actor: Actor, password: string) {
   assertDemoControl(actor);
-  const r = await seed(db, { password });
+  const r = await bootstrapEpoch(db, password);
   const ctx = await createContext(db, { orgId: r.orgId });
   await db.transaction((tx) =>
     appendAudit(
@@ -115,10 +139,9 @@ export async function resetDemo(db: Db, actor: Actor, password: string) {
         operation: "demo.reset",
         entityType: "organization",
         entityId: r.orgId,
-        changes: { seedVersion: "p2-v1" },
+        changes: { seedVersion: SEED_VERSION },
       },
     ),
   );
-  const detections = await runDetector(ctx);
-  return { orgId: r.orgId, detections };
+  return r;
 }

@@ -1,4 +1,7 @@
-/** The Phase 2 demo, driven like the UI will drive it: reset → detector → decide → approve → clock → outcome. */
+/**
+ * The Phase 2 demo, driven like the UI drives it: reset → detector + catalog → local priority →
+ * decide → approve → clock → outcome.
+ */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import type { Pool } from "pg";
@@ -7,6 +10,8 @@ import { acceptDecision, executeReadyActions, grantApproval } from "@/applicatio
 import { createContext, loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
 import { getInsightTrace, listInsights, listMyApprovals } from "@/application/queries/insights";
+import { performanceView } from "@/application/queries/performance";
+import { CATALOG } from "@/infra/seed/catalog";
 import { advanceClock, resetDemo } from "@/application/scenario";
 import * as s from "@/infra/db/schema";
 import { seed } from "@/infra/seed/seed";
@@ -34,21 +39,95 @@ describe("Phase 2 demo scenario", () => {
     return loadUserActor(appDb, orgId, u.id, { sessionId: `s-${email}`, viaDemoSwitcher: true });
   };
 
-  it("reset seeds a new epoch and the detector finds exactly the planted story", async () => {
+  const haifa = async (email: string) =>
+    (await listInsights(appDb, orgId, await as(email))).find((i) => /Haifa Grand Canyon net sales/.test(i.title))!;
+
+  it("reset seeds a new epoch: the detector finds exactly the planted story, and the catalog loads", async () => {
     // Bootstrap an epoch so the Admin persona exists, then reset as that Admin.
     orgId = (await seed(ownerDb, { password: "test-password" })).orgId;
     const admin = await as("admin@vector-retail.example");
     const r = await resetDemo(appDb, admin, "test-password");
     orgId = r.orgId;
     expect(r.detections).toHaveLength(1);
+    expect(r.catalog).toHaveLength(CATALOG.length);
     const list = await listInsights(appDb, orgId, await as("dana@vector-retail.example"));
-    expect(list).toHaveLength(1);
-    expect(list[0].title).toMatch(/Haifa Grand Canyon net sales −1\d\.\d% vs\. usual/);
-    expect(list[0].priorityBand).toBe("P2");
+    expect(list).toHaveLength(19); // 14 risks (13 catalog + the live Haifa story) and 5 opportunities
+    expect(
+      list
+        .filter((i) => i.workstream === "risk")
+        .map((i) => i.priorityBand)
+        .sort()
+        .join(""),
+    ).toBe("P1P1P1P1P2P2P2P2P2P3P3P3P4P4");
+    expect(
+      list
+        .filter((i) => i.workstream === "opportunity")
+        .map((i) => i.priorityBand)
+        .sort()
+        .join(""),
+    ).toBe("O1O2O2O2O3");
+    const h = await haifa("dana@vector-retail.example");
+    expect(h.title).toMatch(/Haifa Grand Canyon net sales −1\d\.\d% vs\. usual/);
+    expect(h.priorityBand).toBe("P2");
+    expect((await verifyAuditChain(appDb, orgId)).ok).toBe(true);
+  });
+
+  it("local priority: P2 for the Center region manager (R11) and the Dizengoff branch manager (R10); P1 for Avi", async () => {
+    const maya = await listInsights(appDb, orgId, await as("maya@vector-retail.example"));
+    const labor = maya.find((i) => /Labor cost 6% over plan/.test(i.title))!;
+    expect([labor.priorityBand, labor.local?.band]).toEqual(["P3", "P2"]);
+    // Never lowered: a group-wide P1 stays P1 for her.
+    expect(maya.find((i) => /Food-safety recall/.test(i.title))!.local).toBeNull();
+    const lior = await listInsights(appDb, orgId, await as("lior@vector-retail.example"));
+    const shrink = lior.find((i) => /Shrinkage spike/.test(i.title))!;
+    expect([shrink.priorityBand, shrink.local?.band]).toEqual(["P3", "P2"]);
+    expect(lior[0].id).toBe(shrink.id); // ranked by local priority
+    const avi = await haifa("avi@vector-retail.example");
+    expect([avi.priorityBand, avi.local?.band]).toEqual(["P2", "P1"]);
+  });
+
+  it("the catalog opens mid-flight: approvals wait on the right people", async () => {
+    const titles = async (email: string) =>
+      (await listMyApprovals(appDb, orgId, await as(email))).map((a) => a.action.title).sort();
+    expect(await titles("omer@vector-retail.example")).toEqual([
+      "Afternoon staff uplift during the heatwave",
+      "Extra beverage and ice-cream deliveries to 8 South branches",
+    ]);
+    expect(await titles("yossi@vector-retail.example")).toEqual([
+      "Transfer top-50 SKU stock from the Center DC to 9 North branches",
+    ]);
+    expect(await titles("dana@vector-retail.example")).toHaveLength(8);
+    expect(await titles("noa@vector-retail.example")).toEqual([]); // she owns those actions (AZ-2)
+  });
+
+  it("performance views follow the viewer's position", async () => {
+    const pos = async (email: string) => (await performanceView(appDb, orgId, await as(email)))!;
+    const dana = await pos("dana@vector-retail.example");
+    expect(dana.position).toBe("group");
+    expect("children" in dana && dana.children.map((c) => c.name).sort()).toEqual([
+      "Center",
+      "Coast",
+      "Jerusalem",
+      "North",
+      "South",
+    ]);
+    expect("departmentPulse" in dana && dana.departmentPulse).toHaveLength(8);
+    const maya = await pos("maya@vector-retail.example");
+    expect(maya.position).toBe("region");
+    expect("children" in maya && maya.children).toHaveLength(12);
+    const labor = maya.kpis.find((k) => k.code === "labor_pct")!;
+    expect(labor.status).toBe("bad"); // R11 is visible in the data, not only in the insight
+    const lior = await pos("lior@vector-retail.example");
+    expect(lior.position).toBe("branch");
+    expect(lior.kpis.find((k) => k.code === "shrink_pct")!.status).toBe("bad");
+    const noa = await pos("noa@vector-retail.example");
+    expect(noa.position).toBe("department");
+    expect("owned" in noa && noa.owned.map((i) => i.band).sort()).toEqual(["P1", "P1"]);
+    expect("weDependOn" in noa && noa.weDependOn.length).toBeGreaterThan(0);
   });
 
   it("the trace explains it: two signals' worth of evidence, a transfer for Noa, a note for Avi", async () => {
-    const [ins] = await listInsights(appDb, orgId, await as("avi@vector-retail.example"));
+    const ins = await haifa("avi@vector-retail.example");
     const t = (await getInsightTrace(appDb, orgId, await as("avi@vector-retail.example"), ins.id))!;
     expect(t.evidence.map((e) => e.title)).toEqual([
       expect.stringMatching(/Net sales/),
@@ -60,11 +139,13 @@ describe("Phase 2 demo scenario", () => {
 
   it("Avi accepts, Yossi approves, execution follows, and 8 days later the outcome is 'worked'", async () => {
     const ctx = await createContext(appDb, { orgId });
-    const [ins] = await listInsights(appDb, orgId, await as("avi@vector-retail.example"));
+    const ins = await haifa("avi@vector-retail.example");
     const t = (await getInsightTrace(appDb, orgId, await as("avi@vector-retail.example"), ins.id))!;
     await acceptDecision(ctx, await as("avi@vector-retail.example"), t.decisions[0].id, "Stock is the cause");
     await executeReadyActions(ctx); // the notification needs no approval
-    const inbox = await listMyApprovals(appDb, orgId, await as("yossi@vector-retail.example"));
+    const inbox = (await listMyApprovals(appDb, orgId, await as("yossi@vector-retail.example"))).filter(
+      (a) => a.insightId === ins.id,
+    );
     expect(inbox).toHaveLength(1);
     await grantApproval(ctx, await as("yossi@vector-retail.example"), inbox[0].action.id, "Approved");
     expect(await executeReadyActions(ctx)).toHaveLength(1);
