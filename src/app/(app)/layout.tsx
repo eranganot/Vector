@@ -1,4 +1,4 @@
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import { Shell } from "../_components/header";
 import { requireActor } from "../_lib/session";
 

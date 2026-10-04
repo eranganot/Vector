@@ -24,6 +24,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | P4g: scoped audit explorer; audit entity ids always UUIDs on refusal paths                                   | #28      |
 | 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                   | #29      |
 | 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates | #30      |
+| 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)    | #31      |
 
 ## Root-cause records
 

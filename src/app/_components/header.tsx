@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { demoNow, seededPeople } from "@/application/facade";
+import { localized } from "@/app/_lib/api";
 import { signOut, switchPersona } from "../actions";
 import { demoPersonasEnabled } from "../_lib/session";
+import { makeT } from "@/i18n/t";
+import { getLocale } from "../_lib/locale";
+import { LanguageSwitch } from "./language-switch";
 import { NavLink } from "./nav-link";
 import { Logo } from "./ui";
 
@@ -45,68 +49,72 @@ export async function Shell({
   children: React.ReactNode;
 }) {
   const now = await demoNow();
+  me = await localized(me);
+  const locale = await getLocale();
+  const t = makeT(locale);
   const people = demoPersonasEnabled() ? await seededPeople() : [];
   const groups = ["Leadership & admin", "Regions & branches", "Departments"].map((g) => ({
     g,
     people: people.filter((p) => groupOf(p.title) === g),
   }));
+  const shownGroups = await localized(groups);
   // audit.read (authorization.md §2): Executive, Admin and managers; the explorer scopes what each one sees.
   const seeAudit = ["executive", "admin", "department_manager", "regional_manager"].some((r) => roles.includes(r));
   const nav = (
     <>
       <NavLink href="/">
-        <Icon d={ICONS.today} /> Home
+        <Icon d={ICONS.today} /> {t("Home")}
       </NavLink>
       <NavLink href="/risks">
-        <Icon d={ICONS.risks} /> Risks
+        <Icon d={ICONS.risks} /> {t("Risks")}
       </NavLink>
       <NavLink href="/opportunities">
-        <Icon d={ICONS.opportunities} /> Opportunities
+        <Icon d={ICONS.opportunities} /> {t("Opportunities")}
       </NavLink>
       <NavLink href="/commitments">
-        <Icon d={ICONS.commitments} /> Commitments
+        <Icon d={ICONS.commitments} /> {t("Commitments")}
       </NavLink>
       <NavLink href="/actions">
-        <Icon d={ICONS.actions} /> Actions &amp; outcomes
+        <Icon d={ICONS.actions} /> {t("Actions & outcomes")}
       </NavLink>
       <NavLink href="/org">
-        <Icon d={ICONS.org} /> Organization
+        <Icon d={ICONS.org} /> {t("Organization")}
       </NavLink>
       <NavLink href="/approvals">
-        <Icon d={ICONS.approvals} /> Waiting on you
+        <Icon d={ICONS.approvals} /> {t("Waiting on you")}
         {approvals > 0 && (
-          <span className="ml-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
+          <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
             {approvals}
           </span>
         )}
       </NavLink>
       {seeAudit && (
         <NavLink href="/audit">
-          <Icon d={ICONS.audit} /> Audit
+          <Icon d={ICONS.audit} /> {t("Audit")}
         </NavLink>
       )}
       {roles.includes("admin") && (
         <NavLink href="/admin/demo">
-          <Icon d={ICONS.demo} /> Demo controls
+          <Icon d={ICONS.demo} /> {t("Demo controls")}
         </NavLink>
       )}
     </>
   );
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="hidden border-r border-line bg-panel/60 px-4 py-6 lg:flex lg:flex-col lg:gap-8">
+      <aside className="hidden border-e border-line bg-panel/60 px-4 py-6 lg:flex lg:flex-col lg:gap-8">
         <Link href="/" className="flex items-center gap-2.5 px-2 no-underline">
           <Logo />
           <span className="flex flex-col leading-tight">
             <span className="text-[15px] font-semibold tracking-[0.14em]">VECTOR</span>
-            <span className="text-[11px] text-muted">Organizational intelligence</span>
+            <span className="text-[11px] text-muted">{t("Organizational intelligence")}</span>
           </span>
         </Link>
-        <nav className="flex flex-col gap-1" aria-label="Main">
+        <nav className="flex flex-col gap-1" aria-label={t("Main")}>
           {nav}
         </nav>
         <p className="mt-auto px-2 text-[11px] leading-relaxed text-muted">
-          Synthetic organization. Executions are simulated.
+          {t("Synthetic organization. Executions are simulated.")}
         </p>
       </aside>
       <div className="flex min-w-0 flex-col">
@@ -115,29 +123,30 @@ export async function Shell({
             <Logo size={22} />
             <span className="text-sm font-semibold tracking-[0.14em]">VECTOR</span>
           </Link>
-          <nav className="flex w-full gap-1 overflow-x-auto lg:hidden" aria-label="Main (mobile)">
+          <nav className="flex w-full gap-1 overflow-x-auto lg:hidden" aria-label={t("Main (mobile)")}>
             {nav}
           </nav>
           <div className="grow" />
-          <span className="font-mono text-xs text-muted" title="Demo clock">
-            {now.toISOString().slice(0, 16).replace("T", " ")} UTC · demo clock
+          <LanguageSwitch locale={locale} />
+          <span className="font-mono text-xs text-muted" title={t("Demo clock")}>
+            {now.toISOString().slice(0, 16).replace("T", " ")} UTC · {t("demo clock")}
           </span>
           <details className="relative">
             <summary className="cursor-pointer list-none rounded-full border border-line bg-soft px-3.5 py-1.5 text-[13px]">
-              {via ? "Viewing as " : ""}
-              <b>{me.name}</b> · {me.title} {via ? "· demo" : ""} ▾
+              {via ? `${t("Viewing as")} ` : ""}
+              <b>{me.name}</b> · {me.title} {via ? `· ${t("demo")}` : ""} ▾
             </summary>
-            <div className="absolute right-0 z-20 mt-2 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-line bg-panel p-2 shadow-2xl">
-              {people.length > 0 && <p className="px-2 pb-1 pt-1 text-xs text-muted">Switch persona (demo)</p>}
-              {groups.map(
+            <div className="absolute end-0 z-20 mt-2 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-line bg-panel p-2 shadow-2xl">
+              {people.length > 0 && <p className="px-2 pb-1 pt-1 text-xs text-muted">{t("Switch persona (demo)")}</p>}
+              {shownGroups.map(
                 ({ g, people: ps }) =>
                   ps.length > 0 && (
                     <div key={g} className="border-t border-line py-1 first:border-t-0">
-                      <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted">{g}</p>
+                      <p className="px-2 pt-1 text-[11px] uppercase tracking-wide text-muted">{t(g)}</p>
                       {ps.map((p) => (
                         <form key={p.id} action={switchPersona}>
                           <input type="hidden" name="email" value={p.email} />
-                          <button className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-soft">
+                          <button className="w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-soft">
                             <b>{p.name}</b> <span className="text-muted">· {p.title}</span>
                           </button>
                         </form>
@@ -146,7 +155,9 @@ export async function Shell({
                   ),
               )}
               <form action={signOut} className="mt-1 border-t border-line pt-1">
-                <button className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-soft">Sign out</button>
+                <button className="w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-soft">
+                  {t("Sign out")}
+                </button>
               </form>
             </div>
           </details>
