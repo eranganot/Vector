@@ -230,6 +230,8 @@ export const insight = pgTable(
   {
     id: id(),
     orgId: orgId(),
+    /** "risk" or "opportunity": separate workstreams, scored and ranked separately (ADR-006). */
+    workstream: text("workstream").notNull().default("risk"),
     title: text("title").notNull(),
     whatHappened: text("what_happened").notNull(),
     whyItMatters: text("why_it_matters").notNull(),

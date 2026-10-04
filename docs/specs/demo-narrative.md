@@ -19,9 +19,7 @@ every step on the record.
 | 1:40 | Dana                   | Recommendation: transfer stock from the Center DC + expedite delivery. Badge: _Needs Yossi's approval: rule AP-4 inventory transfer_  | Human control by policy                |
 | 2:10 | Yossi (Regional North) | Persona switch → Approvals inbox → reads the trace → **Approve** with a note                                                          | Clear ownership; nothing self-approves |
 | 2:40 | —                      | Executes (labelled _simulated_); demo clock advances 3 days                                                                           | Closed loop                            |
-| 3:10 | Dana                   | Outcome: OSA 91% → 98%, verdict **worked**, lesson recorded                                                                           | Did it work? Learn                     |
-| 3:40 | Dana                   | Second card: live heatwave forecast for South branches → opportunity insight (external data)                                          | Real-world intelligence                |
-| 4:10 | —                      | Audit view: the whole story rebuilt from the log; hash chain verified                                                                 | Trust you can prove                    |
+| 3:10 | Dana                   | Outcome: OSA 91% → 98%, verdict **worked**, lesson recorded                                                                           | Did it work? Learn                     |     | 3:40 | Dana | Opportunities lane: live heatwave forecast for South branches → O1 "pursue now" (external data), managed separately from risks | Real-world intelligence; risk and upside handled differently |     | 4:10 | —   | Audit view: the whole story rebuilt from the log; hash chain verified | Trust you can prove |
 | 4:40 | —                      | Close: Signal → Insight → Decision → Action → Outcome, with evidence, priority and approval                                           | The product loop                       |
 
 ## Phase 2 demo (first live slice)

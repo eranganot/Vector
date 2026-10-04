@@ -140,6 +140,7 @@ export async function runDetector(ctx: AppContext): Promise<DetectionResult[]> {
         affectedUnitIds: [region.id, ...(osa && supply ? [supply.id] : []), ...(store ? [store.id] : [])],
         confidence: Math.min(0.95, 0.75 + 0.05 * (sales.days.length - 3)),
         priority: {
+          compliance: 0,
           z: sales.z,
           impactIls: weeklyImpact,
           breadth: "isolated",

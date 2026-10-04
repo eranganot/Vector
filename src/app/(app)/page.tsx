@@ -24,7 +24,7 @@ export default async function Home() {
       <div className="flex flex-col gap-1">
         <h1 className="text-[26px] font-semibold">{headline}</h1>
         <p className="text-sm text-muted">
-          Ranked by priority (model priority-v1). {me.name}, {me.title}.
+          Risks ranked by priority; opportunities are a separate workstream. {me.name}, {me.title}.
         </p>
       </div>
       {approvals.length > 0 && (
@@ -43,25 +43,34 @@ export default async function Home() {
           </ul>
         </Card>
       )}
-      <section className="flex flex-col gap-3">
-        <SectionTitle>Insights</SectionTitle>
-        {insights.length === 0 && <p className="text-sm text-muted">No insights in your scope yet.</p>}
-        {insights.map((i) => (
-          <Link
-            key={i.id}
-            href={`/insights/${i.id}`}
-            className="flex flex-wrap items-center gap-4 rounded-[10px] border border-line bg-panel px-5 py-4 no-underline hover:border-ink"
-          >
-            <Band band={i.priorityBand} score={i.priorityScore} />
-            <div className="flex min-w-0 grow flex-col">
-              <span className="text-[17px] font-semibold">{i.title}</span>
-              <span className="text-sm text-muted">{i.primaryUnitName}</span>
-            </div>
-            <Pill>{STATUS[i.status] ?? i.status}</Pill>
-            <span className="text-sm underline">Why am I seeing this?</span>
-          </Link>
-        ))}
-      </section>
+      {(["risk", "opportunity"] as const).map((ws) => {
+        const items = insights.filter((i) => i.workstream === ws);
+        return (
+          <section key={ws} className="flex flex-col gap-3">
+            <SectionTitle>{ws === "risk" ? "Risks" : "Opportunities"}</SectionTitle>
+            {items.length === 0 && (
+              <p className="text-sm text-muted">
+                {ws === "risk" ? "No risks in your scope." : "No opportunities in your scope yet."}
+              </p>
+            )}
+            {items.map((i) => (
+              <Link
+                key={i.id}
+                href={`/insights/${i.id}`}
+                className="flex flex-wrap items-center gap-4 rounded-[10px] border border-line bg-panel px-5 py-4 no-underline hover:border-ink"
+              >
+                <Band band={i.priorityBand} score={i.priorityScore} />
+                <div className="flex min-w-0 grow flex-col">
+                  <span className="text-[17px] font-semibold">{i.title}</span>
+                  <span className="text-sm text-muted">{i.primaryUnitName}</span>
+                </div>
+                <Pill>{STATUS[i.status] ?? i.status}</Pill>
+                <span className="text-sm underline">Why am I seeing this?</span>
+              </Link>
+            ))}
+          </section>
+        );
+      })}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { api } from "@/application/facade";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
-import type { PriorityBreakdown } from "@/domain/priority";
+import { BANDS, type PriorityBreakdown } from "@/domain/priority";
 import { acceptDecisionAction, declineDecisionAction, reviewOutcomeAction } from "../../../actions";
 import { BackLink, Band, Card, EvidenceChart, Notice, Pill, SectionTitle, Simulated } from "../../../_components/ui";
 import { requireActor } from "../../../_lib/session";
@@ -120,7 +120,7 @@ export default async function TracePage({
               </div>
               <p className="mt-2 text-muted">
                 Confidence {ins.confidence.toFixed(2)} → ×{pb.confidenceMultiplier.toFixed(2)} · score {pb.score} ·
-                bands P1 ≥ 70, P2 ≥ 55, P3 ≥ 40
+                bands P1 ≥ {BANDS.P1}, P2 ≥ {BANDS.P2}, P3 ≥ {BANDS.P3}
               </p>
             </div>
             <p className="text-[13px]">

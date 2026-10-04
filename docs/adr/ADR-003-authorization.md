@@ -1,6 +1,6 @@
 # ADR-003: Authorization as domain policy, separate from authentication
 
-- Status: Proposed (Phase 1 gate)
+- Status: Accepted (Phase 1 gate, 2026-10-04)
 
 ## Context
 

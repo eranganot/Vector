@@ -4,7 +4,8 @@ Status: **Draft for Phase 1 approval**. Wireframes: the "VECTOR Phase 1 Wirefram
 
 ## Principle
 
-Every screen answers _what matters and what should happen_, in that order. KPIs appear only as **evidence behind
+Every screen answers _what matters and what should happen_, in that order. **Risks and opportunities are separate
+workstreams** (ADR-006): each has its own lane and ranking on every screen, and they are never mixed in one list. KPIs appear only as **evidence behind
 insights**, never as the headline. This is how VECTOR avoids turning into a BI dashboard (charter §3).
 
 ## Navigation
@@ -36,7 +37,7 @@ region or branch · Viewer → Command Center (read-only, their scope).
 2. **Top priorities**: ranked insight cards (P1/P2): title, affected units, impact, band, owner, status.
 3. **Decisions waiting on you**: approvals and pending decisions.
 4. Health by region: a small multiple per region (one composite status + the 2 KPIs driving it).
-5. Risks and opportunities: P3 items and opportunity-type insights.
+5. **Opportunities**, a separate lane ranked by opportunity value (O1–O3), owned mostly by Marketing and Trade & Commercial.
 
 **Insight trace** (the core trust screen):
 
@@ -49,7 +50,8 @@ region or branch · Viewer → Command Center (read-only, their scope).
 5. Lifecycle timeline: decision → approval → execution → outcome, each step with who and when.
 6. Audit tab: raw events, with a chain verification badge.
 
-**Unit view (Department / Region / Branch):** insights in scope ranked by priority; actions owned in the unit; for
+**Unit view (Department / Region / Branch):** risks in scope ranked by priority (region and branch views rank by **local
+priority** and show the organizational band beside it, e.g. "P3 for the group · P2 for your branch"); opportunities in their own lane; actions owned in the unit; for
 regions, child branches ranked by attention needed; dependencies (P4); key KPIs as compact evidence strips.
 
 **Approvals inbox:** per request: action summary, why approval is needed (matched rules), the insight's priority and
