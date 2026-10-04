@@ -163,7 +163,7 @@ test("closed loop: Avi records the lesson of the Haifa transfer; the next stock 
   page,
 }) => {
   await as(page, "Avi Mizrahi");
-  await page.getByRole("link", { name: "Actions & outcomes" }).click();
+  await page.getByRole("link", { name: "Actions & outcomes", exact: true }).click();
   await page.getByRole("link", { name: /Outcomes & lessons · 1 to review/ }).click();
   const card = page
     .locator("div", { has: page.getByRole("link", { name: /Transfer top-category stock Haifa Downtown/ }) })
@@ -209,4 +209,14 @@ test("audit explorer: managers see their scope with filters; the board observer 
 
   await as(page, "Tal Ben-David");
   expect((await page.goto("/audit"))?.status()).toBe(404);
+});
+
+test("Q1: an undecided conflict escalates to the common manager (the CEO for two departments)", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/approvals");
+  // R12 (Trade's delisting vs Marketing's promotion) was not decided before its overlap: it is now Dana's to decide.
+  await page.getByRole("link", { name: /Promotion planned on items Trade & Commercial is delisting/ }).click();
+  await page.waitForURL(/\/insights\//);
+  await expect(page.getByText(/escalated to VECTOR Retail Group \(common manager\)/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Accept recommendation" })).toBeVisible();
 });

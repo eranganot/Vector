@@ -191,8 +191,9 @@ test("Accept/Decline appears only for people who may decide; decisions are liste
 }) => {
   await as(page, "Eitan Rosen");
   await page.goto("/approvals");
-  // 3 catalog decisions, plus (Phase 4) his dairy-response commitment, overdue after the story advanced the clock.
-  await expect(page.getByText(/Decisions to make · 4/)).toBeVisible();
+  // 3 catalog decisions, plus (Phase 4) his overdue dairy-response commitment, minus the R12 conflict, which escalated
+  // to the CEO (Q1: undecided 2 days before its overlap) when the story advanced the clock 8 days.
+  await expect(page.getByText(/Decisions to make · 3/)).toBeVisible();
   await expect(page.getByText(/Agree the response to Dairy Co.*overdue/).first()).toBeVisible();
   await page
     .locator("main a[href^='/insights/']")

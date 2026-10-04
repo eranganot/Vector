@@ -4,10 +4,14 @@
  */
 import Link from "next/link";
 import { headlineFor } from "@/application/facade";
-import type { KpiStat } from "@/application/facade";
+import type { api, KpiStat } from "@/application/facade";
 import { ActionList, Breadcrumb, ChildTable, DepartmentPulse, HEALTH, type View } from "./unit";
 import { Band, Card, Dot, fmtIls, fmtKpi, LineChart, Pill, Ring, SectionTitle } from "./ui";
 import { DependenciesCard, type CommitmentsView } from "./commitments";
+import { ActionsSummary, CommitmentsSummary } from "./home-cards";
+
+type ActionsView = Awaited<ReturnType<typeof api.actions>>;
+type OutcomesView = Awaited<ReturnType<typeof api.outcomes>>;
 
 type Item = View["items"][number];
 
@@ -259,6 +263,7 @@ export function Dashboard({
   waiting,
   changes,
   deps,
+  work,
 }: {
   v: View;
   greeting?: string;
@@ -266,6 +271,8 @@ export function Dashboard({
   changes?: Changes;
   /** Phase 4: real dependencies on commitments for this scope. */
   deps?: CommitmentsView | null;
+  /** Phase 4 on the home (Eran, 2026-10-05): actions & outcomes for this scope. */
+  work?: { actions: ActionsView; outcomes: OutcomesView };
 }) {
   const { headline, subline } = headlineFor(v);
   const own = !!greeting;
@@ -323,6 +330,13 @@ export function Dashboard({
         <WorkstreamSummary v={v} ws="risk" unitId={unitId} />
         <WorkstreamSummary v={v} ws="opportunity" unitId={unitId} />
       </div>
+
+      {(deps || work) && (
+        <div className="grid gap-6 xl:grid-cols-2">
+          {deps ? <CommitmentsSummary v={deps} unitId={unitId} /> : <div />}
+          {work ? <ActionsSummary a={work.actions} o={work.outcomes} /> : <div />}
+        </div>
+      )}
 
       {"children" in v && v.position === "group" && (
         <>

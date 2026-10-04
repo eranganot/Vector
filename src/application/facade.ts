@@ -124,8 +124,9 @@ export const api = {
   ) => renegotiateCommitment(await ctx(), a, id, input),
   cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
   audit: async (a: Actor, f?: AuditFilter) => auditExplorer(db(), await activeOrgId(db()), a, f),
-  actions: async (a: Actor, filter?: ActionFilter) => actionsView(db(), await activeOrgId(db()), a, filter),
-  outcomes: async (a: Actor) => outcomesView(db(), await activeOrgId(db()), a),
+  actions: async (a: Actor, filter?: ActionFilter, unitId?: string) =>
+    actionsView(db(), await activeOrgId(db()), a, filter, unitId),
+  outcomes: async (a: Actor, unitId?: string) => outcomesView(db(), await activeOrgId(db()), a, unitId),
   lessonsFor: async (a: Actor, insightId: string) => lessonsForInsight(db(), await activeOrgId(db()), a, insightId),
   approvalHistory: async (a: Actor) => listMyApprovalHistory(db(), await activeOrgId(db()), a),
   /** Cosmetic (every command re-checks): may this person use this capability over these units? */

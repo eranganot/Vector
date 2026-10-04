@@ -450,6 +450,9 @@ export const conflict = pgTable(
     insightId: uuid("insight_id").references(() => insight.id),
     status: conflictStatus("status").notNull(),
     resolvedReason: text("resolved_reason"),
+    /** Q1: when an undecided conflict was escalated, and to which unit (the two owners' common ancestor). */
+    escalatedAt: ts("escalated_at"),
+    escalatedToUnitId: uuid("escalated_to_unit_id").references(() => orgUnit.id),
     version: integer("version").notNull().default(1),
     createdAt: ts("created_at").notNull(),
     updatedAt: ts("updated_at").notNull(),

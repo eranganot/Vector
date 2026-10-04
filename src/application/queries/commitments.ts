@@ -143,6 +143,19 @@ export async function commitmentsView(db: DbOrTx, orgId: string, actor: Actor, u
           ],
         }).ok &&
         (c.status === "open" || c.status === "overdue"),
+      // Q3 (Eran, 2026-10-05): the owner and the level above (the parent unit's managers) may move the due date.
+      canRenegotiate:
+        actor.kind === "user" &&
+        (c.status === "open" || c.status === "overdue") &&
+        (actor.userId === c.ownerUserId ||
+          actor.assignments.some(
+            (x) => x.unit.id === c.ownerUnitId || x.unit.id === unitById(c.ownerUnitId)!.pathIds.at(-2),
+          )) &&
+        authorizeUser(actor, "commitment.update", {
+          targetUnits: [
+            { id: c.ownerUnitId, type: unitById(c.ownerUnitId)!.type, pathIds: unitById(c.ownerUnitId)!.pathIds },
+          ],
+        }).ok,
       // Only an insight the viewer may read is linked (out of scope looks missing).
       insight:
         linked && canRead(actor, linked.visibleUnitIds)
@@ -246,15 +259,22 @@ export async function commitmentsForInsight(db: DbOrTx, orgId: string, actor: Ac
   const ids = new Set([...rows.map((r) => r.id), ...ks.flatMap((k) => [k.commitmentAId, k.commitmentBId])]);
   return {
     commitments: [...ids].map((id) => byId.get(id)).filter((c): c is NonNullable<typeof c> => !!c),
-    conflicts: ks.map((k) => ({
-      id: k.id,
-      resource: k.resource,
-      overlap: `${k.overlapStart} → ${k.overlapEnd}`,
-      status: k.status,
-      resolvedReason: k.resolvedReason,
-      a: k.commitmentAId,
-      b: k.commitmentBId,
-    })),
+    conflicts: await Promise.all(
+      ks.map(async (k) => ({
+        id: k.id,
+        resource: k.resource,
+        overlap: `${k.overlapStart} → ${k.overlapEnd}`,
+        status: k.status,
+        resolvedReason: k.resolvedReason,
+        escalatedAt: k.escalatedAt,
+        escalatedTo: k.escalatedToUnitId
+          ? ((await db.select({ name: orgUnit.name }).from(orgUnit).where(eq(orgUnit.id, k.escalatedToUnitId)))[0]
+              ?.name ?? null)
+          : null,
+        a: k.commitmentAId,
+        b: k.commitmentBId,
+      })),
+    ),
   };
 }
 

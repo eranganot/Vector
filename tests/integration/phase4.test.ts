@@ -19,6 +19,7 @@ import {
 import { createContext, loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
 import { advanceClock, resetDemo } from "@/application/scenario";
+import { listMyDecisions } from "@/application/queries/insights";
 import { commitmentsForInsight, commitmentsView } from "@/application/queries/commitments";
 import { actionsView, outcomesView } from "@/application/queries/actions";
 import { auditExplorer } from "@/application/queries/audit";
@@ -275,6 +276,10 @@ describe("commitments read model (scope, both directions, bottlenecks)", () => {
     expect(v.summary.onTimeRate).not.toBeNull();
     // The CEO is not offered the owners' buttons (cosmetic; the command allows her).
     expect([...v.owe, ...v.overdue].every((c) => !c.canUpdate)).toBe(true);
+    // Q3: the level above may move a department's due date (the CEO is the level above every department).
+    const mkt = [...v.owe, ...v.overdue].filter((c) => c.ownerUnitName === "Marketing" && c.status !== "done");
+    expect(mkt.length).toBeGreaterThan(0);
+    expect(mkt.every((c) => c.canRenegotiate)).toBe(true);
   });
 
   it("Finance waits on HR and Trade; Marketing's own promises are not shown to Finance as 'owed'", async () => {
@@ -358,5 +363,28 @@ describe("scoped audit explorer (P4g)", () => {
     const byRonit = (await auditExplorer(appDb, orgId, await as("dana"), { actor: ronitId }))!;
     expect(byRonit.events.every((e) => e.actor === "Ronit Shapiro")).toBe(true);
     expect(await auditExplorer(appDb, orgId, await as("tal"))).toBeNull();
+  });
+});
+
+describe("Q1 escalation of undecided conflicts (Eran, 2026-10-05)", () => {
+  it("48 h after detection, undecided conflicts move to the common manager (the CEO for two departments), once", async () => {
+    const r7 = (await appDb.select().from(s.insight).where(eq(s.insight.orgId, orgId))).find((i) =>
+      i.title.startsWith("Finance spend freeze"),
+    )!;
+    expect((await listMyDecisions(appDb, orgId, await as("michal"))).map((d) => d.insightId)).toContain(r7.id);
+    await advanceClock(appDb, await as("admin"), 24); // 48 h since the seed detected it
+    const ks = await appDb.select().from(s.conflict).where(eq(s.conflict.orgId, orgId));
+    const escalated = ks.filter((k) => k.escalatedAt);
+    // R7 and R9 are still undecided; R12 and the dairy conflict were resolved earlier in this file.
+    expect(escalated.map((k) => k.resource).sort()).toEqual(["branches:all-pos", "budget:q4-discretionary"]);
+    const group = await unit("GROUP");
+    expect(escalated.every((k) => k.escalatedToUnitId === group.id)).toBe(true);
+    const [after] = await appDb.select().from(s.insight).where(eq(s.insight.id, r7.id));
+    expect(after.primaryUnitId).toBe(group.id);
+    expect((await listMyDecisions(appDb, orgId, await as("dana"))).map((d) => d.insightId)).toContain(r7.id);
+    expect((await listMyDecisions(appDb, orgId, await as("michal"))).map((d) => d.insightId)).not.toContain(r7.id);
+    expect(await audits("conflict.escalated")).toHaveLength(2);
+    // Idempotent: the next run escalates nothing.
+    expect((await runCommitmentMonitor(await ctx())).escalated).toEqual([]);
   });
 });
