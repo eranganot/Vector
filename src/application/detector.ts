@@ -12,14 +12,18 @@ import { recordDetection, type DetectionResult } from "./commands/detection";
 const ils = (n: number) => `₪${Math.round(n / 1000).toLocaleString("en-US")}k`;
 const pct = (x: number) => `${(Math.abs(x) * 100).toFixed(1)}%`;
 
-/** Unit manager lookup: the person holding `role` exactly at `unitId` (seeded org has one each). */
+/**
+ * The head of a unit for a role: the person work is assigned to. A unit may have several managers
+ * (Supply Chain has Noa and Ben), so this never picks "the first row": it asks for the flagged head.
+ */
 async function holderOf(ctx: AppContext, unitId: string, role: "regional_manager" | "department_manager") {
-  const [r] = await ctx.db
+  const heads = await ctx.db
     .select({ id: user.id, name: user.name })
     .from(roleAssignment)
     .innerJoin(user, eq(user.id, roleAssignment.userId))
-    .where(and(eq(roleAssignment.orgUnitId, unitId), eq(roleAssignment.role, role)));
-  return r;
+    .where(and(eq(roleAssignment.orgUnitId, unitId), eq(roleAssignment.role, role), eq(roleAssignment.isHead, true)));
+  if (heads.length > 1) throw new Error(`unit ${unitId} has ${heads.length} heads for ${role}; expected one`);
+  return heads[0];
 }
 
 export async function runDetector(ctx: AppContext): Promise<DetectionResult[]> {

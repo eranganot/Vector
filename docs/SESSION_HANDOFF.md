@@ -99,6 +99,9 @@ See README "Commands". Deploy check: `pnpm smoke --url <dev url> --expect-sha <s
 
 ## Lessons
 
+- 2026-10-04: a merge is not done until the push-to-`main` CI run is green, not only the PR run (#28/#30 were missed).
+- 2026-10-04: never pick "the first row" for a person; a unit can have several managers (`is_head`).
+
 - 2026-10-04: integration tests must never share a database with anything a person or `doctor` relies on: they forge audit
   rows on purpose. The helper now refuses non-test databases; CI creates `vector_test`.
 - 2026-10-04: `railway add --database postgres` printed "Project not found" yet created the database (twice). A CLI error is not proof of a no-op: after any Railway mutation, re-read state (`railway status --json`) before retrying.

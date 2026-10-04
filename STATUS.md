@@ -15,6 +15,23 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Root-cause records
 
+### 2026-10-04 · CI failed on `main` after PRs #13 and #14 (e2e: Noa's inbox not empty) (reported by Eran)
+
+- **Symptom:** runs #28 (a248652) and #30 (8c7b8de) on `main` failed at "the Haifa story": Noa's Waiting on you showed an
+  approval request; the PR runs of the same code had passed, as had local and Dev runs.
+- **Evidence:** the CI error context shows Noa asked to approve "Transfer top-category stock Haifa Downtown → Haifa Grand
+  Canyon", and her own action list (3 items) does not contain it: in that run the transfer was owned by **Ben**.
+- **Root cause:** the detector assigned the transfer with `holderOf()`, which took the first row of an unordered query
+  ("seeded org has one each"). PR #13 added a second Supply Chain manager (Ben), so Postgres chose the owner; when it chose
+  Ben, Noa became an eligible approver.
+- **Ruled out:** approval routing (Noa really is eligible when she isn't the owner); test ordering (the failure is in the
+  first assertion about Noa, on a fresh reset).
+- **Why silent:** nondeterministic: local, PR and Dev runs happened to return Noa first. And I checked PR CI only, not the
+  push-to-`main` run, so #28's failure went unnoticed until Eran saw it.
+- **Fix:** `role_assignment.is_head` (migration 0005); one head per unit and role (seed test); the detector assigns work to
+  the head and refuses an ambiguous unit; integration test asserts the transfer is Noa's. Seed `p2-v4`. Process: after a
+  merge, wait for the `main` run too.
+
 ### 2026-10-04 · Dev deploy of a248652 (PR #13) failed at build
 
 - **Symptom:** Railway deployment 30d4a9a3 FAILED; Dev kept serving 71e78fc (no outage).

@@ -1,6 +1,6 @@
 # Synthetic data plan — VECTOR Retail Group
 
-Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built** (seed `p2-v3`, Eran's G2 scope). All data is
+Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built** (seed `p2-v4`, Eran's G2 scope). All data is
 synthetic (charter §17). Code: `src/infra/seed/` (`org.ts`, `generator.ts`, `catalog.ts`, `seed.ts`).
 
 ## Principles
@@ -18,7 +18,7 @@ synthetic (charter §17). Code: `src/infra/seed/` (`org.ts`, `generator.ts`, `ca
 
 ## Scale
 
-|                 | Phase 2 as built (`p2-v3`)                                       | Later                                         |
+|                 | Phase 2 as built (`p2-v4`)                                       | Later                                         |
 | --------------- | ---------------------------------------------------------------- | --------------------------------------------- |
 | Regions         | 5: North, Coast, Center, Jerusalem, South                        | same                                          |
 | Branches        | 60 (12 per region; size classes L and M)                         | same                                          |

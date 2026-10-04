@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "@/domain/calendar";
 import { CATALOG_PLANTS, generateDay, generateDepartmentDay, P2S1 } from "./generator";
-import { UNITS } from "./org";
+import { UNITS, USERS } from "./org";
 
 const branch = (code: string) => UNITS.find((u) => u.code === code)!;
 
@@ -50,5 +50,15 @@ describe("synthetic generator", () => {
     expect(UNITS.filter((u) => u.type === "branch")).toHaveLength(60);
     expect(UNITS.filter((u) => u.type === "region")).toHaveLength(5);
     expect(UNITS.filter((u) => u.type === "department")).toHaveLength(8);
+  });
+
+  it("every unit with managers has exactly one head per role (work is assigned to the head)", () => {
+    const byUnitRole = new Map<string, boolean[]>();
+    for (const u of USERS)
+      for (const r of u.roles) {
+        const k = `${r.unit}/${r.role}`;
+        byUnitRole.set(k, [...(byUnitRole.get(k) ?? []), r.isHead]);
+      }
+    for (const [k, flags] of byUnitRole) expect(flags.filter(Boolean).length, k).toBe(1);
   });
 });

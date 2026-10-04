@@ -1,0 +1,1 @@
+ALTER TABLE "role_assignment" ADD COLUMN "is_head" boolean DEFAULT false NOT NULL;

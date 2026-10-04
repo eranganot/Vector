@@ -164,6 +164,11 @@ describe("Phase 2 demo scenario", () => {
     ]);
     expect(t.insight.whyItMatters).toMatch(/stock problem/);
     expect(t.actions.map((a) => a.type).sort()).toEqual(["inventory_transfer", "notify_owner"]);
+    // Assigned to the head of Supply Chain, deterministically, although the department has two managers.
+    const noa = await as("noa@vector-retail.example");
+    expect(t.actions.find((a) => a.type === "inventory_transfer")!.ownerUserId).toBe(
+      noa.kind === "user" ? noa.userId : "",
+    );
   });
 
   it("Avi accepts, Yossi approves, execution follows, and 8 days later the outcome is 'worked'", async () => {

@@ -36,6 +36,13 @@
       "when": 1791123560914,
       "tag": "0004_kpi_level_insight_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791134199649,
+      "tag": "0005_role_assignment_head",
+      "breakpoints": true
     }
   ]
 }
