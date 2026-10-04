@@ -26,6 +26,7 @@ that sessions work from. If the two disagree, ask Eran; do not silently pick one
 | 1 Product & architecture    | Approved by Eran, with amendments: 5 more departments and cross-department scenarios (G1-a), the scenario and priority review (G1-b, G1-c)                                                                                                           |
 | 2 Core VECTOR chain         | **Signed off by Eran** (G-P2) and promoted to Prod (`demo` branch); the five known issues from the gate fixed before Phase 3 (PR #16)                                                                                                                |
 | 3 Organizational experience | Built (docs/phases/PHASE_3.md): Command Center, unit views `/units/[id]`, hierarchy, role-routed home, actionable cards, Zod inputs, Time-to-Understanding check. **Signed off by Eran** (G-P3, with the G-P3a home dashboards) and promoted to Prod |
+| 4 Operational intelligence  | Built and verified on Dev (docs/phases/PHASE_4.md): commitments, dependencies, live conflicts, approval workflow UX, action and outcome tracking with lessons, scoped audit explorer. **Awaiting Eran's Phase 4 gate** (Q1–Q5)                       |
 
 ## Definition of done (every phase)
 
