@@ -92,6 +92,7 @@ none of the demo scenarios needs them.
 | AP-4 Inventory transfer     | type `inventory_transfer`                                                      | Regional Manager of the **receiving** region, or the Supply Chain Department Manager                      |
 | AP-5 High priority          | the insight is P1                                                              | Regional Manager of the primary unit's region, or Executive if group-level                                |
 | AP-6 Staffing change        | type `staffing_change`                                                         | Regional Manager of the target region                                                                     |
+| AP-7 Legal & regulatory     | type `regulatory_notification`, `contract_clause_invocation` or `recall`       | Legal & Compliance Department Manager, or Executive                                                       |
 
 Not matched by any rule means no approval is needed. That applies to, for example, an internal task to a branch
 manager within the proposer's own scope. The evaluation result, including the list of rules evaluated and not

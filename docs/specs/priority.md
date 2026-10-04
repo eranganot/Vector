@@ -31,7 +31,7 @@ Each factor f is in [0, 1]; the weights w sum to 1; c is the insight's confidenc
 
 ## Calibration (how the thresholds were set, not invented)
 
-Ten scenarios ([priority-scenarios.json](priority-scenarios.json)) were written with an expected band **before**
+Fifteen scenarios ([priority-scenarios.json](priority-scenarios.json); S11–S15 added with the cross-department catalog in [scenarios.md](scenarios.md)) were written with an expected band **before**
 any score was computed. `pnpm exec tsx scripts/calibrate-priority.ts` scores them:
 
 | Scenario                                                    | Score | Expected | Result |
@@ -47,9 +47,9 @@ any score was computed. `pnpm exec tsx scripts/calibrate-priority.ts` scores the
 | S10 2-hour POS outage, resolved                             |  33.7 | P4       | P4     |
 | S03 Single-branch NPS −4                                    |  28.1 | P4       | P4     |
 
-All ten land in their expected band. **Caveats:**
+All fifteen land in their expected band. **Caveats:**
 
-- The P2/P3 boundary is the tightest (58.1 vs. 52.7). Phase 3's larger dataset will re-run calibration with
+- Two margins are tight: P1/P2 (S14 at 67.7 vs. the 70 line) and P2/P3 (58.1 vs. 52.7). Phase 3's larger dataset will re-run calibration with
   more scenarios before the investor demo.
 - S10 shows why magnitude alone is not priority: the largest statistical deviation (z = 4) ranks near the bottom,
   because almost nothing is at stake and it is already over.

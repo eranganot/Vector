@@ -75,7 +75,7 @@
     },
     {
       "id": "S07",
-      "title": "Promo on item X while Merchandising delists X, 5 branches, in 10 days",
+      "title": "Promo on item X while Trade & Commercial delists X, 5 branches, in 10 days",
       "z": 2.0,
       "impactIls": 80000,
       "breadth": "local",
@@ -116,6 +116,61 @@
       "strategicWeight": 0.4,
       "confidence": 0.95,
       "expected": "P4"
+    },
+    {
+      "id": "S11",
+      "title": "Key dairy supplier +7% cost on 120 SKUs in 10 days; promo already planned on them",
+      "z": 2.5,
+      "impactIls": 250000,
+      "breadth": "systemic",
+      "hoursToImpact": 240,
+      "strategicWeight": 0.7,
+      "confidence": 0.9,
+      "expected": "P2"
+    },
+    {
+      "id": "S12",
+      "title": "Food-safety recall of a supplier batch; off shelves in 60 branches within 12 h",
+      "z": 4.0,
+      "impactIls": 180000,
+      "breadth": "systemic",
+      "hoursToImpact": 12,
+      "strategicWeight": 1.0,
+      "confidence": 0.95,
+      "expected": "P1"
+    },
+    {
+      "id": "S13",
+      "title": "POS upgrade rollout scheduled inside the holiday peak, 60 branches, in 14 days",
+      "z": 2.0,
+      "impactIls": 400000,
+      "breadth": "systemic",
+      "hoursToImpact": 336,
+      "strategicWeight": 0.6,
+      "confidence": 0.8,
+      "expected": "P2"
+    },
+    {
+      "id": "S14",
+      "title": "New wage rule in 30 days; HR's updated pay tables 5 days overdue",
+      "z": 2.0,
+      "impactIls": 120000,
+      "breadth": "systemic",
+      "hoursToImpact": -120,
+      "strategicWeight": 0.5,
+      "confidence": 0.9,
+      "expected": "P2"
+    },
+    {
+      "id": "S15",
+      "title": "Finance discretionary-spend freeze vs. Marketing's committed Q4 campaign, in 7 days",
+      "z": 1.5,
+      "impactIls": 350000,
+      "breadth": "systemic",
+      "hoursToImpact": 168,
+      "strategicWeight": 0.7,
+      "confidence": 0.85,
+      "expected": "P2"
     }
   ]
 }

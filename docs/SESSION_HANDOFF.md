@@ -4,7 +4,7 @@ _Last updated: 2026-10-04_
 
 ## Current phase
 
-Phase 1 — Product & architecture: specs complete, awaiting Eran's gate (Phase 0 signed off 2026-10-04)
+Phase 2 — Core VECTOR chain (Phase 1 approved 2026-10-04 with the departments/scenarios amendment)
 
 ## Objective
 
@@ -37,8 +37,6 @@ Turn the charter into approved specs before core code: domain model, authorizati
 
 ## Open decisions
 
-- Phase 1 gate: approve domain model + state machines, roles/approval rules AP-1..AP-6, priority model v1 + bands, wireframes/IA, demo narrative, ADR-003/004/005
-
 - AI provider (Claude vs Gemini) — at Phase 5 gate
 
 ## Known limitations / deliberate deferrals
@@ -53,7 +51,7 @@ Turn the charter into approved specs before core code: domain model, authorizati
 
 ## Next recommended action
 
-Eran approves the Phase 1 gate → start Phase 2 (core VECTOR chain, deterministic).
+Build Phase 2 per docs/specs (schema → domain → commands → detector → executors/outcome → scenario engine → thin UI → tests → deploy).
 
 ## Reproducible commands
 

@@ -15,7 +15,7 @@ org-tree scope, separation of duties, or approval as a recorded human act.
 - **Permission and authorization** are pure functions in `src/domain/policy`: a static role → capability
   matrix, plus `authorize(actor, capability, target, context)` applying scope (org subtree) and context rules
   AZ-1..AZ-6.
-- **Approval requirements** are pure, versioned rules (AP-1..AP-6) evaluated at submit time and again at execution.
+- **Approval requirements** are pure, versioned rules (AP-1..AP-7) evaluated at submit time and again at execution.
   An approval is an entity with its own state machine, bound to one action version.
 - Every command calls `authorize` before the domain transition. Read queries are scoped in SQL.
 
