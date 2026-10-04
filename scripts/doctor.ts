@@ -6,7 +6,11 @@
  */
 import { existsSync } from "node:fs";
 import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { migrationStatus } from "../src/infra/db/migrations";
+import * as schema from "../src/infra/db/schema";
+import { verifyAuditChain } from "../src/application/audit";
+import type { Db } from "../src/application/db";
 
 type Result = { name: string; ok: boolean; detail: string };
 const results: Result[] = [];
@@ -49,6 +53,37 @@ async function main() {
           m.pending === 0,
           `${m.applied}/${m.expected} applied${m.pending ? ` — run pnpm db:migrate` : ""}`,
         );
+        // Audit integrity (ADR-004): every organization epoch's hash chain verifies end to end.
+        const db = drizzle(pool, { schema }) as unknown as Db;
+        const orgs = await pool.query("select id, is_active, seed_version from organization order by created_at");
+        const broken: string[] = [];
+        let events = 0;
+        for (const o of orgs.rows) {
+          const v = await verifyAuditChain(db, o.id);
+          events += v.count;
+          if (!v.ok) broken.push(`${o.id.slice(0, 8)} at #${v.brokenAt}`);
+        }
+        record(
+          "audit hash chains",
+          broken.length === 0,
+          broken.length ? `broken: ${broken.join(", ")}` : `${orgs.rowCount} epoch(s), ${events} events verified`,
+        );
+        // Seed integrity: the active epoch is the current synthetic organization with both workstreams.
+        const active = orgs.rows.find((o) => o.is_active);
+        if (active) {
+          const c = await pool.query(
+            `select (select count(*)::int from org_unit where org_id = $1 and type = 'branch') as branches,
+                    (select count(*)::int from org_unit where org_id = $1 and type = 'department') as departments,
+                    (select count(*)::int from insight where org_id = $1) as insights`,
+            [active.id],
+          );
+          const { branches, departments, insights } = c.rows[0];
+          record(
+            "active demo epoch",
+            branches === 60 && departments === 8 && insights >= 19,
+            `seed ${active.seed_version}: ${branches} branches, ${departments} departments, ${insights} insights`,
+          );
+        } else record("active demo epoch", false, "none — run pnpm demo:reset");
       } catch (err) {
         record("database connection", false, err instanceof Error ? err.message : String(err));
       } finally {

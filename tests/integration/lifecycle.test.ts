@@ -186,6 +186,62 @@ describe("Phase 2 story: Haifa sales drop, Signal → Outcome", () => {
       const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
       expect(a.status).toBe("pending_approval");
     });
+    it("§5.3 approving a different (even identical) action does not approve this one", async () => {
+      const twin = haifaDetection(r);
+      twin.signal.primaryUnitId = r.unitIds["HFA-DT"];
+      twin.signal.dedupeKey = `kpi_deviation:net_sales:${r.unitIds["HFA-DT"]}`;
+      twin.insight.primaryUnitId = r.unitIds["HFA-DT"];
+      twin.recommendation.actions[0].targetUnitIds = [r.unitIds["HFA-DT"]];
+      const det = await recordDetection(ctx, twin);
+      const dec = (await appDb.select().from(s.decision).where(eq(s.decision.insightId, det.insightId)))[0];
+      await acceptDecision(ctx, await person(r, "yossi"), dec.id);
+      await grantApproval(ctx, await person(r, "dana"), det.actionIds![0], "Approve the twin only");
+      const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
+      expect(a.status).toBe("pending_approval");
+    });
+    it("§5.5 high confidence and low priority never auto-approve", async () => {
+      const low = haifaDetection(r);
+      low.signal.primaryUnitId = r.unitIds.NAZ;
+      low.signal.dedupeKey = `test:low:${r.unitIds.NAZ}`;
+      low.insight.primaryUnitId = r.unitIds.NAZ;
+      low.insight.confidence = 0.99;
+      low.insight.priority = {
+        ...low.insight.priority!,
+        z: 0.5,
+        impactIls: 6_000,
+        hoursToImpact: 2000,
+        strategicWeight: 0.2,
+      };
+      low.recommendation.actions = [
+        {
+          type: "staffing_change",
+          title: "Extra cashier on Thursdays",
+          ownerUserId: r.userIds.shira,
+          targetUnitIds: [r.unitIds.NAZ],
+          estimatedCost: 12_000,
+          params: {},
+        },
+      ];
+      const det = await recordDetection(ctx, low);
+      const [ins] = await appDb.select().from(s.insight).where(eq(s.insight.id, det.insightId));
+      expect(ins.priorityBand).toBe("P4");
+      const dec = (await appDb.select().from(s.decision).where(eq(s.decision.insightId, det.insightId)))[0];
+      await acceptDecision(ctx, await person(r, "yossi"), dec.id);
+      const [a] = await appDb.select().from(s.action).where(eq(s.action.id, det.actionIds![0]));
+      expect(a.status).toBe("pending_approval");
+    });
+    it("§5.6 switching to an approver persona grants nothing without an explicit grant", async () => {
+      const yossiViaSwitcher = await loadUserActor(appDb, r.orgId, r.userIds.yossi, {
+        sessionId: "switch-to-yossi",
+        viaDemoSwitcher: true,
+      });
+      await listMyApprovals(appDb, r.orgId, yossiViaSwitcher);
+      await getInsightTrace(appDb, r.orgId, yossiViaSwitcher, insightId);
+      const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
+      expect(a.status).toBe("pending_approval");
+      const approvals = await appDb.select().from(s.approval).where(eq(s.approval.actionId, transferId));
+      expect(approvals.map((x) => x.status)).toEqual(["requested"]);
+    });
     it("§5.4 the owner cannot approve their own action (AZ-2)", async () =>
       expectDenied(grantApproval(ctx, await person(r, "noa"), transferId), /AZ-2/));
     it("an ineligible manager cannot approve (Avi: branch scope; Maya: other region)", async () => {
