@@ -17,15 +17,15 @@ that phase needs.
 
 ## Scale by phase
 
-|                 | Phase 2                                       | Phase 3+                                                                              |
-| --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Regions         | 2 (North, Center)                             | 5 (North, Haifa & Coast, Center, Jerusalem, South)                                    |
-| Branches        | 6                                             | 60 (8–16 per region)                                                                  |
-| Departments     | 3 (Store Operations, Supply Chain, Marketing) | 8 (+ Merchandising & Buying, Finance, HR & Workforce, Customer Experience, IT & Data) |
-| Users           | 8                                             | ~25                                                                                   |
-| KPIs            | 4                                             | ~10                                                                                   |
-| History         | 12 weeks daily                                | 52 weeks daily                                                                        |
-| Planted stories | 1 (Haifa sales drop)                          | 5 charter scenarios + 3–4 decoys                                                      |
+|                 | Phase 2                                       | Phase 3+                                                                                        |
+| --------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Regions         | 2 (North, Center)                             | 5 (North, Haifa & Coast, Center, Jerusalem, South)                                              |
+| Branches        | 6                                             | 60 (8–16 per region)                                                                            |
+| Departments     | 3 (Store Operations, Supply Chain, Marketing) | 8 (+ Trade & Commercial, Finance, HR, Legal & Compliance, IT); see [scenarios.md](scenarios.md) |
+| Users           | 8                                             | ~25                                                                                             |
+| KPIs            | 4                                             | ~10                                                                                             |
+| History         | 12 weeks daily                                | 52 weeks daily                                                                                  |
+| Planted stories | 1 (Haifa sales drop)                          | 5 charter scenarios + 3–4 decoys                                                                |
 
 ## Phase 2 contents
 
@@ -71,13 +71,11 @@ value = base(size_class) × weekday_shape × holiday_factor × trend(t) × regio
 - **Planted story P2-S1:** Haifa Grand Canyon net sales fall 18% from day −7. Cause: an OSA drop in two top
   categories after a DC routing change. OSA falls 3 days earlier, and both KPIs recover after a transfer action.
 
-## Phase 3+ planted stories (mapped to charter §36)
+## Phase 3+ planted stories
 
-| Story                                                        | Charter scenario              | Signal type          |
-| ------------------------------------------------------------ | ----------------------------- | -------------------- |
-| North stock-outs before the holiday weekend                  | KPI anomaly                   | `kpi_deviation`      |
-| Promo assets promised in the weekly ops meeting, 3 days late | Meeting commitment            | `commitment_overdue` |
-| Marketing promo vs. Merchandising delisting the same items   | Conflicting decision          | `decision_conflict`  |
-| Heatwave forecast for South branches (live)                  | External event                | `external_event`     |
-| DC delay cascading to 14 branches                            | Cross-department dependency   | `dependency_delay`   |
-| 3–4 decoys (noise spikes, a resolved outage)                 | Prove VECTOR doesn't cry wolf | —                    |
+The full catalog, with departments, dependency chains and approvals, is in [scenarios.md](scenarios.md). There are 11
+cross-department stories (C1–C5 plus the six earlier ones), covering all five charter §36 scenario types, plus 3–4 decoys
+(noise spikes, a resolved outage) that prove VECTOR doesn't cry wolf.
+
+Each department gets a manager persona in Phase 3: Store Operations, Supply Chain (Noa Friedman), Trade & Commercial,
+Marketing (Ronit Shapiro), Finance, HR, Legal & Compliance, IT.
