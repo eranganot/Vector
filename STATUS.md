@@ -15,6 +15,21 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Root-cause records
 
+### 2026-10-04 · Dev deploy of a248652 (PR #13) failed at build
+
+- **Symptom:** Railway deployment 30d4a9a3 FAILED; Dev kept serving 71e78fc (no outage).
+- **Evidence (WHAT, proven):** build log `Build error occurred [Error: Failed to open database … Loading persistence directory
+failed … failed to remove file /app/.next/cache/turbopack/v16.3.8-…/00000105.del: No such file or directory]`. The same
+  commit built green in CI (no cache) and locally from a clean `.next`.
+- **Ruled out:** a code or compile error (CI and local builds of the same commit succeed; the failure is in cache loading,
+  before compilation).
+- **WHY (inferred, not observed):** Next 16.3 caches `next build` work on disk by default; Railway restores `.next/cache`
+  between builds, and the Prod environment Eran created as a duplicate of Dev builds the same service with the same cache
+  around the same time, so a half-written cache was restored.
+- **Fix:** `experimental.turbopackFileSystemCacheForBuild: false` in `next.config.ts`; builds no longer read or write a
+  shared cache (verified: no `.next/cache` after a local build). Cost: slower cold builds.
+- **Why silent:** CI never restores `.next/cache`, so only Railway exercises the cache path.
+
 ### 2026-10-04 · Two insight pages returned "This page couldn't load" (reported by Eran on Dev)
 
 - **Symptom:** the Tel Aviv Dizengoff shrinkage spike (P3·49) and the South heatwave (O1·64) traces showed a server error for
