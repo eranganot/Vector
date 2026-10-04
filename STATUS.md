@@ -18,6 +18,24 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Root-cause records
 
+### 2026-10-04 · Prod: persona sign-in failed ("Persona sign-in failed: check SEED_USER_PASSWORD") after the secrets were rotated
+
+- **Symptom:** on Prod (9cec7c6, `env=prod`) every demo persona returned to `/login` with that error. Smoke (public
+  checks) and doctor passed, so the deploy looked healthy.
+- **Proven cause:** Prod's database was seeded on its first boot, when its variables were still the copy of Dev. Eran then
+  set a new `SEED_USER_PASSWORD`. The boot step `demo:reset --if-empty` reseeded only when the `SEED_VERSION` changed, so the
+  seeded people kept Dev's password while the persona switcher signs in with Prod's new one. Evidence: the email/password
+  form on Prod signs Dana in **with Dev's seed password** (and on Dev, the control); the switcher on Prod, using Prod's
+  value, is rejected.
+- **Ruled out:** `BETTER_AUTH_URL` / cookie settings (a form sign-in on Prod succeeds and sets a session); unknown persona
+  (the list renders and the error is the sign-in one); database or migrations (health and doctor pass).
+- **Fix:** `reseedReason()` (src/infra/seed/reseed.ts): the boot reseed also runs when the seed password no longer
+  verifies against the seeded people; a new epoch re-hashes every seeded person's password (old epochs and audit kept).
+  Test: `tests/integration/schema-seed.test.ts` "boot-time reseed decision"; script run locally: same password → "not
+  reseeding", rotated → "reseeding (SEED_USER_PASSWORD changed…)". CI now also runs on pushes to `demo` so Railway's "Wait
+  for CI" has a check to wait for. `pnpm smoke --phase <n>` verifies an environment at the phase it runs.
+- **Lesson:** public smoke and doctor do not sign in; a Prod verification must include one persona sign-in.
+
 ### 2026-10-04 · A branch manager's unit view showed the same risk as P1 and P2 (caught in Phase 3 screen review)
 
 - **Symptom:** on Avi's home (Haifa Grand Canyon) the risk card read **P1 · 77**, while the summary said "0 P1" and Waiting
