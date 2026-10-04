@@ -1,8 +1,21 @@
 # Scenario catalog
 
 Status: **Approved with Phase 1, revised 2026-10-04** after Eran's review: compliance factor added (priority-v2),
-local (scope-relative) priority added, and opportunities split into their own workstream. Scores come from
-`pnpm exec tsx scripts/calibrate-priority.ts`; inputs live in [priority-scenarios.json](priority-scenarios.json).
+local (scope-relative) priority added (v2.1 after the R11 decision), and opportunities split into their own workstream.
+Scores come from `pnpm exec tsx scripts/calibrate-priority.ts`; inputs live in [priority-scenarios.json](priority-scenarios.json).
+
+**Live in the demo (Phase 2):** every scenario below is an insight in the seeded demo. R8 is found by the live detector in
+the generated KPI data; the other 18 enter through the same write path from `src/infra/seed/catalog.ts` (a synthetic
+source feed per scenario, with the fixture's priority inputs and, where a KPI exists, evidence drawn from the generated
+data). A unit test keeps the catalog identical to the fixtures. A few start mid-flight, decided by their persona through the
+normal commands, so the demo opens with approvals waiting:
+
+| Scenario              | Decided by (seed)                     | Approvals waiting on                                                            |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
+| R1 Food-safety recall | Yael Barak (General Counsel)          | Dana (CEO): all four actions (AP-3, AP-5, AP-7, AP-1)                           |
+| R3 North stock-outs   | Yossi Cohen (Regional Manager, North) | Yossi: the transfer (AP-4 + AP-5); Dana: the ₪54k staffing uplift (AP-3 ≥ ₪50k) |
+| O1 Heatwave, South    | Omer Biton (Regional Manager, South)  | Omer: extra deliveries (AP-3) and staff uplift (AP-6)                           |
+| R13 POS outage        | acknowledged by Lior Ben-Ami          | —                                                                               |
 
 There are two workstreams, managed separately (ADR-006):
 
@@ -15,6 +28,11 @@ They share the lifecycle (Signal → Insight → Decision → Action → Outcome
 They are never ranked against each other, and each has its own lane in every view.
 
 ## Departments (8)
+
+All eight are seeded, each with a department manager persona: Store Operations (Shira Katz), Supply Chain (Noa Friedman),
+Trade & Commercial (Eitan Rosen), Marketing (Ronit Shapiro), Finance (Michal Golan, CFO), HR (Hila Dahan), Legal &
+Compliance (Yael Barak, General Counsel), IT (Amir Klein, CIO). Each department owns KPIs on its performance dashboard
+(see [performance-dashboards.md](performance-dashboards.md)).
 
 | Department         | Owns                                                                   | Typical signals                                   |
 | ------------------ | ---------------------------------------------------------------------- | ------------------------------------------------- |
@@ -89,7 +107,8 @@ Factor order in each card: magnitude · impact · breadth · urgency · strategi
   shelves in 60 branches within 12 h) → IT (block the SKU at POS) → Marketing (pause the promo, customer notice) → Finance
   (write-off, supplier claim).
 - **Factors:** 1.00 · 0.68 · 1.00 · 1.00 · 1.00 · 1.00 (compliance: regulator-mandated action).
-- **Approvals:** regulatory notice AP-7 · customer notice AP-1 · group-wide AP-2 (CEO).
+- **Approvals:** every action on a P1 risk matches AP-5; the regulator notice and the recall also match AP-7 (Legal), the
+  customer notice AP-1, the ₪12k recall AP-3. Each action's owner is excluded (AZ-2), so in the demo all four wait on the CEO.
 - **Outcome:** % of branches confirmed clear within 12 h; regulator notified in time.
 
 ### R2 · DC delivery delay cascading to 14 branches: P1 77.0 (S04)
@@ -151,10 +170,12 @@ Factor order in each card: magnitude · impact · breadth · urgency · strategi
 
 ### R8 · Haifa Grand Canyon net sales −18%: P2 57.8, local P1 72.7 (S01) — the Phase 2 demo
 
-- **Trigger:** sales 18% below the usual level for a week; OSA fell first. Signal: `kpi_deviation` (detector v1, live).
+- **Trigger:** sales 18% below the usual level for a week, on the same days on-shelf availability fell. Signal:
+  `kpi_deviation` (detector v1, live).
 - **Chain:** Store Operations ← Supply Chain (a DC routing change dropped two categories).
-- **Factors:** 0.70 · 0.60 · 0.25 · 0.75 · 0.80 · 0.00. Local for the branch manager: impact 1.00 (10% of the branch's sales),
-  breadth 1.00 → P1.
+- **Factors (fixture):** 0.70 · 0.60 · 0.25 · 0.75 · 0.80 · 0.00. Local for the branch manager: impact 1.00 (10% of the
+  branch's sales), breadth 1.00 → P1. Live, the detector measures ₪221k/week at stake (z −6.6): P2 64.4 for the group, P1
+  for Avi.
 - **Approvals:** inventory transfer AP-4 → Regional Manager North or the VP Supply Chain (owner excluded).
 - **Outcome:** OSA up ≥ 5 points within 7 days (the live demo shows "worked").
 
@@ -169,7 +190,7 @@ Factor order in each card: magnitude · impact · breadth · urgency · strategi
 
 ### R10 · Single-branch shrinkage spike: P3 48.5, local P2 60.4 (S09)
 
-- **Trigger:** shrinkage at one branch 3.5σ above normal. Signal: `kpi_deviation`.
+- **Trigger:** shrinkage at Tel Aviv Dizengoff jumps from ~1.4% to ~4.4% of sales for five days. Signal: `kpi_deviation`.
 - **Chain:** Store Operations → Legal & Compliance (police report, evidence handling) → HR (staff interviews) → Finance
   (write-off).
 - **Factors:** 0.88 · 0.39 · 0.25 · 0.75 · 0.60 · 0.00. **For the store manager it is P2** (₪40k is ~4% of the branch's
@@ -177,31 +198,32 @@ Factor order in each card: magnitude · impact · breadth · urgency · strategi
 - **Approvals:** extra security staffing AP-6.
 - **Outcome:** shrinkage back within 1σ in 4 weeks.
 
-### R11 · Labor cost 6% over plan, Center: P3 46.2, local P3 40.3 (S05)
+### R11 · Labor cost 6% over plan, Center: P3 46.2, local P2 52.3 (S05)
 
-- **Trigger:** labor % of sales above plan across 12 branches for 3 weeks. Signal: `kpi_deviation`.
+- **Trigger:** labor % of sales ~6% above plan across all 12 Center branches for 3 weeks. Signal: `kpi_deviation`.
 - **Chain:** Store Operations → HR (rosters) → Finance (budget).
 - **Factors:** 0.55 · 0.55 · 0.75 · 0.50 · 0.50 · 0.00.
-- **Open question:** I expected P2 locally for the Center regional manager; the model says P3 because ₪90k is 0.7% of the
-  region's weekly sales. The fixture records P3 pending Eran's call.
+- **Local (Eran's decision, G1-c):** P2 for the Center regional manager. A cost overrun is measured against the budget it
+  overruns: ₪90k is ~4.6% of the region's weekly labor budget (priority-v2.1-local). It stays P3 group-wide.
 - **Approvals:** rostering changes AP-6.
 
 ### R12 · Promo vs. delisting conflict: P3 43.9 (S07)
 
-- **Trigger:** Marketing schedules a promo on items Trade & Commercial is delisting. Signal: `decision_conflict`.
+- **Trigger:** Marketing schedules a promo in 10 days on 14 items Trade & Commercial is delisting at 5 Coast branches.
+  Signal: `decision_conflict`.
 - **Chain:** Marketing ↔ Trade & Commercial; Supply Chain (remaining stock); Store Operations (shelf space).
 - **Factors:** 0.50 · 0.52 · 0.50 · 0.25 · 0.70 · 0.00.
 - **Approvals:** none matched by default; the decision is routed to both department managers, escalating to the CEO if unresolved.
 
 ### R13 · 2-hour POS outage, already resolved: P4 32.1, local P3 40.2 (S10)
 
-- **Trigger:** a POS outage at one branch, fixed. Signal: incident record.
+- **Trigger:** a 2-hour POS outage at Tel Aviv Dizengoff, fixed the same day. Signal: incident record.
 - **Chain:** IT → Store Operations → Finance (reconciliation).
 - **Factors:** 1.00 · 0.09 · 0.25 · 0.10 · 0.40 · 0.00. Shows that unusual ≠ important: the biggest z-score, ranked near the bottom.
 
 ### R14 · Branch NPS down 4 points: P4 30.3, local P3 39.1 (S03)
 
-- **Trigger:** NPS at one branch below its range for 2 weeks. Signal: `kpi_deviation`.
+- **Trigger:** NPS at Tel Aviv Dizengoff ~4 points below its range for 2 weeks. Signal: `kpi_deviation`.
 - **Chain:** Store Operations → HR (service training) → Marketing (customer follow-up).
 - **Factors:** 0.40 · 0.21 · 0.25 · 0.25 · 0.60 · 0.00.
 
@@ -265,4 +287,6 @@ Linked stories show one change rippling through the organization:
 
 - The five charter scenario types (§36) are all covered: KPI anomaly (R3, R8), meeting commitment (R4, R5), conflicting
   decision (R7, R9, R12), external event (R1, O1, O2), cross-department dependency (R2, R6).
-- There are four decoys in the synthetic data (noise spikes, R13's resolved outage), to prove VECTOR doesn't cry wolf.
+- Decoys prove VECTOR doesn't cry wolf: across 60 branches and 84 days of generated noise the detector raises only the planted
+  Haifa story (unit test), the planted background conditions (North OSA dip, Center labor, Dizengoff shrinkage and NPS) move
+  KPIs without creating false sales alerts, and R13 is unusual but correctly ranked low.

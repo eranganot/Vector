@@ -11,10 +11,12 @@ unauthorized modification. Investors and future customers will ask "how do I kno
 
 1. Every command writes its entity change and an `audit_event` row in **one database transaction**. A state
    change without an audit row cannot commit.
-2. `audit_event` is insert-only. The app role `vector_app` has `INSERT, SELECT` only. A trigger raises on
+2. `audit_event` is insert-only. The app's login role `vector_app` gets its privileges from the group role
+   `vector_app_rw` (migration 0002), which has `INSERT, SELECT` only on `audit_event`. A trigger raises on
    `UPDATE`, `DELETE` and `TRUNCATE` for all roles. Migrations run as the owner and never touch existing rows.
-3. Rows form a per-org **hash chain**: `hash = sha256(prev_hash || canonical_json(row))`, serialized with a
-   transaction-scoped advisory lock. `pnpm run doctor` verifies the chain.
+3. Rows form a per-org **hash chain**: `hash = sha256(prev_hash || canonical_json(fields))` over 18 fields (every
+   column except `id`, `recorded_at` and the hashes; `hashedFields` in `src/application/audit.ts`), serialized with a
+   transaction-scoped advisory lock. `pnpm run doctor` verifies the chain of every organization epoch.
 4. Corrections are new events that reference the original, never edits.
 
 ## Alternatives considered
@@ -26,5 +28,7 @@ unauthorized modification. Investors and future customers will ask "how do I kno
 ## Consequences
 
 - Small write-path cost (advisory lock + hash) is irrelevant at prototype volumes.
-- The restricted DB role needs a second connection string on Railway (`DATABASE_URL` for migrations as owner,
-  `APP_DATABASE_URL` for the app). Introduced in Phase 2 with the audit table.
+- The restricted DB role needs a second connection string (`DATABASE_URL` for migrations as owner,
+  `APP_DATABASE_URL` for the app as `vector_app`). Introduced in Phase 2 with the audit table; `pnpm db:roles`
+  creates the role, and the app falls back to `DATABASE_URL` when `APP_DATABASE_URL` is unset (local development).
+- A demo reset starts a new organization epoch instead of deleting rows, so every epoch keeps its own chain.

@@ -34,6 +34,8 @@ jobs:
           --health-cmd "pg_isready -U vector" --health-interval 2s --health-timeout 3s --health-retries 20
     env:
       DATABASE_URL: postgres://vector:vector@localhost:5432/vector
+      # Integration tests forge audit rows on purpose: they get their own database (STATUS.md, 2026-10-04).
+      TEST_DATABASE_URL: postgres://vector:vector@localhost:5432/vector_test
       VECTOR_ENV: test
       LOG_LEVEL: warn
       GIT_SHA: ${{ github.sha }}
@@ -54,6 +56,7 @@ jobs:
       - run: pnpm format:check
       - run: pnpm test
       - run: pnpm db:migrate
+      - run: PGPASSWORD=vector psql -h localhost -U vector -d vector -c "create database vector_test"
       - run: pnpm test:integration
       - run: pnpm demo:reset
       - run: pnpm build

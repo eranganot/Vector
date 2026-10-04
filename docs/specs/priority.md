@@ -1,17 +1,17 @@
 # Prioritization models
 
-Status: **Revised 2026-10-04 (v2)** after Eran's scenario review. ADR-005 (deterministic priority), as amended, and
+Status: **Revised 2026-10-04 (v2; local v2.1 after Eran's R11 decision)**, as built. ADR-005 (deterministic priority), as amended, and
 ADR-006 (separate workstreams, local priority). Implemented in `src/domain/priority.ts`; golden fixtures in
 `src/domain/priority.test.ts`; calibration report: `pnpm exec tsx scripts/calibrate-priority.ts`.
 
 There are three deterministic, versioned models. All of them store their full breakdown with the insight, so the
 "Why am I seeing this?" panel shows exactly what was computed.
 
-| Model               | Used for                                                                  | Bands                                                                           |
-| ------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `priority-v2`       | Risk workstream, organizational view (Executive, departments)             | P1 ≥ 67 act today · P2 ≥ 51 this week · P3 ≥ 38 plan/monitor · P4 informational |
-| `priority-v2-local` | Risk workstream, seen by a regional or branch manager for their own scope | same bands                                                                      |
-| `opportunity-v1`    | Opportunity workstream (never ranked against risks)                       | O1 ≥ 60 pursue now · O2 ≥ 33 plan and resource · O3 watch                       |
+| Model                 | Used for                                                                  | Bands                                                                           |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `priority-v2`         | Risk workstream, organizational view (Executive, departments)             | P1 ≥ 67 act today · P2 ≥ 51 this week · P3 ≥ 38 plan/monitor · P4 informational |
+| `priority-v2.1-local` | Risk workstream, seen by a regional or branch manager for their own scope | same bands                                                                      |
+| `opportunity-v1`      | Opportunity workstream (never ranked against risks)                       | O1 ≥ 60 pursue now · O2 ≥ 33 plan and resource · O3 watch                       |
 
 ## Risk priority (priority-v2)
 
@@ -23,7 +23,7 @@ There are three deterministic, versioned models. All of them store their full br
 | -------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Strategic weight     |   0.30 | How much the executive team says this KPI or area matters (governed configuration)                                                                                                         |
 | Impact               |   0.20 | ₪ at stake per week, log scale: ₪5k → 0, ₪1M → 1                                                                                                                                           |
-| Magnitude            |   0.15 | `min(                                                                                                                                                                                      | z   | , 4) / 4`, the deviation from the unit's own usual level |
+| Magnitude            |   0.15 | min(\|z\|, 4) / 4: the deviation from the unit's own usual level (z = standard deviations from it)                                                                                         |
 | Urgency              |   0.15 | Hours until impact or due date: ≤ 24 h or overdue 1.0 · ≤ 72 h 0.75 · ≤ 7 d 0.5 · ≤ 30 d 0.25 · later 0.1 · already happening 0.75                                                         |
 | Breadth              |   0.10 | isolated 0.25 · local (2–3 branches) 0.5 · regional 0.75 · systemic 1.0                                                                                                                    |
 | **Compliance** (new) |   0.10 | Regulatory or contractual exposure if unhandled: 0 none · 0.3 contractual terms · 0.6 internal policy obligation · 0.8 legal/regulatory deadline · 1.0 safety or regulator-mandated action |
@@ -35,7 +35,7 @@ c = confidence (0–1); low confidence removes up to 40% of the score but never 
 Weights and thresholds were searched together over a grid (each weight 0.10–0.30, step 0.05) to reproduce every expected
 band with the widest gap between bands. Two constraints came from Eran's review:
 
-- **C4 (wage rule, S14) stays P2.** That caps the compliance weight at 0.10: at 0.15 or more it becomes P1.
+- **R5 (wage rule, S14) stays P2.** That caps the compliance weight at 0.10: at 0.15 or more it becomes P1.
 - **Urgency stays at 0.15**, because "act today" is the product's promise. The best grid point with urgency at 0.10 had
   slightly wider gaps (5.9 vs. 3.9 points), but it would under-rank imminent items.
 
@@ -62,23 +62,35 @@ Tightest gaps: P1/P2 3.9 points (68.7 vs. 64.8), which is narrower than v1's 8.4
 toward P1; and P2/P3 5.6 points (54.1 vs. 48.5), slightly wider than v1's 5.4. The live Phase 2 detector scores the
 real (synthetic) Haifa data at 64.4, P2, under v2; under v1 it scored 69.3.
 
-## Local priority (priority-v2-local)
+## Local priority (priority-v2.1-local)
 
 The same formula and bands, but **impact** and **breadth** are measured against the viewer's own scope:
 
 - impact = ₪ at stake as a share of the scope's weekly sales, log scale: 0.5% → 0, 10% → 1;
-- breadth = share of the scope affected: ≥ 50% → 1.0 · ≥ 25% → 0.75 · ≥ 10% → 0.5 · otherwise 0.25.
+- **cost overruns (v2.1, Eran's R11 decision, G1-c):** when a risk is a cost overrun on a budget line (`costLine`, e.g.
+  labor), its impact is measured against the scope's weekly budget for that line instead of its sales. The labor budget is
+  the labor-cost target (15.8% of sales) × the scope's weekly sales. An overrun is judged against the budget it overruns;
+- breadth = share of the scope's branches affected: ≥ 50% → 1.0 · ≥ 25% → 0.75 · ≥ 10% → 0.5 · otherwise 0.25. An item
+  listed at the viewer's own unit (or above it) covers the whole scope;
+- **raise-only (G2-a, proposed):** local priority can raise an item for its scope but never ranks it below its group-wide
+  band, so a group P1 stays P1 for everyone.
 
-The organizational priority stays the reference for the Command Center and department views. Region and branch views
-rank by local priority and show both, e.g. "P3 for the group · **P2 for your branch**".
+Computed at read time (`localPriorities` in `src/application/queries/performance.ts`) from the stored inputs and the live
+scope (weekly sales from the KPI observations), so it always matches the current formula version. The group-wide priority
+stays the reference for the CEO and department views. Region and branch views rank by local priority and show both, e.g.
+"**P2 for Center** (group P3)".
 
-| Scenario                 | Viewer           | Org     | Local                                    |
-| ------------------------ | ---------------- | ------- | ---------------------------------------- |
-| R8 Haifa sales drop      | Branch manager   | P2 57.8 | **P1 72.7**                              |
-| R10 Shrinkage spike      | Branch manager   | P3 48.5 | **P2 60.4**                              |
-| R14 Branch NPS down      | Branch manager   | P4 30.3 | P3 39.1                                  |
-| R13 POS outage, resolved | Branch manager   | P4 32.1 | P3 40.2                                  |
-| R11 Labor cost, Center   | Regional manager | P3 46.2 | P3 40.3 (expected P2: **open question**) |
+| Scenario                 | Viewer           | Group   | Local       |
+| ------------------------ | ---------------- | ------- | ----------- |
+| R8 Haifa sales drop      | Branch manager   | P2 57.8 | **P1 72.7** |
+| R10 Shrinkage spike      | Branch manager   | P3 48.5 | **P2 60.4** |
+| R11 Labor cost, Center   | Regional manager | P3 46.2 | **P2 52.3** |
+| R13 POS outage, resolved | Branch manager   | P4 32.1 | P3 40.2     |
+| R14 Branch NPS down      | Branch manager   | P4 30.3 | P3 39.1     |
+
+Fixture values. In the live demo the inputs come from the generated data: the Haifa insight is ₪221k/week at stake (24% of
+the branch's week), so Avi sees **P1** while the group sees P2 (64.4); the R11 overrun is ~4.7% of Center's labor budget, so
+Maya sees **P2**; the Dizengoff shrinkage spike is P2 for Lior.
 
 ## Opportunity value (opportunity-v1)
 
@@ -94,11 +106,14 @@ on their own and never mixed with risks.
 | Reach         |   0.10 | isolated · local · regional · systemic                 |
 
 × (0.6 + 0.4 × confidence). Calibration: O1 64.0 · O4 55.5 · O3 48.0 · O2 45.7 · O5 19.5. All five reproduce their
-expected band (O1 ≥ 60, O2 ≥ 33); the O1/O2 gap is 8.5 points.
+expected band (O1 ≥ 60, O2 ≥ 33); the O1/O2 gap is 8.5 points. Opportunity insights store this breakdown in the same
+priority columns, with band O1–O3. (Naming: the scenarios are numbered O1–O5 in the catalog and OP1–OP5 in the fixtures; the
+**bands** are O1 pursue now · O2 plan · O3 watch. The UI shows bands only.)
 
 ## Governance
 
-- Weights, bands and per-KPI strategic weights are versioned configuration (`weights-v2`). Changing them is a proposed,
+- Weights, bands and per-KPI strategic weights are versioned configuration (`weights-v2`; opportunity-v1 and
+  priority-v2.1-local are versioned by their model name). Changing them is a proposed,
   Executive-approved, audited operation, and applies only to insights created afterwards.
 - AI (Phase 5+) may supply factor inputs (e.g. compliance exposure, relevance of an external event), recorded with their
   `AiGeneration` id; the formulas stay deterministic. AI may propose weight changes from outcome history (D6); a human approves them.

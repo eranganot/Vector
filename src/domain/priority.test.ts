@@ -50,7 +50,7 @@ describe("priority-v2 (risks) golden fixtures", () => {
   });
   it("treats overdue as maximally urgent", () =>
     expect(computePriority({ ...data.risks[0], hoursToImpact: -5 }).factors.urgency).toBe(1));
-  it("C4 (S14) stays P2 even with its compliance exposure (Eran, 2026-10-04)", () =>
+  it("R5 wage rule (S14) stays P2 even with its compliance exposure (Eran, 2026-10-04)", () =>
     expect(computePriority(data.risks.find((s) => s.id === "S14")!).band).toBe("P2"));
 });
 
