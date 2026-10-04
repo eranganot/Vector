@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Approvals inbox</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F1F1D}a:hover{color:#5E5E59}
+</style>
+</helmet>
+<div style="width: 1280px; height: 900px; box-sizing: border-box; background: #F4F4F2; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1F1F1D; display: flex; flex-direction: column">
+<header style="height: 56px; box-sizing: border-box; padding: 0 32px; background: #FFFFFF; border-bottom: 1px solid #D6D6D2; display: flex; align-items: center; gap: 32px">
+<div style="font-weight: 600; letter-spacing: 0.12em; font-size: 15px">VECTOR</div>
+<nav style="display: flex; gap: 24px; font-size: 14px">
+<a href="Region.dc.html" style="text-decoration: none; padding: 17px 0">North</a>
+<a href="#" style="font-weight: 600; text-decoration: none; border-bottom: 2px solid #1F1F1D; padding: 17px 0">Approvals <span style="background: #1F1F1D; color: #FFFFFF; border-radius: 10px; padding: 1px 7px; font-size: 12px">2</span></a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Actions</a>
+<a href="#" style="text-decoration: none; padding: 17px 0">Audit</a>
+</nav>
+<div style="flex-grow: 1"></div>
+<button style="font: inherit; font-size: 13px; background: #F4F4F2; border: 1px solid #D6D6D2; border-radius: 18px; padding: 6px 14px; color: #1F1F1D">Viewing as <b>Yossi Cohen</b> · Regional Manager North · demo ▾</button>
+</header>
+<main style="padding: 28px 32px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<section style="display: flex; flex-direction: column; gap: 10px">
+<h1 style="margin: 0 0 6px; font-size: 22px; font-weight: 600">Waiting for your approval</h1>
+<div style="background: #FFFFFF; border: 2px solid #1F1F1D; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; gap: 8px; align-items: center"><span style="background: #9A3412; color: #FFFFFF; font-weight: 600; font-size: 12px; border-radius: 6px; padding: 3px 7px">P1</span><span style="font-size: 12px; color: #5E5E59">expires in 71 h</span></div>
+<div style="font-weight: 600">Inventory transfer: Center DC → 9 North branches</div>
+<div style="font-size: 13px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">₪38,000 · owner Noa Friedman</div>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; gap: 8px; align-items: center"><span style="background: #FFFFFF; color: #9A3412; border: 1.5px solid #9A3412; font-weight: 600; font-size: 12px; border-radius: 6px; padding: 2px 6px">P2</span><span style="font-size: 12px; color: #5E5E59">expires in 2 d</span></div>
+<div style="font-weight: 600">Customer SMS: delayed pickup orders, Nazareth</div>
+<div style="font-size: 13px; font-family: 'IBM Plex Mono', monospace; color: #5E5E59">external message · owner Rami Haddad</div>
+</div>
+</section>
+<section style="grid-column: span 2; background: #FFFFFF; border: 1px solid #D6D6D2; border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 13px; color: #5E5E59">For insight: Stock-out risk on top-50 SKUs in 9 North branches · <a href="Trace.dc.html">open full trace</a></div>
+<h2 style="margin: 0; font-size: 22px; font-weight: 600">Inventory transfer: Center DC → 9 North branches</h2>
+</div>
+<div style="background: #F4F4F2; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; font-size: 14px">
+<div style="font-weight: 600">Why you are asked</div>
+<div>AP-4 inventory transfer → Regional Manager of the receiving region (North)</div>
+<div>AP-5 P1 insight → Regional Manager of the primary unit's region (North)</div>
+<div>AP-3 cost ≥ ₪10,000 → Regional Manager of the target region (North)</div>
+<div style="font-size: 13px; color: #5E5E59">You are eligible under all three rules. You did not propose this action and you don't own it.</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; font-size: 13px">
+<div style="border: 1px solid #D6D6D2; border-radius: 8px; padding: 12px"><div style="color: #5E5E59">OSA now</div><div style="font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace">91%</div><div style="color: #5E5E59">baseline 97%</div></div>
+<div style="border: 1px solid #D6D6D2; border-radius: 8px; padding: 12px"><div style="color: #5E5E59">At stake</div><div style="font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace">₪600k</div><div style="color: #5E5E59">per week</div></div>
+<div style="border: 1px solid #D6D6D2; border-radius: 8px; padding: 12px"><div style="color: #5E5E59">Action cost</div><div style="font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace">₪38,000</div><div style="color: #5E5E59">transport + handling</div></div>
+<div style="border: 1px solid #D6D6D2; border-radius: 8px; padding: 12px"><div style="color: #5E5E59">Expected outcome</div><div style="font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace">≥ 96%</div><div style="color: #5E5E59">OSA within 7 days</div></div>
+</div>
+<div style="font-size: 14px; display: flex; flex-direction: column; gap: 4px">
+<div style="font-weight: 600">What will happen if you approve</div>
+<div>An internal transfer task is created for Supply Chain (simulated execution). VECTOR then tracks OSA in the 9 branches for 7 days and records whether it worked.</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="note" style="font-size: 13px; font-weight: 600">Note (required if you deny)</label>
+<textarea id="note" rows="3" style="font: inherit; font-size: 14px; border: 1px solid #D6D6D2; border-radius: 8px; padding: 10px"></textarea>
+</div>
+<div style="display: flex; gap: 12px; align-items: center">
+<button style="font: inherit; font-size: 15px; font-weight: 600; background: #1F1F1D; color: #FFFFFF; border: 0; border-radius: 8px; padding: 12px 22px">Approve</button>
+<button style="font: inherit; font-size: 15px; background: #FFFFFF; color: #1F1F1D; border: 1px solid #1F1F1D; border-radius: 8px; padding: 11px 22px">Deny</button>
+<div style="font-size: 12px; color: #5E5E59">Recorded with your name, time and session. Silence never approves.</div>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
