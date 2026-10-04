@@ -1,5 +1,5 @@
 {
-  "note": "Calibration sets. Expected bands were written from product judgment BEFORE scores were computed; Eran reviewed them on 2026-10-04 (C4/S14 and C3/S13 stay P2; S09 higher for the store manager; opportunities are a separate workstream). These are golden fixtures for src/domain/priority.ts.",
+  "note": "Calibration sets. Expected bands were written from product judgment BEFORE scores were computed; Eran reviewed them on 2026-10-04 (S14 and S13 stay P2; S09 higher for the store manager; opportunities are a separate workstream). These are golden fixtures for src/domain/priority.ts.",
   "riskBands": {
     "P1": "Act today; executive attention",
     "P2": "Act this week",
@@ -86,10 +86,12 @@
       "local": {
         "scope": "region",
         "scopeWeeklySalesIls": 13000000,
-        "shareOfScopeAffected": 1.0,
-        "expected": "P3",
-        "note": "Written expectation was P2; priority-v2-local scores it P3 (₪90k is 0.7% of the region's weekly sales). Fixture records the model result; flagged to Eran for a decision."
-      }
+        "costLineBudgetIls": 1950000,
+        "shareOfScopeAffected": 1,
+        "expected": "P2",
+        "note": "Eran 2026-10-04: P2 for the region manager. priority-v2.1-local measures a cost overrun against the budget it overruns: the region's labor budget (target 15% of sales = ₪1.95M/week), so ₪90k is 4.6% of it."
+      },
+      "costLine": "labor"
     },
     {
       "id": "S06",

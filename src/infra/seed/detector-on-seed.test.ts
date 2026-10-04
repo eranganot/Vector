@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addDays } from "@/domain/calendar";
-import { generateDay } from "@/infra/seed/generator";
+import { CATALOG_PLANTS, generateDay } from "@/infra/seed/generator";
 import { UNITS } from "@/infra/seed/org";
 import { detectDeviation, KPI_CONFIG } from "@/domain/detection/kpi-deviation";
 
@@ -23,17 +23,27 @@ describe("kpi-deviation detector v1 on the synthetic data", () => {
     expect(osa!.change).toBeLessThan(-5);
   });
 
-  it("raises nothing on unplanted noise (no other branch, no other KPI)", () => {
+  it("raises nothing on unplanted noise across all 60 branches (planted conditions excepted)", () => {
+    const northDip = CATALOG_PLANTS.northOsaDip.branches as readonly string[];
     for (const b of branches) {
       for (const k of Object.keys(KPI_CONFIG) as (keyof ReturnType<typeof generateDay>)[]) {
         if (b.code === "HFA-GC" && (k === "net_sales" || k === "osa" || k === "transactions" || k === "labor_pct"))
           continue;
+        if (k === "osa" && northDip.includes(b.code)) continue; // R3, planted
+
         expect(
           detectDeviation(series(b.code, k, "2026-10-22"), "2026-10-22", KPI_CONFIG[k]),
           `${b.code}/${k}`,
         ).toBeNull();
       }
     }
+  });
+
+  it("only Haifa Grand Canyon's sales deviate, so the live detector creates exactly one insight", () => {
+    const hits = branches.filter((b) =>
+      detectDeviation(series(b.code, "net_sales", "2026-10-22"), "2026-10-22", KPI_CONFIG.net_sales),
+    );
+    expect(hits.map((b) => b.code)).toEqual(["HFA-GC"]);
   });
 
   it("stays quiet on Haifa Grand Canyon before the story starts", () => {

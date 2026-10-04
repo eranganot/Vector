@@ -1,7 +1,8 @@
 # Architecture
 
-Status: describes the system as built at the end of Phase 0, plus the Phase 2 target (marked **P2**). Decisions:
-ADR-001 (stack), ADR-002 (hosting), ADR-003 (authorization), ADR-004 (audit), ADR-005 (priority).
+Status: describes the system as built at the end of Phase 2. Later-phase parts are marked with their phase.
+Decisions: ADR-001 (stack), ADR-002 (hosting), ADR-003 (authorization), ADR-004 (audit), ADR-005 (priority),
+ADR-006 (workstreams and local priority).
 
 ## Components
 
@@ -9,18 +10,18 @@ ADR-001 (stack), ADR-002 (hosting), ADR-003 (authorization), ADR-004 (audit), AD
 graph TD
   U[People in seeded roles<br/>login + demo persona switcher] --> UI
   subgraph App["Next.js app · one Railway service"]
-    UI[Web UI: Command Center, Department, Region/Branch, Trace, Approvals, Audit]
-    APP[Application layer: commands + scoped queries]
-    DOM[Domain core: state machines, policy, priority, audit events]
-    DET[Detectors P2]
-    EXE[Executors + jobs P2]
+    UI[Web UI: Today, Performance, Trace, Approvals, Audit, Demo controls]
+    APP[Application layer: commands + scoped queries + scenario engine]
+    DOM[Domain core: state machines, policy, priority, detection]
+    DET[Detector + scenario catalog]
+    EXE[Clock jobs, simulated executors, outcome evaluator]
     AI[AI gateway P5: proposes only]
     UI --> APP --> DOM
     DET --> APP
     AI --> APP
     APP --> EXE
   end
-  APP --> PG[(PostgreSQL: domain tables, insert-only audit, jobs)]
+  APP --> PG[(PostgreSQL: domain tables, insert-only audit, demo clock)]
   AI --> LLM[LLM provider P5]
   EXT[Open-Meteo P6] --> DET
 ```
@@ -32,35 +33,81 @@ graph TD
 | Infrastructure        | `src/infra`       | domain types              | app                                  |
 | UI and route handlers | `src/app`         | application, domain types | DB (`@/infra/db`, pg, Drizzle)       |
 
-The boundaries are enforced by ESLint (`no-restricted-imports`).
+The boundaries are enforced by ESLint (`no-restricted-imports`) for the domain, the application layer and UI
+components (`src/app/**/*.tsx`). The rule does not cover `.ts` files under `src/app`: server actions and the session
+helper import `@/infra/auth` (Better Auth), and `/api/health` uses the DB pool directly for its health query.
 
-## Command pipeline (P2)
+The UI reaches the application only through `src/application/facade.ts`, which binds the database and the active
+organization to the queries and commands. Server actions in `src/app/actions.ts` re-derive the actor from the session
+on every call.
 
-Every state-changing request follows one path:
+## UI (Phase 2)
+
+Dark theme, sidebar navigation (top bar on small screens). Every page requires sign-in.
+
+| Route            | What it shows                                                                                                                          | Who                        |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `/login`         | Sign-in form; demo persona list when `DEMO_PERSONAS=on`                                                                                | everyone                   |
+| `/`              | Today: risk and opportunity lanes, ranked separately, plus recently resolved. Region and branch managers see local priority            | anyone with `insight.read` |
+| `/performance`   | Dashboard for the viewer's position: group, region, branch or department (KPIs vs. target or usual level, workstreams, execution)      | anyone with `insight.read` |
+| `/insights/[id]` | Trace: signals, evidence, priority breakdown, decision, actions, approvals, outcome, and the insight's audit trail. Out of scope = 404 | anyone who can read it     |
+| `/approvals`     | Open approval requests the viewer is eligible to answer (grant or deny)                                                                | approvers                  |
+| `/audit`         | Hash-chain status of the active epoch                                                                                                  | Executive, Admin           |
+| `/admin/demo`    | Advance the demo clock; reset the demo into a new epoch                                                                                | Admin (`demo.control`)     |
+
+The UI exposes accept/decline decision, grant/deny approval and review outcome. The other human commands
+(acknowledge, dismiss, cancel, amend, retry) exist in the application layer and arrive in the UI with the unit views
+in Phase 3. A scoped audit explorer arrives in Phase 4.
+
+## Command pipeline
+
+Every state-changing request follows one path (`runCommand` in `src/application/context.ts`):
 
 1. **Authenticate**: session → `Actor` (user with role assignments, or a system actor).
-2. **Validate** the input with Zod.
+2. **Check the input**: by TypeScript type and by explicit guards in the command (rationale required, known action
+   type, clock-advance range). Zod validation at the command boundary arrives with the Phase 3 API; in Phase 2 Zod validates only
+   the runtime configuration (`src/infra/config.ts`).
 3. **Begin transaction**; load the target entity `FOR UPDATE`.
-4. **Authorize** (`domain/policy/authorize`): permission + scope + context rules. A denial is audited and returned.
-5. **Transition** (pure domain function): `(entity, command, actor, policy, clock) → { next, events } | DomainError`.
+4. **Authorize** (`domain/policy/authorize`): permission + scope + context rules.
+5. **Transition** (pure domain table and guards): illegal transitions throw `IllegalTransition`.
 6. **Persist** the entity changes and the `audit_event` rows (advisory lock + hash chain) in the same transaction.
-7. **Commit**, then enqueue follow-up jobs (pg-boss): execute a ready action, schedule an outcome evaluation.
+7. **Commit.** A refused command rolls back, and its `<operation>.denied` row is written in a separate transaction.
 
-Reads go through scoped query functions that filter by the actor's visible units in SQL.
+Follow-up work runs **synchronously, in the same request**, not from a queue: after a decision is accepted or an
+approval granted, the facade runs `executeReadyActions`. Reads go through scoped query functions that filter by the
+actor's visible units in SQL.
 
-## Background work (P2)
+## Background work
 
-pg-boss in-process (same service) runs the detector schedule, executors, outcome evaluator and the clock
-jobs (approval expiry/lapse). The demo scenario engine drives the same jobs with the demo clock. It moves to a
-separate Railway worker service only if load or isolation requires it.
+There is no job queue in Phase 2 (pg-boss was the plan; it is not installed). The jobs are plain functions:
+
+- `runClockJobs`: expire approval requests after 72 h and lapse unused approvals after 7 days (`system:clock`).
+- `executeReadyActions`: the simulated executors for every `ready` action (`system:executor`).
+- `evaluateDueOutcomes`: verdicts for outcome windows that have closed, then resolve insights whose loop closed
+  (`system:outcome-evaluator`).
+- `runDetector`: the KPI deviation detector over all branches for the clock's day (`system:detector`).
+
+The demo scenario engine (`src/application/scenario.ts`) runs them: `advanceClock` generates the synthetic KPI data
+for the elapsed days, advances the clock, then runs the clock jobs, the executor, the evaluator and (when the day
+changed) the detector; `resetDemo` seeds a new epoch, runs the detector and loads the scenario catalog. Nothing runs
+them on a timer, so outside the demo controls approvals do not expire on their own. A scheduler (pg-boss or a Railway
+cron service) remains an option for a later phase, when real time matters.
 
 ## Time
 
-`Clock` is injected everywhere in the domain. Production uses the system clock; the demo environment uses a
-DB-persisted demo clock that the scenario engine can advance. Audit rows keep both `occurred_at` (domain clock) and
-`recorded_at` (real time).
+`Clock` is injected everywhere in the domain. Commands read the organization's DB-persisted demo clock
+(`demo_clock`, falling back to real time if none is set) once per request; the scenario engine advances it. Audit rows
+keep both `occurred_at` (domain clock) and `recorded_at` (real time).
+
+## Demo epochs
+
+A demo reset never deletes data. It creates a new `organization` (an "epoch"), seeds it, and marks it active; older
+epochs and their audit chains stay intact and are still verified by `pnpm run doctor`. Every query and command works
+on the active organization.
 
 ## Environments and deploy
 
-See ADR-002 and the README. `main` → Dev automatically; `demo` branch → demo after sign-off. `/api/health` reports the
-build SHA, DB status and migrations; `pnpm smoke --expect-sha` verifies a deploy.
+See ADR-002 and the README. `main` → Dev automatically; `demo` branch → demo after sign-off. On Railway the service
+starts with `pnpm start:railway`: migrate, create the `vector_app` role if `APP_DB_PASSWORD` is set, seed a demo epoch
+if none carries the current seed version, then start. `/api/health` reports the build SHA, DB status, migrations and
+the active epoch's seed version and risk and opportunity counts; `pnpm smoke --expect-sha` verifies a deploy.

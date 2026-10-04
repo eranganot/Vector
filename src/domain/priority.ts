@@ -53,6 +53,8 @@ export type PriorityInput = {
    */
   compliance: number;
   confidence: number;
+  /** Set when the risk is a cost overrun on a budget line (used by the local view only). */
+  costLine?: "labor" | "operating";
 };
 
 export type PriorityBreakdown = {
@@ -97,7 +99,7 @@ export function computePriority(input: PriorityInput): PriorityBreakdown {
 }
 
 // ── Risks seen from a region or branch: local priority ──────────────────────
-export const LOCAL_MODEL_VERSION = "priority-v2-local";
+export const LOCAL_MODEL_VERSION = "priority-v2.1-local";
 
 export type LocalScope = {
   /** The viewer's scope unit kind (a group-level viewer uses the organizational priority). */
@@ -105,15 +107,21 @@ export type LocalScope = {
   scopeWeeklySalesIls: number;
   /** Share of the scope's branches (or the branch itself = 1) the issue affects. */
   shareOfScopeAffected: number;
+  /**
+   * For a cost overrun: the scope's weekly budget for that cost line (e.g. its labor budget). A cost
+   * overrun is measured against the budget it overruns; everything else against the scope's sales.
+   */
+  costLineBudgetIls?: number;
 };
 
 /**
  * The same model, with impact and breadth measured against the viewer's own scope: ₪40k is small for
  * the group but large for one branch, and one branch is "isolated" for the group but all of a branch
- * manager's world.
+ * manager's world. v2.1 (Eran, 2026-10-04): a cost overrun is measured against its own budget line.
  */
 export function computeLocalPriority(input: PriorityInput, scope: LocalScope): PriorityBreakdown {
-  const share = input.impactIls / Math.max(scope.scopeWeeklySalesIls, 1);
+  const base = input.costLine && scope.costLineBudgetIls ? scope.costLineBudgetIls : scope.scopeWeeklySalesIls;
+  const share = input.impactIls / Math.max(base, 1);
   const s = scope.shareOfScopeAffected;
   const factors: Record<RiskFactor, number> = {
     ...priorityFactors(input),
@@ -132,6 +140,15 @@ export function computeLocalPriority(input: PriorityInput, scope: LocalScope): P
     score,
     band: bandFor(score),
   };
+}
+
+/**
+ * What a region or branch manager sees: local priority can raise an item for its scope but never rank it
+ * below its organizational priority (a group-wide P1 stays P1 for everyone). Returns null when the
+ * organizational view applies.
+ */
+export function effectiveLocal(org: PriorityBreakdown, local: PriorityBreakdown): PriorityBreakdown | null {
+  return local.score > org.score ? local : null;
 }
 
 // ── Opportunities: opportunity-v1 ────────────────────────────────────────────

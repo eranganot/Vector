@@ -1,6 +1,6 @@
 # ADR-006: Separate risk and opportunity workstreams; scope-relative local priority
 
-- Status: Accepted (Eran, 2026-10-04, scenario review)
+- Status: Accepted (Eran, 2026-10-04, scenario review). Amended 2026-10-04: local v2.1 (G1-c) and raise-only (G2-a, proposed).
 
 ## Context
 
@@ -14,7 +14,8 @@ rank higher for the store manager whose whole scope it is.
    Opportunities are scored with `opportunity-v1` (value, window, reach, strategic fit, ease; bands O1–O3). They share the
    lifecycle, approval rules and audit, but are never ranked against each other, and every view gives each its own lane.
 2. **Local priority.** For region and branch viewers, the same risk model is evaluated with impact and breadth measured
-   against the viewer's own scope (`priority-v2-local`). The organizational priority remains the reference for the Command
+   against the viewer's own scope (`priority-v2.1-local`). A cost overrun is measured against the budget line it overruns
+   (G1-c), and local priority only ever raises an item (G2-a). The organizational priority remains the reference for the Command
    Center and departments, and both are shown where they differ.
 3. **Compliance factor.** `priority-v2` adds compliance exposure (weight 0.10, capped so that the wage-rule scenario stays P2).
 
@@ -27,4 +28,7 @@ rank higher for the store manager whose whole scope it is.
 
 - Each insight stores the organizational breakdown; local priority is computed deterministically at read time from the stored
   inputs and the viewer's scope (no extra state, always consistent with the formula version).
+- Implemented: `workstream` (migration 0003) and `owner_department_id` (0004) on insight; the detector and the scenario
+  catalog write both workstreams; the Today page and the dashboards show separate lanes; region and branch managers see local
+  priority in lists, dashboards and the trace page.
 - Calibration covers all three models (`scripts/calibrate-priority.ts`), and golden fixtures pin them.

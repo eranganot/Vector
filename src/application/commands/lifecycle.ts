@@ -155,7 +155,7 @@ async function submitActions(scope: CommandScope, decisionId: string) {
         audience: (a.params as { audience?: "internal" | "external" }).audience,
         targetUnits: await unitsByIds(tx, ctx.orgId, a.targetUnitIds),
         estimatedCost: Number(a.estimatedCost),
-        insightBand: ins.priorityBand as "P1" | "P2" | "P3" | "P4",
+        insightBand: ins.priorityBand,
         insightPrimaryUnit: primary,
       },
       await orgFacts(tx, ctx.orgId, pb.budgetDepartmentCode),

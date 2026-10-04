@@ -20,7 +20,8 @@ export type ActionFacts = {
   audience?: "internal" | "external";
   targetUnits: UnitRef[];
   estimatedCost: number;
-  insightBand: "P1" | "P2" | "P3" | "P4";
+  /** Risk band P1–P4, or opportunity band O1–O3 (AP-5 applies to P1 risks only). */
+  insightBand: string;
   insightPrimaryUnit: UnitRef;
 };
 

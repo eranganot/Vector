@@ -172,6 +172,10 @@ export const kpi = pgTable(
     higherIsBetter: boolean("higher_is_better").notNull(),
     strategicWeight: doublePrecision("strategic_weight").notNull(),
     ownerDepartmentId: uuid("owner_department_id").references(() => orgUnit.id),
+    /** "branch" (observed per branch) or "department" (observed on the department unit). */
+    level: text("level").notNull().default("branch"),
+    /** Plan / target level for dashboards; null = compared with the usual level only. */
+    target: doublePrecision("target"),
   },
   (t) => [uniqueIndex("kpi_code_uq").on(t.orgId, t.code)],
 );
@@ -239,6 +243,8 @@ export const insight = pgTable(
       .notNull()
       .references(() => orgUnit.id),
     affectedUnitIds: uuid("affected_unit_ids").array().notNull(),
+    /** The department that owns the response (scenarios.md ●); others in affected_unit_ids must act. */
+    ownerDepartmentId: uuid("owner_department_id").references(() => orgUnit.id),
     /** Affected units and all their ancestors: a user sees the insight if any of their scope units is here. */
     visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
     signalIds: uuid("signal_ids").array().notNull(),

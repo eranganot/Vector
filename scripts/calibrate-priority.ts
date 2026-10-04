@@ -26,7 +26,7 @@ for (const s of [...d.risks].sort((a, b) => computePriority(b).score - computePr
     `${s.id.padEnd(5)} ${String(p.score).padStart(5)} ${p.band}   ${s.expected}  | ${[f.magnitude, f.impact, f.breadth, f.urgency, f.strategic, f.compliance].map(f2).join(" ")} | ${s.title}`,
   );
 }
-console.log("\nLOCAL · priority-v2-local (viewer's own scope)");
+console.log("\nLOCAL · priority-v2.1-local (viewer's own scope)");
 for (const s of d.risks.filter((x: { local?: unknown }) => x.local)) {
   const p = computeLocalPriority(s, s.local);
   if (p.band !== s.local.expected) ok = false;

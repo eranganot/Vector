@@ -5,8 +5,18 @@ import * as schema from "@/infra/db/schema";
 import { migrationsFolder } from "@/infra/db/migrations";
 import { ensureAppRole } from "@/infra/db/roles";
 
-export const OWNER_URL = process.env.DATABASE_URL ?? "";
-if (!OWNER_URL) throw new Error("Integration tests need DATABASE_URL");
+/**
+ * Integration tests forge audit rows on purpose (tamper detection) and never delete anything, so
+ * they must not run against a database anyone uses: TEST_DATABASE_URL is preferred, and a database
+ * whose name lacks "test" is refused (STATUS.md, 2026-10-04 root-cause record).
+ */
+export const OWNER_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL || "";
+if (!OWNER_URL) throw new Error("Integration tests need TEST_DATABASE_URL (a *_test database)");
+const dbName = new URL(OWNER_URL).pathname.slice(1);
+if (!/test/i.test(dbName))
+  throw new Error(
+    `Refusing to run integration tests against "${dbName}": they write forged audit rows. Set TEST_DATABASE_URL to a *_test database.`,
+  );
 export const APP_PASSWORD = "integration_test_app_role_pw";
 
 /** Migrates, ensures the restricted app role, and returns owner + app-role pools. */

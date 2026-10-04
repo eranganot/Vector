@@ -138,6 +138,7 @@ export async function runDetector(ctx: AppContext): Promise<DetectionResult[]> {
           : `About ${ils(weeklyImpact)} of weekly sales is at stake. No availability problem was found; the cause needs investigation.`,
         primaryUnitId: b.id,
         affectedUnitIds: [region.id, ...(osa && supply ? [supply.id] : []), ...(store ? [store.id] : [])],
+        ownerDepartmentId: store?.id,
         confidence: Math.min(0.95, 0.75 + 0.05 * (sales.days.length - 3)),
         priority: {
           compliance: 0,
@@ -156,7 +157,7 @@ export async function runDetector(ctx: AppContext): Promise<DetectionResult[]> {
             ? `Restore availability at ${b.name} with a stock transfer from ${source.name}`
             : `Investigate the sales drop at ${b.name}`,
         rationale: osa
-          ? "Availability fell before sales did; replenishing the gap is the fastest lever."
+          ? "Sales fell where and when availability fell; replenishing the gap is the fastest lever."
           : "No operational cause detected yet.",
         actions,
       },

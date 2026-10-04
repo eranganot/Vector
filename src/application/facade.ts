@@ -13,6 +13,7 @@ import {
 import { reviewOutcome } from "./commands/outcomes";
 import { activeOrgId, createContext, loadUserActor } from "./context";
 import { getInsightTrace, listInsights, listMyApprovals } from "./queries/insights";
+import { performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
 import { demoClock, user } from "@/infra/db/schema";
@@ -59,6 +60,7 @@ export const api = {
   listInsights: async (a: Actor) => listInsights(db(), await activeOrgId(db()), a),
   trace: async (a: Actor, id: string) => getInsightTrace(db(), await activeOrgId(db()), a, id),
   myApprovals: async (a: Actor) => listMyApprovals(db(), await activeOrgId(db()), a),
+  performance: async (a: Actor) => performanceView(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {
     const c = await ctx();
@@ -77,3 +79,4 @@ export const api = {
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
+export type { KpiStat } from "./queries/performance";

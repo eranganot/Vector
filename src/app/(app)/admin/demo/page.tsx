@@ -50,7 +50,7 @@ export default async function DemoControls({
           deleted).
         </p>
         <form action={resetDemoAction}>
-          <button className="rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white">Reset demo</button>
+          <button className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">Reset demo</button>
         </form>
       </Card>
     </>

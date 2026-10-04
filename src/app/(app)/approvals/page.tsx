@@ -77,7 +77,11 @@ export default async function ApprovalsPage({
                 className="rounded-lg border border-line px-3 py-2"
               />
               <div className="flex flex-wrap items-center gap-3">
-                <button name="verdict" value="grant" className="rounded-lg bg-ink px-5 py-2.5 font-semibold text-white">
+                <button
+                  name="verdict"
+                  value="grant"
+                  className="rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink"
+                >
                   Approve
                 </button>
                 <button name="verdict" value="deny" className="rounded-lg border border-ink bg-panel px-5 py-2.5">
