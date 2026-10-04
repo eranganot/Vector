@@ -100,3 +100,61 @@ test("a unit's commitments outside your scope look missing (404)", async ({ page
   await as(page, "Avi Mizrahi");
   expect((await page.goto(`/commitments?unit=${id}`))?.status()).toBe(404);
 });
+
+test("approval workflow: an amendment is a new revision; its author is not asked; the approver sees why, who else, and history", async ({
+  page,
+}) => {
+  await as(page, "Yossi Cohen");
+  await page.goto("/risks");
+  await page
+    .getByRole("link", { name: /Stock-outs on top-50 SKUs/ })
+    .first()
+    .click();
+  await page.waitForURL(/\/insights\//);
+  const box = page.locator("div.rounded-lg", {
+    has: page.getByText("Weekend staffing uplift, 9 North branches", { exact: true }),
+  });
+  await box.getByText("Amend…").click();
+  await box.locator('input[name="estimatedCost"]').fill("40000");
+  await box.locator('input[name="note"]').fill("8 branches; Nazareth is already staffed");
+  await box.getByRole("button", { name: /Save revision/ }).click();
+  await expect(box.getByText(/cost ₪40,000/)).toBeVisible();
+  await expect(box.getByText("Pending approval")).toBeVisible();
+  // AZ-2: the author of a revision is never asked to approve it.
+  await page.goto("/approvals");
+  await expect(page.getByRole("heading", { level: 2, name: "Weekend staffing uplift, 9 North branches" })).toHaveCount(
+    0,
+  );
+
+  await as(page, "Dana Levi");
+  await page.goto("/approvals");
+  const card = page.locator("div", {
+    has: page.getByRole("heading", { level: 2, name: "Weekend staffing uplift, 9 North branches" }),
+  });
+  await expect(card.last().getByText(/Nobody else is asked/)).toBeVisible();
+  await expect(card.last().getByText(/revision 2/)).toBeVisible();
+  await expect(card.last().getByText(/request expires in about \d+ h/)).toBeVisible();
+  await card.last().getByRole("button", { name: "Approve" }).click();
+  await expect(page.getByText("Approved. Execution started (simulated).")).toBeVisible();
+  const history = page.locator("section", { has: page.getByText(/Your recent answers/) });
+  await expect(history.getByText("Weekend staffing uplift, 9 North branches")).toBeVisible();
+  await expect(history.getByText("Approved").first()).toBeVisible();
+});
+
+test("acknowledge and dismiss an insight from its trace (audited, with a reason)", async ({ page }) => {
+  await as(page, "Maya Azulay");
+  await page.goto("/risks");
+  await page
+    .getByRole("link", { name: /Labor cost 6% over plan/ })
+    .first()
+    .click();
+  await page.waitForURL(/\/insights\//);
+  await page.getByRole("button", { name: "Acknowledge" }).click();
+  await expect(page.getByText("acknowledged", { exact: true })).toBeVisible();
+  await page.getByText("Dismiss…").click();
+  const dismiss = page.locator("form", { has: page.getByRole("button", { name: "Dismiss insight" }) });
+  await dismiss.locator('input[name="rationale"]').fill("Seasonal hiring; plan updated next week");
+  await dismiss.getByRole("button", { name: "Dismiss insight" }).click();
+  await expect(page.getByText("dismissed", { exact: true })).toBeVisible();
+  await expect(page.getByText(/insight\.dismissed/)).toBeVisible();
+});

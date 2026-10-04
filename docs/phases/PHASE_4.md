@@ -153,8 +153,9 @@ seeded insights. There is no commitment or dependency the system can track, so n
    instantly, and Eitan (Trade) sees it in Waiting on you.
 3. Admin advances the clock by a day. Trade's supplier-response commitment goes overdue. Finance's margin forecast,
    which depended on it, turns "at risk" on Michal's home.
-4. Shira approves an action. She sees the rule, why she is asked, and when the request expires. A denial leads to an
-   amendment and a new approval.
+4. Yossi amends the weekend staffing action (₪54k → ₪40k): a new revision and a new approval request. He is not asked
+   to approve his own change (AZ-2); Dana sees the rule, why she is asked, who else is asked and when it expires, approves,
+   and finds it in her answers.
 5. After the outcome window, Avi reviews the Haifa outcome with a lesson. The next stock-transfer insight shows "Last
    time we did this: …".
 
@@ -172,6 +173,8 @@ seeded insights. There is no commitment or dependency the system can track, so n
 ## Progress
 
 - P4a plan and specs (#23). P4b commitments, dependencies, conflicts: schema, commands, seed `p4-v1`, monitor (#24).
+- P4e: approval workflow UX (why you, who else is asked, targets, due, expiry, your recent answers); acknowledge,
+  dismiss, cancel, amend and retry from the trace; AZ-2 fix for amendments (#26).
 - P4c/P4d: live detection on Dev; Commitments tab; the Dependencies card on every home (bottlenecks, on-time rate,
   conflicts, who waits on whom); the plans behind an insight on its trace (#25).
 
@@ -184,6 +187,10 @@ seeded insights. There is no commitment or dependency the system can track, so n
 - **Q3 · Renegotiating a date:** the owner may move a due date with a rationale. Dependents are notified (an internal
   notice), and no approval is required. Repeated renegotiation is visible in the commitment's history.
 - **Q4 · Dependency status is derived, not stored**, so it can never drift from the commitment and the clock.
+- **Q5 · Amending after a denial (needs your decision, §30 lifecycle):** the demo plan said "a denial leads to an
+  amendment and a new approval", but in the approved action state machine (G1) `rejected` is final, and amendments are
+  allowed only before a decision. Phase 4 therefore demonstrates amending a _pending_ action (new revision, new
+  approval request). Option: allow `rejected → proposed` by amendment (row A12b). Not built without your approval.
 
 ## Approval gates
 

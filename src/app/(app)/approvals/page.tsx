@@ -18,11 +18,12 @@ export default async function ApprovalsPage({
 }) {
   const { error, done } = await searchParams;
   const { actor } = await requireActor();
-  const [items, decisions, mine, now] = await Promise.all([
+  const [items, decisions, mine, now, history] = await Promise.all([
     api.myApprovals(actor),
     api.myDecisions(actor),
     api.myActions(actor),
     demoNow(),
+    api.approvalHistory(actor),
   ]);
   const ACTION_STATE: Record<string, string> = {
     proposed: "Waiting for the decision",
@@ -74,7 +75,7 @@ export default async function ApprovalsPage({
         }
       />
       {items.length === 0 && <p className="text-sm text-muted">No approval request is waiting for you.</p>}
-      {items.map(({ approval, action, insightTitle, band, insightId }) => {
+      {items.map(({ approval, action, insightTitle, band, insightId, alsoAsked, targetNames }) => {
         const req = approval.requirement as ApprovalRequirement;
         const matched = req.rules.filter((r) => r.matched);
         const hoursLeft = Math.max(0, 72 - (now.getTime() - approval.requestedAt.getTime()) / 3_600_000);
@@ -100,11 +101,18 @@ export default async function ApprovalsPage({
               ))}
               <span className="text-[13px] text-muted">
                 You are eligible under every rule, and you neither proposed nor own this action.
+                {alsoAsked.length > 0
+                  ? ` Also asked: ${alsoAsked.join(", ")} (the first answer counts).`
+                  : " Nobody else is asked."}
               </span>
             </div>
             <div className="font-mono text-[13px] text-muted">
-              Cost ₪{Number(action.estimatedCost).toLocaleString("en-US")} · revision {action.revision} · request
-              expires in about {Math.round(hoursLeft)} h (demo clock)
+              Cost ₪{Number(action.estimatedCost).toLocaleString("en-US")} · for {targetNames.join(", ")}
+              {action.dueAt ? ` · due ${action.dueAt.toISOString().slice(5, 16).replace("T", " ")}` : ""} · revision{" "}
+              {action.revision} ·{" "}
+              <span className={hoursLeft < 12 ? "text-warn" : ""}>
+                request expires in about {Math.round(hoursLeft)} h (demo clock); unanswered, it goes back to the owner
+              </span>
             </div>
             <form action={approveAction} className="flex flex-col gap-3">
               <input type="hidden" name="actionId" value={action.id} />
@@ -160,6 +168,33 @@ export default async function ApprovalsPage({
             </Pill>
           </Link>
         ))}
+      </section>
+      <section className="flex flex-col gap-3">
+        <SectionTitle aside={<span className="text-xs text-muted">recorded in the audit trail</span>}>
+          Your recent answers · {history.length}
+        </SectionTitle>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted">You have not answered an approval request yet.</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line/60 text-sm">
+            {history.map((h) => (
+              <li key={h.id} className="flex flex-wrap items-center gap-3 py-2">
+                <Band band={h.band} />
+                <Pill tone={h.status === "granted" ? "good" : h.status === "denied" ? "bad" : "neutral"}>
+                  {h.status === "granted" ? "Approved" : h.status === "denied" ? "Denied" : h.status}
+                </Pill>
+                <Link href={`/insights/${h.insightId}`} className="min-w-0 no-underline hover:underline">
+                  {h.actionTitle}
+                </Link>
+                <span className="text-xs text-muted">
+                  rev {h.revision}
+                  {h.decidedAt ? ` · ${h.decidedAt.toISOString().slice(5, 16).replace("T", " ")}` : ""}
+                  {h.rationale ? ` · “${h.rationale}”` : ""} · now {h.actionStatus.replace("_", " ")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </>
   );

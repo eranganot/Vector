@@ -2,7 +2,16 @@ import { notFound } from "next/navigation";
 import { api } from "@/application/facade";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { BANDS, OPPORTUNITY_BANDS, type PriorityBreakdown } from "@/domain/priority";
-import { acceptDecisionAction, declineDecisionAction, reviewOutcomeAction } from "../../../actions";
+import {
+  acceptDecisionAction,
+  acknowledgeInsightAction,
+  amendActionAction,
+  cancelActionAction,
+  declineDecisionAction,
+  dismissInsightAction,
+  retryActionAction,
+  reviewOutcomeAction,
+} from "../../../actions";
 import { CommitmentCard } from "../../../_components/commitments";
 import { BackLink, Band, Card, EvidenceChart, Notice, Pill, SectionTitle, Simulated } from "../../../_components/ui";
 import { requireActor } from "../../../_lib/session";
@@ -60,6 +69,24 @@ export default async function TracePage({
     api.commitmentsForInsight(actor, id), // Phase 4: the promises and plans behind this insight
   ]);
   const { insight: ins } = t;
+  // Cosmetic (every command re-checks): which lifecycle controls to offer this person.
+  const live = ins.status === "open" || ins.status === "acknowledged";
+  const [mayAck, mayDismiss, controls] = await Promise.all([
+    live && ins.status === "open" ? api.may(actor, "insight.acknowledge", [ins.primaryUnitId]) : false,
+    live ? api.may(actor, "insight.dismiss", [ins.primaryUnitId]) : false,
+    Promise.all(
+      t.actions.map(async (a) => ({
+        id: a.id,
+        cancel:
+          ["proposed", "pending_approval", "ready"].includes(a.status) &&
+          (await api.may(actor, "action.cancel", a.targetUnitIds)),
+        amend:
+          ["proposed", "pending_approval", "ready"].includes(a.status) &&
+          (await api.may(actor, "action.propose", a.targetUnitIds)),
+        retry: a.status === "failed" && (await api.may(actor, "action.execute", a.targetUnitIds)),
+      })),
+    ),
+  ]);
   const unitName = (uid: string) => t.units.find((u) => u.id === uid)?.name ?? "unknown unit";
   const personName = (pid: string | null) =>
     t.people.find((p) => p.id === pid)?.name ??
@@ -89,6 +116,34 @@ export default async function TracePage({
               <Pill tone={isOpp ? "good" : "neutral"}>{isOpp ? "Opportunity workstream" : "Risk workstream"}</Pill>
               <Pill tone={ins.status === "resolved" ? "good" : "neutral"}>{ins.status}</Pill>
               <Pill>{sourceLabel(ins.generatedBy)}</Pill>
+              {mayAck && (
+                <form action={acknowledgeInsightAction}>
+                  <input type="hidden" name="insightId" value={ins.id} />
+                  <button className="rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
+                    Acknowledge
+                  </button>
+                </form>
+              )}
+              {mayDismiss && (
+                <details>
+                  <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
+                    Dismiss…
+                  </summary>
+                  <form action={dismissInsightAction} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                    <input type="hidden" name="insightId" value={ins.id} />
+                    <input
+                      name="rationale"
+                      required
+                      minLength={3}
+                      placeholder="Why it needs no action"
+                      className="field min-w-64"
+                    />
+                    <button className="rounded-lg border border-p1 px-3 py-1 font-semibold text-p1">
+                      Dismiss insight
+                    </button>
+                  </form>
+                </details>
+              )}
             </div>
             <h1 className="text-[26px] font-semibold leading-tight">{ins.title}</h1>
             <p className="leading-relaxed">
@@ -290,6 +345,80 @@ export default async function TracePage({
                         {ap.rationale && `: “${ap.rationale}”`}
                       </div>
                     )}
+                    {(() => {
+                      const c = controls.find((x) => x.id === a.id);
+                      if (!c || !(c.cancel || c.amend || c.retry)) return null;
+                      return (
+                        <div className="mt-1 flex flex-wrap items-start gap-2">
+                          {c.retry && (
+                            <form action={retryActionAction}>
+                              <input type="hidden" name="insightId" value={ins.id} />
+                              <input type="hidden" name="actionId" value={a.id} />
+                              <button className="rounded-lg border border-accent px-3 py-1 text-[13px] text-accent">
+                                Retry
+                              </button>
+                            </form>
+                          )}
+                          {c.amend && (
+                            <details>
+                              <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
+                                Amend…
+                              </summary>
+                              <form action={amendActionAction} className="mt-2 flex flex-wrap items-end gap-2 text-sm">
+                                <input type="hidden" name="insightId" value={ins.id} />
+                                <input type="hidden" name="actionId" value={a.id} />
+                                <label className="flex flex-col gap-1 text-[13px]">
+                                  Cost (₪)
+                                  <input
+                                    type="number"
+                                    name="estimatedCost"
+                                    min={0}
+                                    step={500}
+                                    defaultValue={Number(a.estimatedCost)}
+                                    className="field w-32"
+                                  />
+                                </label>
+                                <label className="flex grow flex-col gap-1 text-[13px]">
+                                  What changes
+                                  <input name="note" className="field" placeholder="e.g. half the volume" />
+                                </label>
+                                <button className="rounded-lg bg-accent px-3 py-1.5 font-semibold text-accent-ink">
+                                  Save revision {a.revision + 1}
+                                </button>
+                                <span className="basis-full text-xs text-muted">
+                                  A new revision withdraws any pending or granted approval; the policy is re-run for the
+                                  new one.
+                                </span>
+                              </form>
+                            </details>
+                          )}
+                          {c.cancel && (
+                            <details>
+                              <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1 text-[13px] hover:bg-soft">
+                                Cancel…
+                              </summary>
+                              <form
+                                action={cancelActionAction}
+                                className="mt-2 flex flex-wrap items-center gap-2 text-sm"
+                              >
+                                <input type="hidden" name="insightId" value={ins.id} />
+                                <input type="hidden" name="actionId" value={a.id} />
+                                <input
+                                  name="rationale"
+                                  required
+                                  minLength={3}
+                                  placeholder="Why"
+                                  className="field min-w-56"
+                                />
+                                <button className="rounded-lg border border-p1 px-3 py-1 font-semibold text-p1">
+                                  Cancel action
+                                </button>
+                              </form>
+                            </details>
+                          )}
+                        </div>
+                      );
+                    })()}
                     {out && (
                       <div className="text-[13px]">
                         Outcome:{" "}
