@@ -264,7 +264,11 @@ export default async function TracePage({
                       ? behind.conflicts
                           .map(
                             (k) =>
-                              `${k.status === "open" ? "Conflict" : `Conflict resolved (${k.resolvedReason})`} on ${k.resource}, ${k.overlap}`,
+                              `${k.status === "open" ? "Conflict" : `Conflict resolved (${k.resolvedReason})`} on ${k.resource}, ${k.overlap}${
+                                k.escalatedTo && k.status === "open"
+                                  ? ` · escalated to ${k.escalatedTo} (common manager) ${k.escalatedAt?.toISOString().slice(5, 16).replace("T", " ")}`
+                                  : ""
+                              }`,
                           )
                           .join(" · ")
                       : "from the commitment register"}

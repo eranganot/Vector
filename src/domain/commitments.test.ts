@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   bottlenecks,
   cascade,
+  commonAncestor,
+  conflictEscalationDue,
   type CommitmentFacts,
   conflictBetween,
   type DependencyFacts,
@@ -204,5 +206,19 @@ describe("commitment-monitor-v1 scoring", () => {
   it("a small promise with nobody waiting stays low", () => {
     const small = c({ id: "x", status: "overdue", dueAt: T("2026-10-21T12:00:00"), impactIls: 12_000 });
     expect(["P3", "P4"]).toContain(computePriority(overduePriority(small, [], 1, now)).band);
+  });
+});
+
+describe("Q1 conflict escalation", () => {
+  it("is due 48 h after detection, or 2 days before the overlap, whichever comes first", () => {
+    const detected = T("2026-10-22T05:00:00");
+    expect(conflictEscalationDue(detected, "2026-11-01", T("2026-10-23T05:00:00"))).toBe(false);
+    expect(conflictEscalationDue(detected, "2026-11-01", T("2026-10-24T05:00:00"))).toBe(true); // 48 h
+    expect(conflictEscalationDue(detected, "2026-10-24", T("2026-10-22T06:00:00"))).toBe(true); // overlap in < 2 days
+  });
+  it("goes to the lowest common unit: the group for two departments, the region for two branches", () => {
+    expect(commonAncestor(["g", "d-mkt"], ["g", "d-trade"])).toBe("g");
+    expect(commonAncestor(["g", "north", "afula"], ["g", "north", "akko"])).toBe("north");
+    expect(commonAncestor(["g", "north", "afula"], ["g", "coast", "x"])).toBe("g");
   });
 });

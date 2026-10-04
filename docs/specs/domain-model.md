@@ -268,13 +268,14 @@ Overdue becomes an insight (Q2) only with dependents, ≥ ₪10k/week at stake, 
 
 ### 4.7 Conflict (Phase 4)
 
-| #   | From → To       | Command                                         | Actor             | Guard                                                                                                     | Audit                                                                   |
-| --- | --------------- | ----------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| K1  | ∅ → open        | conflict detector (after C1, C5)                | `system:detector` | both open/overdue, different owner units, same resource, overlapping windows, opposing effects (rules v1) | `conflict.detected`; each side becomes visible to the other side's unit |
-| K2  | open → resolved | after C5/C6 on either side, or insight resolved | `system:detector` | the pair no longer collides, or the conflict's insight is resolved/dismissed                              | `conflict.resolved`                                                     |
+| #   | From → To               | Command                                         | Actor             | Guard                                                                                                     | Audit                                                                                                   |
+| --- | ----------------------- | ----------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| K1  | ∅ → open                | conflict detector (after C1, C5)                | `system:detector` | both open/overdue, different owner units, same resource, overlapping windows, opposing effects (rules v1) | `conflict.detected`; each side becomes visible to the other side's unit                                 |
+| K2  | open → resolved         | after C5/C6 on either side, or insight resolved | `system:detector` | the pair no longer collides, or the conflict's insight is resolved/dismissed                              | `conflict.resolved`                                                                                     |
+| K3  | open → open (escalated) | `escalateConflicts` (in the commitment monitor) | `system:detector` | decision still `recommended` 48 h after detection or 2 days before the overlap (Q1)                       | `conflict.escalated`, `insight.escalated`: the deciding unit becomes the two owners' lowest common unit |
 
 Opposing effects (`conflict-rules-v1`): promote × delist, spend × freeze_spend, cutover × peak_trading. The conflict's
-insight is decided by the manager of the unit whose commitment came second (Q1, to confirm at the Phase 4 gate).
+insight is decided by the manager of the unit whose commitment came second; undecided, it escalates to the two units' common manager (Q1, Eran 2026-10-05).
 
 ## 5. Mapping to the charter's ten questions
 

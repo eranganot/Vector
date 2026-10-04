@@ -133,14 +133,16 @@ export function CommitmentCard({ c }: { c: CommitmentItem }) {
             ))}
           </ul>
         )}
-        {c.canUpdate && (
+        {(c.canUpdate || c.canRenegotiate) && (
           <div className="flex flex-wrap items-start gap-2 border-t border-line pt-3">
-            <form action={completeCommitmentAction}>
-              <input type="hidden" name="commitmentId" value={c.id} />
-              <button className="rounded-lg bg-good px-3 py-1.5 text-sm font-semibold text-ground">
-                Mark delivered
-              </button>
-            </form>
+            {c.canUpdate && (
+              <form action={completeCommitmentAction}>
+                <input type="hidden" name="commitmentId" value={c.id} />
+                <button className="rounded-lg bg-good px-3 py-1.5 text-sm font-semibold text-ground">
+                  Mark delivered
+                </button>
+              </form>
+            )}
             <details className="group">
               <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-soft">
                 Move the date
@@ -172,21 +174,23 @@ export function CommitmentCard({ c }: { c: CommitmentItem }) {
                 </button>
               </form>
             </details>
-            <details>
-              <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-soft">
-                Cancel
-              </summary>
-              <form action={cancelCommitmentAction} className="mt-2 flex flex-col gap-2 text-sm">
-                <input type="hidden" name="commitmentId" value={c.id} />
-                <label className="flex flex-col gap-1">
-                  Why
-                  <input name="rationale" required minLength={3} className="field" />
-                </label>
-                <button className="self-start rounded-lg border border-p1 px-3 py-1.5 font-semibold text-p1">
-                  Cancel the commitment
-                </button>
-              </form>
-            </details>
+            {c.canUpdate && (
+              <details>
+                <summary className="cursor-pointer list-none rounded-lg border border-line px-3 py-1.5 text-sm hover:bg-soft">
+                  Cancel
+                </summary>
+                <form action={cancelCommitmentAction} className="mt-2 flex flex-col gap-2 text-sm">
+                  <input type="hidden" name="commitmentId" value={c.id} />
+                  <label className="flex flex-col gap-1">
+                    Why
+                    <input name="rationale" required minLength={3} className="field" />
+                  </label>
+                  <button className="self-start rounded-lg border border-p1 px-3 py-1.5 font-semibold text-p1">
+                    Cancel the commitment
+                  </button>
+                </form>
+              </details>
+            )}
           </div>
         )}
       </Card>

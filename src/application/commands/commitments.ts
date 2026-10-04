@@ -7,6 +7,8 @@
 import { and, eq, inArray, or } from "drizzle-orm";
 import {
   cascade,
+  commonAncestor,
+  conflictEscalationDue,
   type CommitmentEffect,
   type CommitmentFacts,
   COMMITMENT_MONITOR_VERSION,
@@ -26,7 +28,7 @@ import { requireRationale } from "@/domain/lifecycle/guards";
 import { transition } from "@/domain/lifecycle/machines";
 import { assertAuthorized, authorizeSystem, authorizeUser } from "@/domain/policy/authorize";
 import { type Actor, actorId, inSubtree } from "@/domain/types";
-import { commitment, conflict, dependency, insight, orgUnit, roleAssignment, user } from "@/infra/db/schema";
+import { commitment, conflict, decision, dependency, insight, orgUnit, roleAssignment, user } from "@/infra/db/schema";
 import { type AppContext, runCommand } from "../context";
 import type { DbOrTx, Tx } from "../db";
 import { holderOf } from "../detector";
@@ -383,7 +385,7 @@ async function headFor(ctx: AppContext, unit: { id: string; type: string }) {
  */
 export async function runCommitmentMonitor(
   ctx: AppContext,
-): Promise<{ overdue: string[]; insights: DetectionResult[] }> {
+): Promise<{ overdue: string[]; insights: DetectionResult[]; escalated: string[] }> {
   assertAuthorized(authorizeSystem(SYSTEM.detector, "commitment.mark_overdue"));
   const now = ctx.clock.now();
   const { cs, ds, units, people } = await loadAll(ctx.db, ctx.orgId);
@@ -525,7 +527,8 @@ export async function runCommitmentMonitor(
     insights.push(r);
   }
   await sweepConflicts(ctx);
-  return { overdue, insights };
+  const escalated = await escalateConflicts(ctx);
+  return { overdue, insights, escalated };
 }
 
 async function linkInsight(ctx: AppContext, commitmentId: string, insightId: string) {
@@ -800,4 +803,67 @@ export async function sweepConflicts(ctx: AppContext) {
     resolved.push(k.id);
   }
   return resolved;
+}
+
+/**
+ * Q1 escalation (Eran, 2026-10-05): an open conflict whose decision is still pending 48 h after detection, or 2 days
+ * before the overlap starts, moves to the two owners' common manager: the insight's deciding unit becomes their lowest
+ * common unit (the group for two departments, the region for two branches). Idempotent (escalated once).
+ */
+export async function escalateConflicts(ctx: AppContext): Promise<string[]> {
+  assertAuthorized(authorizeSystem(SYSTEM.detector, "conflict.escalate"));
+  const now = ctx.clock.now();
+  const open = await ctx.db
+    .select()
+    .from(conflict)
+    .where(and(eq(conflict.orgId, ctx.orgId), eq(conflict.status, "open")));
+  const out: string[] = [];
+  for (const k of open) {
+    if (k.escalatedAt || !k.insightId) continue;
+    if (!conflictEscalationDue(k.createdAt, k.overlapStart, now)) continue;
+    const [dec] = await ctx.db.select().from(decision).where(eq(decision.insightId, k.insightId));
+    if (!dec || dec.status !== "recommended") continue; // already decided: nothing to escalate
+    await runCommand(
+      ctx,
+      SYSTEM.detector,
+      "conflict.escalate",
+      { entityType: "conflict", entityId: k.id },
+      async ({ tx, audit }) => {
+        const [a, b] = await tx
+          .select()
+          .from(commitment)
+          .where(inArray(commitment.id, [k.commitmentAId, k.commitmentBId]));
+        const [ua, ub] = await unitsByIds(tx, ctx.orgId, [a.ownerUnitId, b.ownerUnitId]);
+        const top = commonAncestor(ua.pathIds, ub.pathIds);
+        if (!top) return;
+        const [ins] = await tx.select().from(insight).where(eq(insight.id, k.insightId!)).for("update");
+        if (ins.primaryUnitId === top) return;
+        await tx
+          .update(insight)
+          .set({ primaryUnitId: top, updatedAt: now, version: ins.version + 1 })
+          .where(eq(insight.id, ins.id));
+        await tx
+          .update(conflict)
+          .set({ escalatedAt: now, escalatedToUnitId: top, updatedAt: now, version: k.version + 1 })
+          .where(eq(conflict.id, k.id));
+        const reason = "undecided 48 h after detection or 2 days before the overlap (Q1)";
+        await audit({
+          operation: "conflict.escalated",
+          entityType: "conflict",
+          entityId: k.id,
+          reason,
+          changes: { decidingUnit: { from: ins.primaryUnitId, to: top } },
+        });
+        await audit({
+          operation: "insight.escalated",
+          entityType: "insight",
+          entityId: ins.id,
+          reason,
+          changes: { primaryUnitId: { from: ins.primaryUnitId, to: top } },
+        });
+        out.push(k.id);
+      },
+    );
+  }
+  return out;
 }

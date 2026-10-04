@@ -20,6 +20,7 @@ export default async function Home() {
     demoNow(),
     api.commitments(actor),
   ]);
+  const [workActions, workOutcomes] = await Promise.all([api.actions(actor, "open"), api.outcomes(actor)]);
   const v = cc ?? own;
   if (!v) return <p className="text-sm text-muted">Nothing in your scope yet.</p>;
   const h = (now.getUTCHours() + 3) % 24; // Israel time for the synthetic organization
@@ -30,6 +31,7 @@ export default async function Home() {
       greeting={`${greet}, ${me.name.split(" ")[0]}${cc ? " · Executive Command Center" : ""}`}
       changes={cc?.changes}
       deps={deps}
+      work={{ actions: workActions, outcomes: workOutcomes }}
       waiting={
         <WaitingCard
           approvals={approvals}

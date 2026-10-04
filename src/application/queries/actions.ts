@@ -18,7 +18,14 @@ async function nowOf(db: DbOrTx, orgId: string) {
   return row?.now ?? new Date();
 }
 
-export async function actionsView(db: DbOrTx, orgId: string, actor: Actor, filter: ActionFilter = "open") {
+/** `unitId` limits the list to actions targeting that unit or inside it (a unit's dashboard). */
+export async function actionsView(
+  db: DbOrTx,
+  orgId: string,
+  actor: Actor,
+  filter: ActionFilter = "open",
+  unitId?: string,
+) {
   const [rows, units, people, roles, requests, now] = await Promise.all([
     db
       .select({
@@ -31,7 +38,10 @@ export async function actionsView(db: DbOrTx, orgId: string, actor: Actor, filte
       .innerJoin(insight, eq(insight.id, action.insightId))
       .where(eq(action.orgId, orgId))
       .orderBy(action.dueAt),
-    db.select({ id: orgUnit.id, name: orgUnit.name, type: orgUnit.type }).from(orgUnit).where(eq(orgUnit.orgId, orgId)),
+    db
+      .select({ id: orgUnit.id, name: orgUnit.name, type: orgUnit.type, pathIds: orgUnit.pathIds })
+      .from(orgUnit)
+      .where(eq(orgUnit.orgId, orgId)),
     db.select({ id: user.id, name: user.name }).from(user).where(eq(user.orgId, orgId)),
     db
       .select({ userId: roleAssignment.userId, unitId: roleAssignment.orgUnitId, role: roleAssignment.role })
@@ -56,6 +66,11 @@ export async function actionsView(db: DbOrTx, orgId: string, actor: Actor, filte
   const me = actor.kind === "user" ? actor.userId : "";
   const all = rows
     .filter((r) => canRead(actor, r.a.visibleUnitIds))
+    .filter(
+      (r) =>
+        !unitId ||
+        r.a.targetUnitIds.some((t) => units.find((u) => u.id === t)?.pathIds.includes(unitId) || t === unitId),
+    )
     .map(({ a, insightTitle, band, insightStatus }) => {
       const overdue = !!a.dueAt && a.dueAt.getTime() < now.getTime() && !TERMINAL.has(a.status);
       const req = requests.find((x) => x.actionId === a.id);
@@ -106,7 +121,7 @@ export async function actionsView(db: DbOrTx, orgId: string, actor: Actor, filte
 }
 
 /** Outcomes the viewer may read, by stage, and the lessons library. */
-export async function outcomesView(db: DbOrTx, orgId: string, actor: Actor) {
+export async function outcomesView(db: DbOrTx, orgId: string, actor: Actor, unitId?: string) {
   const rows = await db
     .select({
       o: outcome,
@@ -126,6 +141,7 @@ export async function outcomesView(db: DbOrTx, orgId: string, actor: Actor) {
   const units = await db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId));
   const list = rows
     .filter((r) => canRead(actor, r.visible))
+    .filter((r) => !unitId || units.some((u) => r.o.unitIds.includes(u.id) && u.pathIds.includes(unitId)))
     .map((r) => {
       const obs = r.o.observed as { baselineMean?: number; windowMean?: number; coverage?: number } | null;
       const outUnits = units.filter((u) => r.o.unitIds.includes(u.id));

@@ -184,19 +184,16 @@ seeded insights. There is no commitment or dependency the system can track, so n
 Screens: `docs/specs/screens/p4-dependencies-ceo.png`, `p4-commitments-ronit.png`, `p4-conflict-trace.png`,
 `p4-approvals-ceo.png`, `p4-actions.png`, `p4-audit-region.png`.
 
-## Choices made by Claude, to confirm at the Phase 4 gate
+## Choices (decided by Eran, 2026-10-05, G4-Q)
 
-- **Q1 · Who decides a conflict:** the manager of the unit whose commitment came second (it introduced the
-  conflict). The other owner is affected and informed, and approval policy v2 routes any resulting actions.
-- **Q2 · When overdue becomes an insight:** only with dependents, ₪10k+/week at stake, or compliance exposure ≥ 0.6.
-  Otherwise it is listed only.
-- **Q3 · Renegotiating a date:** the owner may move a due date with a rationale. Dependents are notified (an internal
-  notice), and no approval is required. Repeated renegotiation is visible in the commitment's history.
-- **Q4 · Dependency status is derived, not stored**, so it can never drift from the commitment and the clock.
-- **Q5 · Amending after a denial (needs your decision, §30 lifecycle):** the demo plan said "a denial leads to an
-  amendment and a new approval", but in the approved action state machine (G1) `rejected` is final, and amendments are
-  allowed only before a decision. Phase 4 therefore demonstrates amending a _pending_ action (new revision, new
-  approval request). Option: allow `rejected → proposed` by amendment (row A12b). Not built without your approval.
+- **Q1 · Who decides a conflict:** the unit whose commitment came second decides; the other owner confirms (a task);
+  if the decision is still pending 48 h after detection, or 2 days before the overlap starts, it escalates to the two
+  units' common manager (the group for two departments, the region for two branches). Built: `escalateConflicts`,
+  run by the commitment monitor; migration 0007.
+- **Q2 · When overdue becomes an insight:** with dependents, ₪10k+/week at stake, or compliance ≥ 0.6. Approved.
+- **Q3 · Moving a due date:** the owner may, with a reason; so may the level above (the parent unit's managers).
+- **Q4 · Dependency status is derived, not stored.** Approved.
+- **Q5 · Amending after a denial:** not built; a denial stays final for now.
 
 ## Approval gates
 

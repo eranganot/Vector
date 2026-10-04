@@ -217,3 +217,26 @@ const EFFECT_WORDS: Record<Effect, string> = {
   peak_trading: "runs peak trading on",
 };
 export const describeEffect = (e: Effect) => EFFECT_WORDS[e];
+
+/**
+ * Q1 (Eran, 2026-10-05: options 1 + 5 + 2): the unit that recorded second decides, the other owner confirms, and an
+ * undecided conflict escalates to the two units' common manager 48 h after it was detected, or 2 days before the
+ * overlap starts, whichever comes first.
+ */
+export const CONFLICT_ESCALATION = { afterHours: 48, beforeOverlapHours: 48 } as const;
+
+export function conflictEscalationDue(detectedAt: Date, overlapStart: string, now: Date): boolean {
+  const sinceDetected = (now.getTime() - detectedAt.getTime()) / HOUR;
+  const toOverlap = (new Date(`${overlapStart}T00:00:00Z`).getTime() - now.getTime()) / HOUR;
+  return sinceDetected >= CONFLICT_ESCALATION.afterHours || toOverlap <= CONFLICT_ESCALATION.beforeOverlapHours;
+}
+
+/** The lowest unit both paths share (root first): the common manager's unit. */
+export function commonAncestor(pathA: string[], pathB: string[]): string | null {
+  let last: string | null = null;
+  for (let i = 0; i < Math.min(pathA.length, pathB.length); i++) {
+    if (pathA[i] !== pathB[i]) break;
+    last = pathA[i];
+  }
+  return last;
+}
