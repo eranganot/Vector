@@ -21,6 +21,7 @@ import type { Db } from "@/application/db";
 import { advanceClock, resetDemo } from "@/application/scenario";
 import { commitmentsForInsight, commitmentsView } from "@/application/queries/commitments";
 import { actionsView, outcomesView } from "@/application/queries/actions";
+import { auditExplorer } from "@/application/queries/audit";
 import { cascade, dependencyStatus } from "@/domain/commitments";
 import * as s from "@/infra/db/schema";
 import { DEMO_DAIRY_PROMO } from "@/infra/seed/commitments";
@@ -328,5 +329,34 @@ describe("action and outcome tracking (P4f)", () => {
   it("outcomes are empty until something has executed and been measured", async () => {
     const o = await outcomesView(appDb, orgId, await as("dana"));
     expect(o.toReview.length + o.reviewed.length).toBe(0);
+  });
+});
+
+describe("scoped audit explorer (P4g)", () => {
+  it("the Executive sees organization events; a branch manager sees his branch's story, his own refusals, not Marketing's", async () => {
+    const dana = (await auditExplorer(appDb, orgId, await as("dana")))!;
+    expect(dana.groupWide).toBe(true);
+    expect(dana.events.some((e) => e.operation === "demo.clock_advanced")).toBe(true);
+
+    const avi = (await auditExplorer(appDb, orgId, await as("avi"), { limit: 10_000 }))!;
+    expect(avi.groupWide).toBe(false);
+    expect(avi.events.some((e) => /Haifa Grand Canyon net sales/.test(e.subject))).toBe(true);
+    expect(avi.events.some((e) => e.operation === "demo.clock_advanced")).toBe(false);
+    expect(avi.events.some((e) => /promo signage/i.test(e.subject))).toBe(false);
+    // His refused attempt to commit Marketing (earlier in this file) is his own: he sees it.
+    expect(avi.events.some((e) => e.operation === "commitment.record.denied" && e.actor === "Avi Mizrahi")).toBe(true);
+    expect(avi.total).toBeLessThan(dana.total);
+  });
+
+  it("filters: refusals only, by operation, by actor; viewers have no audit access", async () => {
+    const denied = (await auditExplorer(appDb, orgId, await as("dana"), { denied: true }))!;
+    expect(denied.events.length).toBeGreaterThan(0);
+    expect(denied.events.every((e) => e.operation.endsWith(".denied"))).toBe(true);
+    const conflicts = (await auditExplorer(appDb, orgId, await as("dana"), { op: "conflict." }))!;
+    expect(conflicts.events.every((e) => e.operation.startsWith("conflict."))).toBe(true);
+    const ronitId = await userId("ronit");
+    const byRonit = (await auditExplorer(appDb, orgId, await as("dana"), { actor: ronitId }))!;
+    expect(byRonit.events.every((e) => e.actor === "Ronit Shapiro")).toBe(true);
+    expect(await auditExplorer(appDb, orgId, await as("tal"))).toBeNull();
   });
 });

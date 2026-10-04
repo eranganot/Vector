@@ -193,3 +193,20 @@ test("closed loop: Avi records the lesson of the Haifa transfer; the next stock 
   await page.goto("/actions?tab=outcomes");
   await expect(page.getByText(/“Move stock from a sister branch within 24 h/)).toBeVisible();
 });
+
+test("audit explorer: managers see their scope with filters; the board observer has no access", async ({ page }) => {
+  await as(page, "Maya Azulay");
+  await page.getByRole("link", { name: "Audit", exact: true }).click();
+  await expect(page.getByText("Hash chain verified ✓")).toBeVisible();
+  await expect(page.getByText(/in your scope/)).toBeVisible();
+  await expect(page.getByText("insight.dismissed").first()).toBeVisible(); // her dismissal of R11, earlier in this file
+  await page.locator('input[name="op"]').fill("dismiss");
+  await page.getByRole("button", { name: "Filter" }).click();
+  await expect(page).toHaveURL(/op=dismiss/);
+  const rows = page.locator("tbody tr");
+  await expect(rows.first()).toContainText("dismiss");
+  await expect(page.getByText("demo.clock_advanced")).toHaveCount(0);
+
+  await as(page, "Tal Ben-David");
+  expect((await page.goto("/audit"))?.status()).toBe(404);
+});
