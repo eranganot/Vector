@@ -115,7 +115,7 @@ describe("authorization (AZ rules)", () => {
   });
 });
 
-describe("approval policy v1 (authorization.md §4)", () => {
+describe("approval policy (authorization.md §4)", () => {
   const facts = (over: Partial<ActionFacts>): ActionFacts => ({
     type: "notify_owner",
     executor: "internal_task",
@@ -173,5 +173,53 @@ describe("approval policy v1 (authorization.md §4)", () => {
   });
   it("nobody is 'eligible' when no rule matched (no approval exists to give)", () => {
     expect(isEligibleApprover(assignments(dana), evaluateApprovalPolicy(facts({}), org))).toBe(false);
+  });
+});
+
+describe("approval policy v2: the owning department approves its own issue (G3, Eran 2026-10-04)", () => {
+  const LEGAL: UnitRef = { id: "LG", type: "department", pathIds: ["G", "LG"] };
+  const yael = user("yael", [{ role: "department_manager", unit: LEGAL }]);
+  const recallOrg: OrgFacts = {
+    group: G,
+    supplyChain: SUPPLY,
+    legal: LEGAL,
+    budgetDepartment: SUPPLY,
+    ownerDepartment: LEGAL,
+  };
+  const p1 = (over: Partial<ActionFacts>): ActionFacts => ({
+    type: "recall",
+    executor: "internal_task",
+    targetUnits: [G],
+    estimatedCost: 12_000,
+    insightBand: "P1",
+    insightPrimaryUnit: LEGAL,
+    ...over,
+  });
+
+  it("the recall (AP-3 + AP-5 + AP-7) is approvable inside Legal, not only by the CEO", () => {
+    const req = evaluateApprovalPolicy(p1({}), recallOrg);
+    expect(req.rules.filter((r) => r.matched).map((r) => r.rule)).toEqual(["AP-3", "AP-5", "AP-7"]);
+    expect(isEligibleApprover(assignments(yael), req)).toBe(true);
+    expect(isEligibleApprover(assignments(noa), req)).toBe(false); // budget owner, but not Legal (AP-7)
+    expect(isEligibleApprover(assignments(dana), req)).toBe(true); // the Executive stays a fallback
+  });
+
+  it("an external customer notice on the owner's issue is approvable by the owning department (AP-1)", () => {
+    const req = evaluateApprovalPolicy(
+      p1({ type: "customer_message", executor: "outbox_message", audience: "external", estimatedCost: 0 }),
+      recallOrg,
+    );
+    expect(isEligibleApprover(assignments(yael), req)).toBe(true);
+  });
+
+  it("an internal notification never needs approval, even on a P1 (the CEO is informed, not asked)", () => {
+    const req = evaluateApprovalPolicy(p1({ type: "notify_owner", estimatedCost: 0 }), recallOrg);
+    expect(req.required).toBe(false);
+  });
+
+  it("the owning department cannot approve spend at or above the Executive threshold", () => {
+    const req = evaluateApprovalPolicy(p1({ type: "staffing_change", estimatedCost: 54_000 }), recallOrg);
+    expect(isEligibleApprover(assignments(yael), req)).toBe(false);
+    expect(isEligibleApprover(assignments(dana), req)).toBe(true);
   });
 });

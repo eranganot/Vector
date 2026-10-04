@@ -3,6 +3,8 @@
  * a later phase's smoke always re-runs the earlier phases' checks.
  *   pnpm smoke --url https://<env>.up.railway.app [--expect-sha <git sha>]
  */
+import { SEED_VERSION } from "../src/infra/seed/org";
+
 type Check = { phase: number; name: string; run: (base: URL) => Promise<string> };
 
 function arg(flag: string): string | undefined {
@@ -82,7 +84,7 @@ const checks: Check[] = [
     run: async (base) => {
       const body = JSON.parse((await get(base, "/api/health")).text);
       const d = body.demo;
-      if (!d || d.seedVersion !== "p2-v2") throw new Error(`seed ${d?.seedVersion}; expected p2-v2`);
+      if (!d || d.seedVersion !== SEED_VERSION) throw new Error(`seed ${d?.seedVersion}; expected ${SEED_VERSION}`);
       if (d.risks < 14 || d.opportunities < 5) throw new Error(`risks ${d.risks}, opportunities ${d.opportunities}`);
       return `seed ${d.seedVersion} · ${d.risks} risks · ${d.opportunities} opportunities`;
     },

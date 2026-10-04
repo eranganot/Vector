@@ -1,11 +1,13 @@
 /**
- * Approval policy v1 (docs/specs/authorization.md §4). Each rule either does not match, or yields the
+ * Approval policy v2 (docs/specs/authorization.md §4). Each rule either does not match, or yields the
  * set of eligible approvers. One approval suffices only if the approver is eligible under EVERY matched
  * rule; the Executive (group scope) is eligible under all of them.
  */
 import { inSubtree, type RoleAssignment, type Role, type UnitRef } from "../types";
 
-export const APPROVAL_POLICY_VERSION = "approval-policy-v1";
+export const APPROVAL_POLICY_VERSION = "approval-policy-v2";
+/** Action types that only inform a person inside the company; AP-5 never holds them (G3, Eran 2026-10-04). */
+const INTERNAL_NOTICE_TYPES = new Set(["notify_owner"]);
 export const COST_THRESHOLD = 10_000;
 export const EXECUTIVE_COST_THRESHOLD = 50_000;
 const LEGAL_TYPES = new Set(["regulatory_notification", "contract_clause_invocation", "recall"]);
@@ -31,6 +33,12 @@ export type OrgFacts = {
   legal?: UnitRef;
   /** Department that owns the budget for this action, if any (AP-3). */
   budgetDepartment?: UnitRef;
+  /**
+   * Department that owns the response to the insight (insight.owner_department_id). Its manager is
+   * accountable for the issue and may approve its actions under AP-1, AP-3 (below the Executive
+   * threshold) and AP-5 (G3, Eran 2026-10-04: e.g. the recall is approved inside Legal, not by the CEO).
+   */
+  ownerDepartment?: UnitRef;
 };
 
 /** The region a unit belongs to (branches and regions only), as a UnitRef. */
@@ -72,7 +80,7 @@ export function evaluateApprovalPolicy(a: ActionFacts, org: OrgFacts): ApprovalR
       "External communication",
       a.executor === "outbox_message" && a.audience === "external",
       `executor=${a.executor}, audience=${a.audience ?? "internal"}`,
-      singleRegionManager(a.targetUnits),
+      [...singleRegionManager(a.targetUnits), ...dept(org.ownerDepartment)],
     ),
     rule("AP-2", "Cross-region", regionCount > 1, `targets span ${regionCount} region(s)`, []),
     rule(
@@ -82,7 +90,7 @@ export function evaluateApprovalPolicy(a: ActionFacts, org: OrgFacts): ApprovalR
       `estimated cost ₪${a.estimatedCost}`,
       a.estimatedCost >= EXECUTIVE_COST_THRESHOLD
         ? []
-        : [...dept(org.budgetDepartment), ...singleRegionManager(a.targetUnits)],
+        : [...dept(org.budgetDepartment), ...singleRegionManager(a.targetUnits), ...dept(org.ownerDepartment)],
     ),
     rule("AP-4", "Inventory transfer", a.type === "inventory_transfer", `type=${a.type}`, [
       ...singleRegionManager(a.targetUnits),
@@ -91,9 +99,9 @@ export function evaluateApprovalPolicy(a: ActionFacts, org: OrgFacts): ApprovalR
     rule(
       "AP-5",
       "High priority",
-      a.insightBand === "P1",
-      `insight band ${a.insightBand}`,
-      singleRegionManager([a.insightPrimaryUnit]),
+      a.insightBand === "P1" && !INTERNAL_NOTICE_TYPES.has(a.type),
+      `insight band ${a.insightBand}${INTERNAL_NOTICE_TYPES.has(a.type) ? ", internal notice" : ""}`,
+      [...singleRegionManager([a.insightPrimaryUnit]), ...dept(org.ownerDepartment)],
     ),
     rule("AP-6", "Staffing change", a.type === "staffing_change", `type=${a.type}`, singleRegionManager(a.targetUnits)),
     rule("AP-7", "Legal and regulatory", LEGAL_TYPES.has(a.type), `type=${a.type}`, dept(org.legal)),

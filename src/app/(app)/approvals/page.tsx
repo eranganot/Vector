@@ -2,7 +2,7 @@ import Link from "next/link";
 import { api, demoNow } from "@/application/facade";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { approveAction } from "../../actions";
-import { Band, Card, Notice } from "../../_components/ui";
+import { Band, Card, Notice, Pill, SectionTitle } from "../../_components/ui";
 import { requireActor } from "../../_lib/session";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -18,10 +18,51 @@ export default async function ApprovalsPage({
 }) {
   const { error, done } = await searchParams;
   const { actor } = await requireActor();
-  const [items, now] = await Promise.all([api.myApprovals(actor), demoNow()]);
+  const [items, decisions, mine, now] = await Promise.all([
+    api.myApprovals(actor),
+    api.myDecisions(actor),
+    api.myActions(actor),
+    demoNow(),
+  ]);
+  const ACTION_STATE: Record<string, string> = {
+    proposed: "Waiting for the decision",
+    pending_approval: "Waiting for approval",
+    ready: "Ready to execute",
+    executing: "Executing",
+    failed: "Failed: retry or cancel",
+  };
   return (
     <>
-      <h1 className="text-[22px] font-semibold">Waiting for your approval</h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-[26px] font-semibold tracking-tight">Waiting on you</h1>
+        <p className="text-sm text-muted">
+          {decisions.length} decision{decisions.length === 1 ? "" : "s"} to make · {items.length} approval
+          {items.length === 1 ? "" : "s"} to give · {mine.length} of your action{mine.length === 1 ? "" : "s"} in flight
+        </p>
+      </div>
+      <section className="flex flex-col gap-3">
+        <SectionTitle aside={<span className="text-xs text-muted">VECTOR recommends; you decide</span>}>
+          Decisions to make · {decisions.length}
+        </SectionTitle>
+        {decisions.length === 0 && (
+          <p className="text-sm text-muted">No recommendation is waiting for your decision.</p>
+        )}
+        {decisions.map((d) => (
+          <Link
+            key={d.decisionId}
+            href={`/insights/${d.insightId}`}
+            className="flex flex-wrap items-start gap-4 rounded-xl border border-line bg-panel/90 px-4 py-3.5 no-underline hover:border-accent/60"
+          >
+            <Band band={d.band} score={d.score} />
+            <span className="flex min-w-0 grow flex-col gap-1">
+              <span className="text-[15px] font-semibold">{d.title}</span>
+              <span className="text-[13px] text-muted">Recommendation: {d.statement}</span>
+            </span>
+            <span className="text-sm text-accent">Accept or decline →</span>
+          </Link>
+        ))}
+      </section>
+      <SectionTitle>Approvals to give · {items.length}</SectionTitle>
       <Notice
         error={error}
         done={
@@ -32,7 +73,7 @@ export default async function ApprovalsPage({
               : undefined
         }
       />
-      {items.length === 0 && <p className="text-sm text-muted">Nothing is waiting for you.</p>}
+      {items.length === 0 && <p className="text-sm text-muted">No approval request is waiting for you.</p>}
       {items.map(({ approval, action, insightTitle, band, insightId }) => {
         const req = approval.requirement as ApprovalRequirement;
         const matched = req.rules.filter((r) => r.matched);
@@ -95,6 +136,31 @@ export default async function ApprovalsPage({
           </Card>
         );
       })}
+      <section className="flex flex-col gap-3">
+        <SectionTitle aside={<span className="text-xs text-muted">actions you own</span>}>
+          Your actions in flight · {mine.length}
+        </SectionTitle>
+        {mine.length === 0 && <p className="text-sm text-muted">You own no open actions.</p>}
+        {mine.map(({ action: a, insightTitle, insightId, band, waitingOn }) => (
+          <Link
+            key={a.id}
+            href={`/insights/${insightId}`}
+            className="flex flex-wrap items-start gap-4 rounded-xl border border-line bg-panel/90 px-4 py-3.5 no-underline hover:border-accent/60"
+          >
+            <Band band={band} />
+            <span className="flex min-w-0 grow flex-col gap-1">
+              <span className="text-[15px] font-semibold">{a.title}</span>
+              <span className="text-[13px] text-muted">
+                {insightTitle}
+                {waitingOn.length > 0 && ` · approver: ${waitingOn.join(" or ")}`}
+              </span>
+            </span>
+            <Pill tone={a.status === "pending_approval" ? "warn" : a.status === "failed" ? "bad" : "neutral"}>
+              {ACTION_STATE[a.status] ?? a.status}
+            </Pill>
+          </Link>
+        ))}
+      </section>
     </>
   );
 }

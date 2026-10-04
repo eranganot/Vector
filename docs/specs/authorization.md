@@ -67,8 +67,8 @@ Admin deliberately has **no business decision or approval rights**: configuring 
 consequential actions are separated. Having `action.approve` lets a role be considered as an approver; whether
 it may approve a given action is decided by the approval rules (§4) and scope.
 
-Assignments in the seed (18 people): Executive at the group root (Dana, CEO); a Department Manager for each of the
-8 departments (Yael Barak, General Counsel, is the Legal & Compliance manager and so the AP-7 approver); a Regional
+Assignments in the seed (20 people): Executive at the group root (Dana, CEO); a Department Manager for each of the
+8 departments, plus a second manager in Legal & Compliance (Dafna Mor, Senior Legal Counsel) and in Supply Chain (Ben Shalom, Head of DC Operations) (Yael Barak, General Counsel, and Dafna are AP-7 approvers); a Regional
 Manager for each of the 5 regions; two Branch Managers (Avi at Haifa Grand Canyon, Lior at Tel Aviv Dizengoff); a
 Viewer at the group root (Tal, board observer); and an Admin at the group root. A Branch Manager is the
 `regional_manager` role assigned at a branch unit; there is no separate role.
@@ -96,15 +96,25 @@ one approval is enough **only if the approver is eligible under every matched ru
 eligible under all rules, so an approver always exists. Multi-step chains, where different people approve different
 rules, are deferred: none of the demo scenarios needs them.
 
-| Rule                        | Matches when                                                                   | Requires approval by                                                                                      |
-| --------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| AP-1 External communication | executor is `outbox_message` with `audience = external` (customers, suppliers) | Regional Manager of the target region, or Executive                                                       |
-| AP-2 Cross-region           | target units span more than one region                                         | Executive                                                                                                 |
-| AP-3 Cost                   | estimated_cost ≥ ₪10,000                                                       | Department Manager owning the budget, or Regional Manager of the target region; **≥ ₪50,000 → Executive** |
-| AP-4 Inventory transfer     | type `inventory_transfer`                                                      | Regional Manager of the **receiving** region, or the Supply Chain Department Manager                      |
-| AP-5 High priority          | the insight is a **risk** in band P1 (opportunity bands O1–O3 never match)     | Regional Manager of the primary unit's region, or Executive if group-level                                |
-| AP-6 Staffing change        | type `staffing_change`                                                         | Regional Manager of the target region                                                                     |
-| AP-7 Legal & regulatory     | type `regulatory_notification`, `contract_clause_invocation` or `recall`       | Legal & Compliance Department Manager, or Executive                                                       |
+| Rule                        | Matches when                                                                                                              | Requires approval by                                                                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| AP-1 External communication | executor is `outbox_message` with `audience = external` (customers, suppliers)                                            | Regional Manager of the target region, the owning department's manager, or Executive                                                       |
+| AP-2 Cross-region           | target units span more than one region                                                                                    | Executive                                                                                                                                  |
+| AP-3 Cost                   | estimated_cost ≥ ₪10,000                                                                                                  | Department Manager owning the budget, Regional Manager of the target region, or the owning department's manager; **≥ ₪50,000 → Executive** |
+| AP-4 Inventory transfer     | type `inventory_transfer`                                                                                                 | Regional Manager of the **receiving** region, or the Supply Chain Department Manager                                                       |
+| AP-5 High priority          | the insight is a **risk** in band P1 (opportunity bands never match); internal notifications (`notify_owner`) never match | Regional Manager of the primary unit's region, the owning department's manager, or Executive                                               |
+| AP-6 Staffing change        | type `staffing_change`                                                                                                    | Regional Manager of the target region                                                                                                      |
+| AP-7 Legal & regulatory     | type `regulatory_notification`, `contract_clause_invocation` or `recall`                                                  | Legal & Compliance Department Manager, or Executive                                                                                        |
+
+**Policy v2 (G3, Eran 2026-10-04).** "The owning department" is the insight's `owner_department_id`: the department
+accountable for the response. Its managers may approve that issue's actions under AP-1, AP-3 (below ₪50,000) and AP-5, so a
+recall owned by Legal & Compliance is approved inside Legal, and executed by Legal and Supply Chain. Internal notifications
+never need approval, so the CEO is informed rather than asked.
+
+**Routing.** The Executive is always added as an eligible approver of every matched rule (a fallback and an escalation
+path), but the inbox only **asks** the Executive when nobody else may approve (e.g. spend ≥ ₪50,000); otherwise a request is
+routed to the other eligible people, never to the action's owner or proposer (`routeApproval` in
+`src/application/queries/insights.ts`).
 
 The Executive is always added as an eligible approver of every matched rule. "Regional Manager of the target region"
 applies only when all targets sit in one region; otherwise only the Executive qualifies. The department that owns
@@ -114,7 +124,7 @@ Not matched by any rule means no approval is needed. That applies to, for exampl
 manager within the proposer's own scope. The evaluation result, including the list of rules evaluated and not
 matched, is stored on the action and in the audit row, so "why didn't this need approval?" has an answer.
 
-Thresholds and rules are **versioned configuration** (`approval-policy-v1`, stored with every evaluation). In the
+Thresholds and rules are **versioned configuration** (`approval-policy-v2`, stored with every evaluation; v1 before 2026-10-04). In the
 MVP, rule changes ship as code, through a PR; an audited `admin.policy` operation to change them arrives later.
 
 ## 5. Approval is never inferred

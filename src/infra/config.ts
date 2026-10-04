@@ -8,7 +8,10 @@ const ConfigSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   /** Restricted app role (vector_app). Falls back to DATABASE_URL for local development. */
   APP_DATABASE_URL: z.string().min(1).optional(),
-  VECTOR_ENV: z.enum(["local", "test", "dev", "demo"]).default("local"),
+  /** Environment name (case-insensitive): local | test | dev | demo | prod. */
+  VECTOR_ENV: z
+    .preprocess((v) => (typeof v === "string" ? v.toLowerCase() : v), z.enum(["local", "test", "dev", "demo", "prod"]))
+    .default("local"),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 });
 

@@ -65,7 +65,12 @@ function Lane({ title, hint, items, empty }: { title: string; hint: string; item
 
 export default async function Home() {
   const { actor, me } = await requireActor();
-  const [insights, approvals, now] = await Promise.all([api.listInsights(actor), api.myApprovals(actor), demoNow()]);
+  const [insights, approvals, decisions, now] = await Promise.all([
+    api.listInsights(actor),
+    api.myApprovals(actor),
+    api.myDecisions(actor),
+    demoNow(),
+  ]);
   const live = insights.filter((i) => i.status === "open" || i.status === "acknowledged");
   const closed = insights.filter((i) => i.status === "resolved" || i.status === "dismissed");
   const risks = live.filter((i) => i.workstream === "risk");
@@ -85,7 +90,7 @@ export default async function Home() {
             : `${risks.length} risk${risks.length === 1 ? "" : "s"}${top ? ` (${top} P1)` : ""} and ${opps.length} opportunit${opps.length === 1 ? "y" : "ies"} in your scope.`}
         </p>
       </div>
-      {approvals.length > 0 && (
+      {approvals.length + decisions.length > 0 && (
         <Card className="border-accent/50 shadow-[0_0_24px_rgb(34_211_238/0.08)]">
           <SectionTitle
             aside={
@@ -94,12 +99,22 @@ export default async function Home() {
               </Link>
             }
           >
-            Waiting on you · {approvals.length}
+            Waiting on you · {approvals.length + decisions.length}
           </SectionTitle>
           <ul className="mt-3 flex flex-col gap-2">
+            {decisions.map((d) => (
+              <li key={d.decisionId} className="flex flex-wrap items-center gap-3 text-sm">
+                <Band band={d.band} />
+                <span className="text-xs uppercase tracking-wide text-accent">Decide</span>
+                <Link href={`/insights/${d.insightId}`} className="font-semibold no-underline hover:underline">
+                  {d.title}
+                </Link>
+              </li>
+            ))}
             {approvals.map((a) => (
               <li key={a.approval.id} className="flex flex-wrap items-center gap-3 text-sm">
                 <Band band={a.band} />
+                <span className="text-xs uppercase tracking-wide text-warn">Approve</span>
                 <span className="font-semibold">{a.action.title}</span>
                 <span className="text-muted">· {a.insightTitle}</span>
               </li>

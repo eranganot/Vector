@@ -158,7 +158,7 @@ async function submitActions(scope: CommandScope, decisionId: string) {
         insightBand: ins.priorityBand,
         insightPrimaryUnit: primary,
       },
-      await orgFacts(tx, ctx.orgId, pb.budgetDepartmentCode),
+      await orgFacts(tx, ctx.orgId, pb.budgetDepartmentCode, ins.ownerDepartmentId),
     );
     const t = transition("action", a.status, req.required ? "submit_requires_approval" : "submit_no_approval");
     await tx

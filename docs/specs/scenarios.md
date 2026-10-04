@@ -10,12 +10,12 @@ source feed per scenario, with the fixture's priority inputs and, where a KPI ex
 data). A unit test keeps the catalog identical to the fixtures. A few start mid-flight, decided by their persona through the
 normal commands, so the demo opens with approvals waiting:
 
-| Scenario              | Decided by (seed)                     | Approvals waiting on                                                            |
-| --------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
-| R1 Food-safety recall | Yael Barak (General Counsel)          | Dana (CEO): all four actions (AP-3, AP-5, AP-7, AP-1)                           |
-| R3 North stock-outs   | Yossi Cohen (Regional Manager, North) | Yossi: the transfer (AP-4 + AP-5); Dana: the ₪54k staffing uplift (AP-3 ≥ ₪50k) |
-| O1 Heatwave, South    | Omer Biton (Regional Manager, South)  | Omer: extra deliveries (AP-3) and staff uplift (AP-6)                           |
-| R13 POS outage        | acknowledged by Lior Ben-Ami          | —                                                                               |
+| Scenario              | Decided by (seed)                     | Approvals waiting on                                                                                                                                                                               |
+| --------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1 Food-safety recall | Yael Barak (General Counsel)          | Yael: all four (Supply Chain's quarantine and POS block, Legal's regulator and customer notices); Dafna can approve Supply Chain's two. The CEO is briefed (notification executed), not asked (G3) |
+| R3 North stock-outs   | Yossi Cohen (Regional Manager, North) | Yossi: the transfer (AP-4 + AP-5); Dana: the ₪54k staffing uplift (AP-3 ≥ ₪50k)                                                                                                                    |
+| O1 Heatwave, South    | Omer Biton (Regional Manager, South)  | Omer: extra deliveries (AP-3) and staff uplift (AP-6)                                                                                                                                              |
+| R13 POS outage        | acknowledged by Lior Ben-Ami          | —                                                                                                                                                                                                  |
 
 There are two workstreams, managed separately (ADR-006):
 
@@ -107,8 +107,9 @@ Factor order in each card: magnitude · impact · breadth · urgency · strategi
   shelves in 60 branches within 12 h) → IT (block the SKU at POS) → Marketing (pause the promo, customer notice) → Finance
   (write-off, supplier claim).
 - **Factors:** 1.00 · 0.68 · 1.00 · 1.00 · 1.00 · 1.00 (compliance: regulator-mandated action).
-- **Approvals:** every action on a P1 risk matches AP-5; the regulator notice and the recall also match AP-7 (Legal), the
-  customer notice AP-1, the ₪12k recall AP-3. Each action's owner is excluded (AZ-2), so in the demo all four wait on the CEO.
+- **Approvals (G3, Eran):** the work sits with Legal & Compliance (Dafna Mor: regulator and customer notices) and Supply
+  Chain (Ben Shalom: quarantine, POS block); approvals are inside Legal (Yael Barak; Dafna for Supply Chain's actions). The
+  CEO receives a briefing (an internal notification, no approval) and is not asked.
 - **Outcome:** % of branches confirmed clear within 12 h; regulator notified in time.
 
 ### R2 · DC delivery delay cascading to 14 branches: P1 77.0 (S04)

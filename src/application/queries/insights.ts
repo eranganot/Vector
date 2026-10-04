@@ -6,7 +6,8 @@ import { and, arrayOverlaps, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { isEligibleApprover, type ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { hasPermission } from "@/domain/policy/permissions";
-import type { Actor } from "@/domain/types";
+import { authorizeUser } from "@/domain/policy/authorize";
+import type { Actor, RoleAssignment } from "@/domain/types";
 import {
   action,
   approval,
@@ -19,6 +20,7 @@ import {
   signal,
   task,
   outboxMessage,
+  roleAssignment,
   user,
 } from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
@@ -150,7 +152,44 @@ export async function auditTrailForInsight(db: DbOrTx, orgId: string, insightId:
     .orderBy(asc(auditEvent.seq));
 }
 
-/** Open approval requests this person is eligible to answer, excluding their own actions (AZ-2). */
+type Person = { name: string; assignments: RoleAssignment[] };
+
+/** Everyone in the org with their role assignments (for routing approvals). */
+async function peopleWithAssignments(db: DbOrTx, orgId: string) {
+  const rows = await db
+    .select({ id: user.id, name: user.name, role: roleAssignment.role, unit: orgUnit })
+    .from(user)
+    .innerJoin(roleAssignment, eq(roleAssignment.userId, user.id))
+    .innerJoin(orgUnit, eq(orgUnit.id, roleAssignment.orgUnitId))
+    .where(eq(roleAssignment.orgId, orgId));
+  const byPerson = new Map<string, Person>();
+  for (const p of rows) {
+    const e = byPerson.get(p.id) ?? { name: p.name, assignments: [] };
+    e.assignments.push({ role: p.role, unit: { id: p.unit.id, type: p.unit.type, pathIds: p.unit.pathIds } });
+    byPerson.set(p.id, e);
+  }
+  return byPerson;
+}
+
+/**
+ * Who an approval request is routed to: the eligible people other than the action's owner and proposer
+ * (AZ-2), excluding the Executive when anyone else is eligible. The Executive stays eligible under every
+ * rule (a fallback and escalation path) but is only *asked* when nobody else may approve (G3, Eran 2026-10-04).
+ */
+function routeApproval(
+  people: Map<string, Person>,
+  requirement: ApprovalRequirement,
+  act: { ownerUserId: string; proposedBy: string },
+) {
+  const eligible = [...people.entries()].filter(
+    ([id, p]) => id !== act.ownerUserId && id !== act.proposedBy && isEligibleApprover(p.assignments, requirement),
+  );
+  const isExec = (p: Person) => p.assignments.some((a) => a.role === "executive");
+  const others = eligible.filter(([, p]) => !isExec(p));
+  return others.length > 0 ? others : eligible;
+}
+
+/** Open approval requests routed to this person (see routeApproval). */
 export async function listMyApprovals(db: DbOrTx, orgId: string, actor: Actor) {
   if (actor.kind !== "user") return [];
   const rows = await db
@@ -160,10 +199,104 @@ export async function listMyApprovals(db: DbOrTx, orgId: string, actor: Actor) {
     .innerJoin(insight, eq(insight.id, action.insightId))
     .where(and(eq(approval.orgId, orgId), eq(approval.status, "requested")))
     .orderBy(desc(insight.priorityScore));
-  return rows.filter(
+  const mine = rows.filter(
     (r) =>
       isEligibleApprover(actor.assignments, r.approval.requirement as ApprovalRequirement) &&
       r.action.proposedBy !== actor.userId &&
       r.action.ownerUserId !== actor.userId,
   );
+  if (mine.length === 0) return [];
+  const people = await peopleWithAssignments(db, orgId);
+  return mine.filter((r) =>
+    routeApproval(people, r.approval.requirement as ApprovalRequirement, r.action).some(([id]) => id === actor.userId),
+  );
+}
+
+/**
+ * Recommendations waiting for this person's decision: open insights whose decision is still
+ * "recommended" and whose primary unit is exactly a unit this person manages (the accountable
+ * decider). The Executive is the decider for group-level insights. Others in scope may still
+ * decide from the trace page; they are not asked to.
+ */
+export async function listMyDecisions(db: DbOrTx, orgId: string, actor: Actor) {
+  if (actor.kind !== "user") return [];
+  const managed = actor.assignments.filter((a) => hasPermission(a.role, "decision.decide")).map((a) => a.unit.id);
+  if (managed.length === 0) return [];
+  const owner = alias(orgUnit, "owner_unit");
+  return db
+    .select({
+      decisionId: decision.id,
+      statement: decision.statement,
+      insightId: insight.id,
+      title: insight.title,
+      band: insight.priorityBand,
+      score: insight.priorityScore,
+      workstream: insight.workstream,
+      ownerDepartmentName: owner.name,
+    })
+    .from(decision)
+    .innerJoin(insight, eq(insight.id, decision.insightId))
+    .leftJoin(owner, eq(owner.id, insight.ownerDepartmentId))
+    .where(
+      and(
+        eq(decision.orgId, orgId),
+        eq(decision.status, "recommended"),
+        inArray(insight.status, ["open", "acknowledged"]),
+        inArray(insight.primaryUnitId, managed),
+      ),
+    )
+    .orderBy(desc(insight.priorityScore));
+}
+
+/** Actions this person owns that are not finished, with who an approval is waiting on. */
+export async function listMyActions(db: DbOrTx, orgId: string, actor: Actor) {
+  if (actor.kind !== "user") return [];
+  const rows = await db
+    .select({ action, insightTitle: insight.title, insightId: insight.id, band: insight.priorityBand })
+    .from(action)
+    .innerJoin(insight, eq(insight.id, action.insightId))
+    .where(
+      and(
+        eq(action.orgId, orgId),
+        eq(action.ownerUserId, actor.userId),
+        inArray(action.status, ["proposed", "pending_approval", "ready", "executing", "failed"]),
+      ),
+    )
+    .orderBy(desc(insight.priorityScore));
+  const pending = rows.filter((r) => r.action.status === "pending_approval");
+  if (pending.length === 0) return rows.map((r) => ({ ...r, waitingOn: [] as string[] }));
+  const reqs = await db
+    .select()
+    .from(approval)
+    .where(
+      and(
+        inArray(
+          approval.actionId,
+          pending.map((r) => r.action.id),
+        ),
+        eq(approval.status, "requested"),
+      ),
+    );
+  const people = await peopleWithAssignments(db, orgId);
+  return rows.map((r) => {
+    const req = reqs.find((x) => x.actionId === r.action.id);
+    const waitingOn = req
+      ? routeApproval(people, req.requirement as ApprovalRequirement, r.action).map(([, p]) => p.name)
+      : [];
+    return { ...r, waitingOn };
+  });
+}
+
+/** Cosmetic check for the UI (the command re-checks): may this person decide on this insight? */
+export async function canDecide(db: DbOrTx, orgId: string, actor: Actor, insightId: string) {
+  const [ins] = await db
+    .select({ primaryUnitId: insight.primaryUnitId })
+    .from(insight)
+    .where(and(eq(insight.id, insightId), eq(insight.orgId, orgId)));
+  if (!ins) return false;
+  const [u] = await db.select().from(orgUnit).where(eq(orgUnit.id, ins.primaryUnitId));
+  return authorizeUser(actor, "decision.decide", {
+    targetUnits: [{ id: u.id, type: u.type, pathIds: u.pathIds }],
+    isWrite: true,
+  }).ok;
 }

@@ -9,7 +9,7 @@ import { verifyAuditChain } from "@/application/audit";
 import { acceptDecision, executeReadyActions, grantApproval } from "@/application/commands/lifecycle";
 import { createContext, loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
-import { getInsightTrace, listInsights, listMyApprovals } from "@/application/queries/insights";
+import { getInsightTrace, listInsights, listMyApprovals, listMyDecisions } from "@/application/queries/insights";
 import { performanceView } from "@/application/queries/performance";
 import { CATALOG } from "@/infra/seed/catalog";
 import { advanceClock, resetDemo } from "@/application/scenario";
@@ -96,8 +96,37 @@ describe("Phase 2 demo scenario", () => {
     expect(await titles("yossi@vector-retail.example")).toEqual([
       "Transfer top-50 SKU stock from the Center DC to 9 North branches",
     ]);
-    expect(await titles("dana@vector-retail.example")).toHaveLength(8);
-    expect(await titles("noa@vector-retail.example")).toEqual([]); // she owns those actions (AZ-2)
+    // G3: the recall is approved inside Legal; the CEO is asked only when nobody else may approve (≥ ₪50k).
+    expect(await titles("yael@vector-retail.example")).toEqual([
+      "Block the SKU at every POS (IT executes for Supply Chain)",
+      "Notify the food-safety regulator of the recall",
+      "Quarantine batch 4471 at the DCs and pull it from 60 branches",
+      "Recall notice to loyalty customers who bought batch 4471",
+    ]);
+    expect(await titles("dana@vector-retail.example")).toEqual(["Weekend staffing uplift, 9 North branches"]);
+    expect(await titles("noa@vector-retail.example")).toEqual([]); // she owns her actions (AZ-2); not Legal (AP-7)
+  });
+
+  it("the CEO is notified of the recall, not asked: the briefing executed as a task for her", async () => {
+    const dana = await as("dana@vector-retail.example");
+    const recall = (await listInsights(appDb, orgId, dana)).find((i) => /Food-safety recall/.test(i.title))!;
+    const t = (await getInsightTrace(appDb, orgId, dana, recall.id))!;
+    const brief = t.actions.find((a) => a.type === "notify_owner")!;
+    expect(brief.status).toBe("executed");
+    expect(t.tasks.map((x) => x.assigneeUserId)).toContain(dana.kind === "user" ? dana.userId : "");
+    const owners = new Set(t.actions.filter((a) => a.type !== "notify_owner").map((a) => a.ownerUserId));
+    const ben = await as("ben@vector-retail.example");
+    const dafna = await as("dafna@vector-retail.example");
+    expect([...owners].sort()).toEqual([ben, dafna].map((a) => (a.kind === "user" ? a.userId : "")).sort()); // the work sits with Supply Chain and Legal
+  });
+
+  it("decisions wait on the accountable manager (the Approvals inbox lists them)", async () => {
+    const decide = async (email: string) => (await listMyDecisions(appDb, orgId, await as(email))).map((d) => d.title);
+    expect(await decide("avi@vector-retail.example")).toEqual([expect.stringMatching(/Haifa Grand Canyon net sales/)]);
+    expect(await decide("maya@vector-retail.example")).toEqual(["Labor cost 6% over plan across the Center region"]);
+    expect(await decide("eitan@vector-retail.example")).toHaveLength(3);
+    expect(await decide("dana@vector-retail.example")).toEqual([]); // nothing is group-level: the CEO isn't flooded
+    expect(await decide("tal@vector-retail.example")).toEqual([]); // viewers never decide
   });
 
   it("performance views follow the viewer's position", async () => {

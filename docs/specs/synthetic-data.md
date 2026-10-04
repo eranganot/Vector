@@ -1,6 +1,6 @@
 # Synthetic data plan — VECTOR Retail Group
 
-Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built** (seed `p2-v2`, Eran's G2 scope). All data is
+Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built** (seed `p2-v3`, Eran's G2 scope). All data is
 synthetic (charter §17). Code: `src/infra/seed/` (`org.ts`, `generator.ts`, `catalog.ts`, `seed.ts`).
 
 ## Principles
@@ -18,12 +18,12 @@ synthetic (charter §17). Code: `src/infra/seed/` (`org.ts`, `generator.ts`, `ca
 
 ## Scale
 
-|                 | Phase 2 as built (`p2-v2`)                                       | Later                                         |
+|                 | Phase 2 as built (`p2-v3`)                                       | Later                                         |
 | --------------- | ---------------------------------------------------------------- | --------------------------------------------- |
 | Regions         | 5: North, Coast, Center, Jerusalem, South                        | same                                          |
 | Branches        | 60 (12 per region; size classes L and M)                         | same                                          |
 | Departments     | 8 (see [scenarios.md](scenarios.md))                             | same                                          |
-| Users           | 18 personas                                                      | ~25 (more branch managers, a deputy CEO)      |
+| Users           | 20 personas                                                      | ~25 (more branch managers, a deputy CEO)      |
 | KPIs            | 16: 6 per branch per day, 10 per department per day              | + promo redemption, online orders (Phase 4–6) |
 | History         | 84 days daily (12 weeks)                                         | 52 weeks (Phase 7, for year-on-year)          |
 | Planted stories | 1 live detector story + 18 catalog scenarios + background plants | five charter scenarios on one timeline (P7)   |
@@ -60,6 +60,8 @@ North so the Phase 2 story keeps its regional manager.
 | Michal Golan  | CFO                                | Department Manager @ Finance                        |
 | Hila Dahan    | VP HR                              | Department Manager @ HR                             |
 | Yael Barak    | General Counsel                    | Department Manager @ Legal & Compliance (AP-7)      |
+| Dafna Mor     | Senior Legal Counsel               | Department Manager @ Legal & Compliance (AP-7)      |
+| Ben Shalom    | Head of DC Operations              | Department Manager @ Supply Chain                   |
 | Amir Klein    | CIO                                | Department Manager @ IT                             |
 | Tal Ben-David | Board observer                     | Viewer @ Group                                      |
 | Ops Admin     | System administrator               | Admin @ Group                                       |
