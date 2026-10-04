@@ -26,14 +26,14 @@ An **actor** is either a signed-in user or a system actor:
 - **System actors:** named, non-human principals with fixed, minimal capabilities (`SYSTEM_ACTOR_OPERATIONS` in
   `authorize.ts`). They never approve.
 
-| System actor               | Can do                                                                       | Cannot do                             |
-| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------- |
-| `system:detector`          | create signals and insights; recommend decisions; propose actions            | decide, approve, execute              |
-| `system:policy`            | submit actions of `decided` decisions; auto-decide under AD rules            | approve, change rules                 |
-| `system:executor`          | execute `ready` actions; complete or fail executions; start outcome watches  | approve, change targets               |
-| `system:outcome-evaluator` | evaluate outcomes; resolve insights whose loop has closed                    | review or override verdicts           |
-| `system:clock`             | expire approval requests; lapse approvals                                    | anything else                         |
-| `system:ai` (P5)           | same as `system:detector`, lower trust: its outputs are always `recommended` | decide, approve, execute, auto-decide |
+| System actor               | Can do                                                                                                                         | Cannot do                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `system:detector`          | create signals and insights; recommend decisions; propose actions; mark commitments overdue; detect and resolve conflicts (P4) | decide, approve, execute; complete, renegotiate or cancel a commitment |
+| `system:policy`            | submit actions of `decided` decisions; auto-decide under AD rules                                                              | approve, change rules                                                  |
+| `system:executor`          | execute `ready` actions; complete or fail executions; start outcome watches                                                    | approve, change targets                                                |
+| `system:outcome-evaluator` | evaluate outcomes; resolve insights whose loop has closed                                                                      | review or override verdicts                                            |
+| `system:clock`             | expire approval requests; lapse approvals                                                                                      | anything else                                                          |
+| `system:ai` (P5)           | same as `system:detector`, lower trust: its outputs are always `recommended`                                                   | decide, approve, execute, auto-decide                                  |
 
 **Read visibility.** A user can read an insight (and its signals, evidence, decision, actions, approvals,
 outcomes, audit) if the primary unit **or any affected unit** is inside one of their scopes. This lets a
@@ -57,6 +57,8 @@ unit), not in SQL; Phase 3 moves them to SQL filters.
 | `action.execute` (manual trigger/retry) |       |     ✓     |         ✓          |             ✓             |        |
 | `action.cancel`                         |       |     ✓     |         ✓          |             ✓             |        |
 | `outcome.review`                        |       |     ✓     |         ✓          |             ✓             |        |
+| `commitment.record` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
+| `commitment.update` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
 | `audit.read` (in scope)                 |   ✓   |     ✓     |         ✓          |             ✓             |        |
 | `config.priority_weights.propose`       |   ✓   |     ✓     |                    |                           |        |
 | `config.priority_weights.approve`       |       |     ✓     |                    |                           |        |
