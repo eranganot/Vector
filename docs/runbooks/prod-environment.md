@@ -39,9 +39,18 @@ Claude's Railway token is scoped to Dev only (D4), so Eran manages Prod's settin
 
 1. Claude fast-forwards `demo` to the signed-off commit on `main` (`git push origin <sha>:demo`) and records it in
    STATUS.md and DECISIONS.md.
-2. Railway deploys `demo`. If the synthetic organization changed (new `SEED_VERSION`), the start command opens a new epoch
-   automatically; otherwise data is kept.
-3. Claude runs smoke and doctor against the Prod URL.
+2. Railway deploys `demo` after CI passes on that commit (CI runs on pushes to `demo` too). If the synthetic organization
+   changed (new `SEED_VERSION`) or `SEED_USER_PASSWORD` was rotated, the start command opens a new epoch automatically;
+   otherwise data is kept.
+3. Claude runs smoke (`--phase <n>` for the phase Prod is on) and doctor against the Prod URL.
+
+## Rotating a secret
+
+- `SEED_USER_PASSWORD`: change it, then redeploy. On boot, `demo:reset --if-empty` sees that the seeded people no longer
+  match the password and seeds a fresh epoch with it (before 2026-10-04 night it did not, and persona sign-in failed:
+  STATUS.md).
+- `BETTER_AUTH_SECRET`: change it and redeploy; everyone is signed out once.
+- `APP_DB_PASSWORD`: change it and redeploy; the start command re-applies the `vector_app` role's password.
 
 ## Before every live demo
 

@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, demo] # demo = Prod; Railway "Wait for CI" needs a run on its commit
 
 concurrency:
   group: ci-${{ github.ref }}
