@@ -75,9 +75,11 @@ Manager for each of the 5 regions; two Branch Managers (Avi at Haifa Grand Canyo
 Viewer at the group root (Tal, board observer); and an Admin at the group root. A Branch Manager is the
 `regional_manager` role assigned at a branch unit; there is no separate role.
 
-How the UI applies `audit.read` in Phase 2: the group-wide `/audit` page (chain status) is shown to Executive and
-Admin only. Department and regional managers see the audit trail of each insight they can read on its trace page.
-A scoped audit explorer arrives in Phase 4.
+How the UI applies `audit.read` (Phase 4): `/audit` is a scoped explorer for everyone holding `audit.read`. An event is
+visible when its subject is (an insight, action or commitment by its visible units; a decision, approval or outcome
+through its insight or action; a conflict when either commitment is visible). Organization-level events (demo reset,
+clock) and refusals against a unit are visible to group-scope readers (Executive, Admin). Everyone sees their own
+actions, including their refused attempts. Each insight's own trail stays on its trace page.
 
 ## 3. Authorization rules (context)
 

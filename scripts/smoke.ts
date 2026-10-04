@@ -135,9 +135,9 @@ const checks: Check[] = [
   },
   {
     phase: 4,
-    name: "Phase 4: commitments and actions require sign-in; the demo runs the commitment register (seed p4+)",
+    name: "Phase 4: commitments, actions and audit require sign-in; the demo runs the commitment register (seed p4+)",
     run: async (base) => {
-      for (const path of ["/commitments", "/actions"]) {
+      for (const path of ["/commitments", "/actions", "/audit"]) {
         const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
         const loc = res.headers.get("location") ?? "";
         if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))

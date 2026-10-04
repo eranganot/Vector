@@ -50,7 +50,8 @@ export async function Shell({
     g,
     people: people.filter((p) => groupOf(p.title) === g),
   }));
-  const seeAudit = roles.includes("executive") || roles.includes("admin");
+  // audit.read (authorization.md §2): Executive, Admin and managers; the explorer scopes what each one sees.
+  const seeAudit = ["executive", "admin", "department_manager", "regional_manager"].some((r) => roles.includes(r));
   const nav = (
     <>
       <NavLink href="/">

@@ -28,6 +28,7 @@ import {
 } from "./commands/commitments";
 import { commitmentFormOptions, commitmentsForInsight, commitmentsView } from "./queries/commitments";
 import { type ActionFilter, actionsView, lessonsForInsight, outcomesView } from "./queries/actions";
+import { type AuditFilter, auditExplorer } from "./queries/audit";
 import type { CommitmentEffect } from "@/domain/commitments";
 import { activeOrgId, createContext, loadUserActor } from "./context";
 import {
@@ -122,6 +123,7 @@ export const api = {
     input: { dueAt: Date; rationale: string; effects?: CommitmentEffect[] },
   ) => renegotiateCommitment(await ctx(), a, id, input),
   cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
+  audit: async (a: Actor, f?: AuditFilter) => auditExplorer(db(), await activeOrgId(db()), a, f),
   actions: async (a: Actor, filter?: ActionFilter) => actionsView(db(), await activeOrgId(db()), a, filter),
   outcomes: async (a: Actor) => outcomesView(db(), await activeOrgId(db()), a),
   lessonsFor: async (a: Actor, insightId: string) => lessonsForInsight(db(), await activeOrgId(db()), a, insightId),

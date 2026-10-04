@@ -113,7 +113,7 @@ export async function recordCommitment(
     ctx,
     actor,
     "commitment.record",
-    { entityType: "commitment", entityId: input.ownerUnitId },
+    { entityType: "org_unit", entityId: input.ownerUnitId }, // no commitment exists yet: a refusal names the unit
     async ({ tx, now, audit }) => {
       const [owner] = await unitsByIds(tx, ctx.orgId, [input.ownerUnitId]);
       assertAuthorized(authorizeUser(actor, "commitment.record", writeCtx([owner])));
@@ -684,7 +684,7 @@ export async function detectConflicts(ctx: AppContext, commitmentId: string): Pr
       ctx,
       SYSTEM.detector,
       "conflict.detect",
-      { entityType: "conflict", entityId: `${a.id}:${b.id}` },
+      { entityType: "commitment", entityId: a.id }, // audit entity ids are UUIDs (refusal path)
       async ({ tx, audit }) => {
         const t = transition("conflict", null, "detect");
         const [row] = await tx
