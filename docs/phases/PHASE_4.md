@@ -1,7 +1,7 @@
 # Phase 4 — Operational Intelligence
 
-Status: **In progress** (started 2026-10-04 on Eran's go-ahead with the Phase 3 sign-off, G-P3: "you can continue to
-phase 4 (in dev)"). Charter §31 Phase 4, Objective 4 (Organizational Coordination), Objective 5 (Closed-Loop
+Status: **Built and verified on Dev; awaiting Eran's Phase 4 gate** (started 2026-10-04 on Eran's go-ahead with the
+Phase 3 sign-off, G-P3: "you can continue to phase 4 (in dev)"). Charter §31 Phase 4, Objective 4 (Organizational Coordination), Objective 5 (Closed-Loop
 Intelligence), §36 scenarios "Meeting Commitment", "Conflicting Decision", "Cross-Department Dependency".
 
 ## Objective
@@ -180,6 +180,9 @@ seeded insights. There is no commitment or dependency the system can track, so n
 - P4g: scoped audit explorer (`/audit` for every `audit.read` holder: filters, refusals, own attempts) (#28).
 - P4c/P4d: live detection on Dev; Commitments tab; the Dependencies card on every home (bottlenecks, on-time rate,
   conflicts, who waits on whom); the plans behind an insight on its trace (#25).
+
+Screens: `docs/specs/screens/p4-dependencies-ceo.png`, `p4-commitments-ronit.png`, `p4-conflict-trace.png`,
+`p4-approvals-ceo.png`, `p4-actions.png`, `p4-audit-region.png`.
 
 ## Choices made by Claude, to confirm at the Phase 4 gate
 

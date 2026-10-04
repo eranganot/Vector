@@ -250,7 +250,7 @@ Verdict rule (deterministic, P2): compare the mean of the metric over the window
 if ≥ 50% of it; `did_not_work` otherwise; `inconclusive` if data coverage < 80% of window days.
 
 **Learning (D6)** in Phase 2 = outcome verdicts and human lessons, stored on the outcome and in the audit trail.
-Querying them per action type, and AI-proposed adjustments to priority weights and playbooks (themselves approved
+Phase 4 queries them per action type ("Last time we did this" on traces, the lessons library on /actions). AI-proposed adjustments to priority weights and playbooks (themselves approved
 through this same Approval mechanism), arrive in Phases 4–5.
 
 ### 4.6 Commitment (Phase 4)

@@ -22,6 +22,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                    | #26      |
 | 2026-10-05 | P4f: Actions & outcomes tracker, lessons library, "Last time we did this"                                | #27      |
 | 2026-10-05 | P4g: scoped audit explorer; audit entity ids always UUIDs on refusal paths                               | #28      |
+| 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                               | #29      |
 
 ## Root-cause records
 

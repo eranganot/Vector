@@ -79,14 +79,14 @@ export default async function ActionsPage({ searchParams }: { searchParams: Prom
             <p className="text-sm text-muted">No actions here.</p>
           ) : (
             <Card className="overflow-x-auto p-0">
-              <table className="w-full min-w-[900px] text-sm">
+              <table className="w-full min-w-[960px] table-fixed text-sm">
                 <thead className="text-left text-xs uppercase tracking-wide text-muted">
                   <tr className="border-b border-line">
-                    <th className="px-4 py-3 font-medium">Action</th>
-                    <th className="px-4 py-3 font-medium">Owner</th>
-                    <th className="px-4 py-3 font-medium">Due</th>
-                    <th className="px-4 py-3 font-medium">Cost</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="w-[44%] px-4 py-3 font-medium">Action</th>
+                    <th className="w-[16%] px-4 py-3 font-medium">Owner</th>
+                    <th className="w-[9%] px-4 py-3 font-medium">Due</th>
+                    <th className="w-[10%] px-4 py-3 font-medium">Cost</th>
+                    <th className="w-[21%] px-4 py-3 font-medium">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,13 +104,13 @@ export default async function ActionsPage({ searchParams }: { searchParams: Prom
                         {a.owner}
                         <div className="text-xs text-muted">{a.department}</div>
                       </td>
-                      <td className={`px-4 py-3 ${a.overdue ? "text-p1" : ""}`}>
+                      <td className={`whitespace-nowrap px-4 py-3 ${a.overdue ? "text-p1" : ""}`}>
                         {a.dueAt ? day(a.dueAt) : "—"}
                         {a.overdue && <div className="text-xs">overdue</div>}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">₪{a.cost.toLocaleString("en-US")}</td>
-                      <td className="px-4 py-3">
-                        <span className="flex flex-wrap items-center gap-2">
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className="flex items-center gap-2">
                           <Pill tone={STATUS[a.status]?.tone}>{STATUS[a.status]?.label ?? a.status}</Pill>
                           {a.status === "executed" && <Simulated />}
                           {a.revision > 1 && <span className="text-xs text-muted">rev {a.revision}</span>}
