@@ -35,7 +35,8 @@ a hash-chained audit, on a realistic synthetic organization, with both workstrea
 - Local, on the PR #11 branch: typecheck, lint, format; 426 unit tests; 37 integration tests (`vector_test`); 5 e2e tests
   against a local build; `pnpm run doctor` (all checks incl. audit chains); `pnpm smoke` (7 checks); calibration (all three
   models in band).
-- Dev: see STATUS.md "Shipped" for the deploy check of each merge.
+- Dev after merging PR #11 (`03133a1`): Railway deployed, migration 0004 applied, new `p2-v2` epoch seeded on boot; `pnpm smoke --expect-sha` 7/7; `pnpm test:e2e` 5/5 against Dev; `pnpm run doctor --url` passes; Dev demo reset afterwards so it opens fresh.
+- Branch `demo` created at `03133a1` for the demo environment (not connected yet; runbook: docs/runbooks/demo-environment.md).
 
 ## Failed / broken
 
@@ -44,8 +45,7 @@ a hash-chained audit, on a realistic synthetic organization, with both workstrea
 
 ## Open decisions (for Eran)
 
-- Phase 2 gate sign-off and promotion to the demo environment (needs Eran to create the environment; steps in the gate
-  brief).
+- Phase 2 gate sign-off and promotion to the demo environment (needs Eran to create the environment once: docs/runbooks/demo-environment.md).
 - G2-a: local priority raise-only (proposed by Claude).
 - D1-n: Postgres "16 or later" wording (16 in the sandbox, 18 on CI/Railway).
 - AI provider (Claude vs Gemini) at the Phase 5 gate.
