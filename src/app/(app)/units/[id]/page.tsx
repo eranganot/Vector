@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import { Dashboard } from "../../../_components/dashboard";
 import { requireActor } from "../../../_lib/session";
 

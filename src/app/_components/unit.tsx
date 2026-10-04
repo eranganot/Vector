@@ -1,6 +1,6 @@
 /** The unit view: one template for the group, a region, a branch and a department (docs/phases/PHASE_3.md). */
 import Link from "next/link";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import type { KpiStat } from "@/application/facade";
 import { Band, Card, Dot, fmtIls, fmtKpi, LineChart, Pill, Ring, SectionTitle } from "./ui";
 import { getT } from "../_lib/locale";
@@ -324,7 +324,7 @@ export async function InsightCard({ i }: { i: CardItem }) {
           {i.ownerDepartmentName && i.primaryUnitName !== i.ownerDepartmentName ? ` · ${i.primaryUnitName}` : ""}
         </span>
       </span>
-      {i.waiting && <Pill tone={i.waiting.startsWith("Decision") ? "strong" : "warn"}>{i.waiting}</Pill>}
+      {i.waiting && <Pill tone={/^(Decision|החלטה)/.test(i.waiting) ? "strong" : "warn"}>{i.waiting}</Pill>}
     </Link>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { api, demoNow } from "@/application/facade";
+import { demoNow } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { approveAction } from "../../actions";
 import { Band, Card, Notice, Pill, SectionTitle } from "../../_components/ui";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import { Band, Card, SectionTitle } from "../../_components/ui";
 import { getT } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";

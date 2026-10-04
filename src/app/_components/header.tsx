@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { demoNow, seededPeople } from "@/application/facade";
+import { localized } from "@/app/_lib/api";
 import { signOut, switchPersona } from "../actions";
 import { demoPersonasEnabled } from "../_lib/session";
 import { makeT } from "@/i18n/t";
@@ -48,6 +49,7 @@ export async function Shell({
   children: React.ReactNode;
 }) {
   const now = await demoNow();
+  me = await localized(me);
   const locale = await getLocale();
   const t = makeT(locale);
   const people = demoPersonasEnabled() ? await seededPeople() : [];
@@ -55,6 +57,7 @@ export async function Shell({
     g,
     people: people.filter((p) => groupOf(p.title) === g),
   }));
+  const shownGroups = await localized(groups);
   // audit.read (authorization.md §2): Executive, Admin and managers; the explorer scopes what each one sees.
   const seeAudit = ["executive", "admin", "department_manager", "regional_manager"].some((r) => roles.includes(r));
   const nav = (
@@ -135,7 +138,7 @@ export async function Shell({
             </summary>
             <div className="absolute end-0 z-20 mt-2 max-h-[70vh] w-80 overflow-y-auto rounded-xl border border-line bg-panel p-2 shadow-2xl">
               {people.length > 0 && <p className="px-2 pb-1 pt-1 text-xs text-muted">{t("Switch persona (demo)")}</p>}
-              {groups.map(
+              {shownGroups.map(
                 ({ g, people: ps }) =>
                   ps.length > 0 && (
                     <div key={g} className="border-t border-line py-1 first:border-t-0">

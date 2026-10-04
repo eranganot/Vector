@@ -3,6 +3,7 @@
  * Hebrew entry falls back to English (and a unit test lists every `t("…")` in the UI that has no translation).
  */
 import type { Locale } from "./locale";
+import { heContent } from "./content";
 import { HE } from "./messages/he";
 
 export type Params = Record<string, string | number>;
@@ -13,5 +14,5 @@ const fill = (s: string, params?: Params) =>
 
 export function makeT(locale: Locale): T {
   if (locale === "en") return (en, params) => fill(en, params);
-  return (en, params) => fill(HE[en] ?? en, params);
+  return (en, params) => fill(HE[en] ?? heContent(en) ?? en, params);
 }

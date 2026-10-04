@@ -3,6 +3,7 @@
  * docs/specs/performance-dashboards.md). Everything is derived at read time from stored KPI
  * observations, insights and actions; nothing here writes.
  */
+import type { T } from "@/i18n/t";
 import { and, eq, gte, inArray, lt } from "drizzle-orm";
 import { addDays } from "@/domain/calendar";
 import { hasPermission } from "@/domain/policy/permissions";
@@ -581,6 +582,8 @@ export const _test = { kpiStat, branchesUnder };
 
 // ── Executive Command Center ─────────────────────────────────────────────────
 
+const EN: T = (en, p) => (p ? en.replace(/\{(\w+)\}/g, (m, k: string) => (k in p ? String(p[k]) : m)) : en);
+
 const CHANGE_VERBS: Record<string, string> = {
   "insight.created": "New",
   "insight.reprioritized": "Re-prioritized",
@@ -600,46 +603,72 @@ const CHANGE_VERBS: Record<string, string> = {
  */
 export type PerformanceView = NonNullable<Awaited<ReturnType<typeof performanceView>>>;
 
-const listNames = (xs: string[], noun: string) =>
+/** "A", "A and B", "A, B and C", or "{n} regions" past three. Plain English unless a translator is given. */
+const listNames = (xs: string[], many: (n: number) => string, t: T) =>
   xs.length > 3
-    ? `${xs.length} ${noun}`
+    ? many(xs.length)
     : xs.length <= 1
       ? xs.join("")
-      : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
+      : t("{list} and {last}", { list: xs.slice(0, -1).join(", "), last: xs.at(-1)! });
 
 /**
  * The one-sentence headline at the top of every dashboard (Phase 3, Eran 2026-10-04: "a clean and clear dashboard").
  * Group and region: which child units need attention. Branch and department: P1 risks and key results off target.
  */
-export function headlineFor(v: PerformanceView) {
+export function headlineFor(v: PerformanceView, t: T = EN) {
   const risks = v.items.filter((i) => i.workstream === "risk");
   const p1 = risks.filter((i) => i.band === "P1").length;
   const o1 = v.items.filter((i) => i.workstream === "opportunity" && i.band === "O1").length;
-  const off = v.kpis.filter((k) => k.status === "bad").map((k) => k.name.toLowerCase());
+  const off = v.kpis.filter((k) => k.status === "bad").map((k) => t(k.name).toLowerCase());
+  const offList = listNames(off, (n) => t("{n} key results", { n }), t);
   let headline: string;
   if ("children" in v && v.children.length > 0) {
-    const noun = v.position === "group" ? "regions" : "branches";
-    const atRisk = v.children.filter((c) => c.health === "at_risk").map((c) => c.name);
-    const watch = v.children.filter((c) => c.health === "watch").map((c) => c.name);
-    const verb = (xs: string[]) => (xs.length === 1 ? "needs" : "need");
+    const many = (n: number) => (v.position === "group" ? t("{n} regions", { n }) : t("{n} branches", { n }));
+    const atRisk = v.children.filter((c) => c.health === "at_risk").map((c) => t(c.name));
+    const watch = v.children.filter((c) => c.health === "watch").map((c) => t(c.name));
+    const a = listNames(atRisk, many, t);
+    const w = listNames(watch, many, t);
+    const one = atRisk.length === 1 && atRisk[0] === a;
     headline =
       atRisk.length > 0
-        ? `${listNames(atRisk, noun)} ${verb(atRisk)} attention${watch.length ? `; ${listNames(watch, noun)} to watch` : ""}.`
+        ? watch.length
+          ? one
+            ? t("{a} needs attention; {w} to watch.", { a, w })
+            : t("{a} need attention; {w} to watch.", { a, w })
+          : one
+            ? t("{a} needs attention.", { a })
+            : t("{a} need attention.", { a })
         : watch.length > 0
-          ? `Nothing critical; ${listNames(watch, noun)} to watch.`
-          : "Everything is on track.";
+          ? t("Nothing critical; {w} to watch.", { w })
+          : t("Everything is on track.");
   } else if (p1 > 0) {
-    headline = `${p1} P1 risk${p1 === 1 ? " needs" : "s need"} attention${off.length ? `; ${listNames(off, "key results")} off target` : ""}.`;
+    headline = off.length
+      ? p1 === 1
+        ? t("1 P1 risk needs attention; {off} off target.", { off: offList })
+        : t("{n} P1 risks need attention; {off} off target.", { n: p1, off: offList })
+      : p1 === 1
+        ? t("1 P1 risk needs attention.")
+        : t("{n} P1 risks need attention.", { n: p1 });
   } else if (off.length > 0) {
-    headline = `No P1 risk; ${listNames(off, "key results")} off target.`;
+    headline = t("No P1 risk; {off} off target.", { off: offList });
   } else {
-    headline = "Everything is on track.";
+    headline = t("Everything is on track.");
   }
-  const scope = v.position === "group" ? "across the group" : `in ${v.scope.name}`;
-  const subline =
-    `${p1} P1 risk${p1 === 1 ? "" : "s"} ${scope} · ${o1} opportunit${o1 === 1 ? "y" : "ies"} to pursue now · ` +
-    `${v.execution.pendingApproval} action${v.execution.pendingApproval === 1 ? "" : "s"} awaiting approval` +
-    (v.execution.overdue ? ` · ${v.execution.overdue} overdue` : "");
+  const parts = [
+    v.position === "group"
+      ? p1 === 1
+        ? t("1 P1 risk across the group")
+        : t("{n} P1 risks across the group", { n: p1 })
+      : p1 === 1
+        ? t("1 P1 risk in {scope}", { scope: t(v.scope.name) })
+        : t("{n} P1 risks in {scope}", { n: p1, scope: t(v.scope.name) }),
+    o1 === 1 ? t("1 opportunity to pursue now") : t("{n} opportunities to pursue now", { n: o1 }),
+    v.execution.pendingApproval === 1
+      ? t("1 action awaiting approval")
+      : t("{n} actions awaiting approval", { n: v.execution.pendingApproval }),
+    ...(v.execution.overdue ? [t("{n} overdue", { n: v.execution.overdue })] : []),
+  ];
+  const subline = parts.join(" · ");
   return { headline, subline };
 }
 

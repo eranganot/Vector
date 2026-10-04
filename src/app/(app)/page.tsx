@@ -1,4 +1,5 @@
-import { api, demoNow } from "@/application/facade";
+import { demoNow } from "@/application/facade";
+import { api, localized } from "@/app/_lib/api";
 import { Dashboard } from "../_components/dashboard";
 import { WaitingCard } from "../_components/waiting";
 import { getT } from "../_lib/locale";
@@ -26,7 +27,7 @@ export default async function Home() {
   const v = cc ?? own;
   if (!v) return <p className="text-sm text-muted">{t("Nothing in your scope yet.")}</p>;
   const h = (now.getUTCHours() + 3) % 24; // Israel time for the synthetic organization
-  const name = me.name.split(" ")[0];
+  const name = (await localized(me)).name.split(" ")[0];
   const greet =
     h < 12
       ? t("Good morning, {name}", { name })

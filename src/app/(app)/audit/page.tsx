@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import { Card, Pill, SectionTitle } from "../../_components/ui";
 import { getT } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";

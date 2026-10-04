@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, demoNow } from "@/application/facade";
+import { demoNow } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import {
   CommitmentCard,
   DependenciesCard,

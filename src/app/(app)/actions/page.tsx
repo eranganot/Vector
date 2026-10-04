@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { type ActionFilter, api } from "@/application/facade";
+import { type ActionFilter } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import { reviewOutcomeAction } from "../../actions";
 import { Band, Card, Pill, SectionTitle, Simulated } from "../../_components/ui";
 import { getLocale } from "../../_lib/locale";

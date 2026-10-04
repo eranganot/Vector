@@ -1,7 +1,7 @@
 /** A workstream tab (Risks or Opportunities): every item in scope, ranked, filterable by band (Eran, 2026-10-04). */
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import type { Actor } from "@/domain/types";
 import { laneHref } from "./dashboard";
 import { Breadcrumb, InsightCard } from "./unit";

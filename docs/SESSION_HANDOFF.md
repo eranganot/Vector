@@ -35,6 +35,11 @@ lessons (docs/phases/PHASE_4.md).
 - **#27** Actions & outcomes: the tracker with filters; outcomes being measured, waiting for a lesson, and reviewed; the lessons library; "Last time we did this".
 - **#28** The scoped audit explorer for every `audit.read` holder: filters, refusals, and your own attempts.
 
+- **#31** Hebrew and right-to-left (G-P4a, before Phase 5): EN / עברית switch per user, every screen mirrored and
+  translated, names and seeded and generated text shown in Hebrew; the database stays English (ADR-007, P-6a).
+  Verified locally: 514 unit, 79 integration, 24 e2e (English unchanged + the Hebrew path); a crawl of every persona
+  and page in Hebrew finds no untranslated data string.
+
 ## Verified (by running)
 
 - **Local:**
@@ -85,7 +90,8 @@ lessons (docs/phases/PHASE_4.md).
 
 1. Eran: the Phase 4 demo on Dev (docs/phases/PHASE_4.md, "Demo scenario"), then the gate (confirm Q1–Q4, decide Q5).
 2. After sign-off: promote to Prod by merging `main` into `demo` (no force), then verify with smoke, doctor, e2e and a persona sign-in.
-3. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate.
+3. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
+   the reader's language (ADR-007, consequences).
 
 ## Reproducible commands
 

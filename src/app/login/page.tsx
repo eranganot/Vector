@@ -1,4 +1,4 @@
-import { seededPeople } from "@/application/facade";
+import { seededPeople } from "@/app/_lib/api";
 import { signIn, switchPersona } from "../actions";
 import { Logo, Notice } from "../_components/ui";
 import { demoPersonasEnabled } from "../_lib/session";

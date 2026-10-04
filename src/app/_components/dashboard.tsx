@@ -210,7 +210,7 @@ async function SummaryRow({ i, detail }: { i: Item; detail: boolean }) {
           <span className="t min-w-0 flex-1 text-sm font-semibold leading-snug">{i.title}</span>
           {i.waiting && (
             <span className="hidden shrink-0 text-xs text-warn md:inline">
-              {i.waiting.replace(/^Decision by the manager of /, `${t("Decision")}: `)}
+              {i.waiting.replace(/^(Decision by the manager of |החלטה בידי המנהל\/ת של )/, `${t("Decision")}: `)}
             </span>
           )}
         </span>
@@ -300,7 +300,7 @@ export async function Dashboard({
   work?: { actions: ActionsView; outcomes: OutcomesView };
 }) {
   const t = await getT();
-  const { headline, subline } = headlineFor(v);
+  const { headline, subline } = headlineFor(v, t);
   const own = !!greeting;
   const unitId = own ? undefined : v.scope.id;
   const asOf = new Date(`${v.asOf}T00:00:00Z`);

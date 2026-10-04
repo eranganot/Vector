@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { api } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { BANDS, OPPORTUNITY_BANDS, type PriorityBreakdown } from "@/domain/priority";
 import {
@@ -54,6 +54,20 @@ const sourceLabel = (t: T, g: string) =>
       : g.startsWith("commitment-monitor") || g.startsWith("conflict-rules")
         ? t("Rule-generated · {rule} · commitment register", { rule: g })
         : g;
+
+/** Priority and opportunity factor names (keys of the stored breakdown). */
+const FACTOR: Record<string, string> = {
+  impact: "impact",
+  breadth: "breadth",
+  urgency: "urgency",
+  magnitude: "magnitude",
+  strategic: "strategic",
+  compliance: "compliance",
+  value: "value",
+  window: "window",
+  reach: "reach",
+  ease: "ease",
+};
 
 export default async function TracePage({
   params,
@@ -240,7 +254,7 @@ export default async function TracePage({
                 {(Object.keys(pb.factors) as (keyof typeof pb.factors)[]).map((k) => (
                   <div key={k} className="contents">
                     <span>
-                      {k} ×{pb.weights[k].toFixed(2)}
+                      {t(FACTOR[k] ?? k)} ×{pb.weights[k].toFixed(2)}
                     </span>
                     <span className="h-2 rounded bg-soft">
                       <span

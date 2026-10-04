@@ -118,6 +118,17 @@ const DYNAMIC = [
   "Needs approval again",
   "Outcome measured",
   "Resolved",
+  // priority factors (insight page)
+  "impact",
+  "breadth",
+  "urgency",
+  "magnitude",
+  "strategic",
+  "compliance",
+  "value",
+  "window",
+  "reach",
+  "ease",
   // actions filters
   "In flight",
   "Overdue",
@@ -126,7 +137,14 @@ const DYNAMIC = [
 ];
 
 describe("Hebrew coverage", () => {
-  const used = [...new Set([...files("src/app").flatMap((p) => keysIn(readFileSync(p, "utf8"))), ...DYNAMIC])];
+  const used = [
+    ...new Set([
+      ...[...files("src/app"), "src/application/queries/performance.ts"].flatMap((p) =>
+        keysIn(readFileSync(p, "utf8")),
+      ),
+      ...DYNAMIC,
+    ]),
+  ];
   it("finds the UI strings", () => expect(used.length).toBeGreaterThan(20));
   it("has a Hebrew translation for every one", () => {
     const missing = used.filter((k) => !(k in HE));
