@@ -101,6 +101,38 @@ const checks: Check[] = [
       throw new Error("dark theme tokens not found in the served CSS");
     },
   },
+  {
+    phase: 3,
+    name: "Phase 3 screens (home dashboards, unit views, Risks, Opportunities, organization, Waiting on you) require sign-in",
+    run: async (base) => {
+      const paths = [
+        "/units/00000000-0000-4000-8000-000000000000",
+        "/org",
+        "/performance",
+        "/approvals",
+        "/risks",
+        "/opportunities",
+      ];
+      for (const p of paths) {
+        const res = await fetch(new URL(p, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${p}: status ${res.status} location ${loc}`);
+        if (/net sales|Command Center/i.test(await res.text())) throw new Error(`${p}: content before sign-in`);
+      }
+      return `${paths.length} routes → /login`;
+    },
+  },
+  {
+    phase: 3,
+    name: "sign-in page offers no external redirect target",
+    run: async (base) => {
+      const { res, text } = await get(base, "/login?next=https://example.com/");
+      if (res.status !== 200) throw new Error(`status ${res.status}`);
+      if (text.includes('value="https://example.com/"')) throw new Error("external next echoed into the form");
+      return "no external next";
+    },
+  },
 ];
 
 async function main() {

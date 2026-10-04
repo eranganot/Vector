@@ -20,7 +20,7 @@ import {
   listMyApprovals,
   listMyDecisions,
 } from "./queries/insights";
-import { performanceView } from "./queries/performance";
+import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
 import { demoClock, user } from "@/infra/db/schema";
@@ -73,6 +73,9 @@ export const api = {
   myActions: async (a: Actor) => listMyActions(db(), await activeOrgId(db()), a),
   canDecide: async (a: Actor, insightId: string) => canDecide(db(), await activeOrgId(db()), a, insightId),
   performance: async (a: Actor) => performanceView(db(), await activeOrgId(db()), a),
+  unit: async (a: Actor, unitId: string) => performanceView(db(), await activeOrgId(db()), a, unitId),
+  commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
+  orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {
     const c = await ctx();
@@ -91,4 +94,7 @@ export const api = {
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
-export type { KpiStat } from "./queries/performance";
+export type { KpiStat, PerformanceView } from "./queries/performance";
+export { headlineFor } from "./queries/performance";
+
+export { parseInput } from "./inputs";

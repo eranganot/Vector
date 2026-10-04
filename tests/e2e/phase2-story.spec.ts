@@ -36,8 +36,9 @@ test("the recall is approved inside Legal; the CEO is informed (runs first: appr
 
 test("the Haifa story runs end to end", async ({ page }) => {
   await as(page, "Avi Mizrahi");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Avi");
-  await expect(page.getByText(/1 risk .*in your scope/)).toBeVisible();
+  // Phase 3: a branch manager's home is their branch's dashboard.
+  await expect(page.getByText(/Good (morning|afternoon|evening), Avi · Haifa Grand Canyon/)).toBeVisible();
+  await expect(page.getByText(/Risks · 1/)).toBeVisible();
   await expect(page.getByText("P1 for Haifa Grand Canyon")).toBeVisible(); // local priority (group-wide P2)
   await page
     .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
@@ -89,8 +90,9 @@ test("the Haifa story runs end to end", async ({ page }) => {
 });
 
 test("out-of-scope insights look missing (404), and viewers get no decision buttons", async ({ page }) => {
-  await as(page, "Dana Levi");
-  await page.goto("/");
+  // The Haifa insight resolved in the story above: it is listed under "Recently resolved" on Avi's Risks tab.
+  await as(page, "Avi Mizrahi");
+  await page.goto("/risks");
   await page
     .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
     .first()
@@ -106,30 +108,58 @@ test("out-of-scope insights look missing (404), and viewers get no decision butt
   await expect(page.getByRole("button", { name: "Accept recommendation" })).toHaveCount(0);
 });
 
-test("both workstreams, local priority and the performance dashboards by position", async ({ page }) => {
+test("every home is a dashboard: KPIs, actions, risk and opportunity summary, dependencies (Eran, 2026-10-04)", async ({
+  page,
+}) => {
   await as(page, "Dana Levi");
-  await expect(page.getByText(/1\d risks \(4 P1\) and 5 opportunities/)).toBeVisible();
-  await expect(page.getByText(/Opportunities · 5/)).toBeVisible();
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Group performance" })).toBeVisible();
-  await expect(page.getByText("Health by region")).toBeVisible();
-  await expect(page.getByText("Organization pulse")).toBeVisible();
+  await expect(page.getByText(/Executive Command Center/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/need attention|to watch|on track/);
+  for (const t of ["Key results", "Health by region", "What changed", "Organization pulse"])
+    await expect(page.getByText(t, { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Waiting on you · \d+$/)).toBeVisible();
+  await expect(page.getByText(/^Risks · \d+$/)).toBeVisible();
+  await expect(page.getByText(/^Opportunities · 5$/)).toBeVisible();
+  await expect(page.getByText(/^Dependencies · \d+$/)).toBeVisible();
+  // Summaries only: the full lists are the Risks and Opportunities tabs.
+  await page.getByRole("link", { name: /^All \d+ risks →$/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Risks · VECTOR Retail Group" })).toBeVisible();
+  await page.getByRole("link", { name: /^P1/ }).first().click();
+  await expect(page).toHaveURL(/band=P1/);
+  await page.getByRole("link", { name: "Opportunities", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Opportunities · VECTOR Retail Group" })).toBeVisible();
 
   await as(page, "Maya Azulay");
-  await expect(page.getByText("P2 for Center")).toBeVisible(); // R11: P3 group-wide, P2 for the region (Eran, 2026-10-04)
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Region performance" })).toBeVisible();
+  await expect(page.getByText(/Maya · Center$/)).toBeVisible();
   await expect(page.getByText("Branches in Center")).toBeVisible();
+  await page.goto("/risks");
+  await expect(page.getByText("P2 for Center")).toBeVisible(); // R11: P3 group-wide, P2 for the region (Eran, 2026-10-04)
 
   await as(page, "Lior Ben-Ami");
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Branch performance" })).toBeVisible();
-  await expect(page.getByText("Dependencies on other departments")).toBeVisible();
+  await expect(page.getByText(/Lior · Tel Aviv Dizengoff$/)).toBeVisible();
+  await expect(page.getByText(/^Dependencies · \d+$/)).toBeVisible();
 
   await as(page, "Noa Friedman");
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Department performance" })).toBeVisible();
+  await expect(page.getByText(/Noa · Supply Chain$/)).toBeVisible();
+  await expect(page.getByText("Department results")).toBeVisible();
   await expect(page.getByText(/Others depend on us/)).toBeVisible();
+  await expect(page.getByText(/tasks? you own/)).toBeVisible(); // actions she must take, not only approvals
+  await page.goto("/performance"); // the Phase 2 address now leads to your dashboard
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test("a unit outside your scope looks missing (404), on its page and its Risks tab", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/org");
+  // Branches sit inside a collapsed region; read the link without opening it.
+  const href = await page
+    .locator("main a", { hasText: /^Haifa Grand Canyon$/ })
+    .first()
+    .getAttribute("href");
+  const unit = new URL(href!, page.url()).toString();
+  const id = unit.split("/units/")[1];
+  await as(page, "Maya Azulay");
+  expect((await page.goto(unit))?.status()).toBe(404);
+  expect((await page.goto(`/risks?unit=${id}`))?.status()).toBe(404);
 });
 
 test("every insight page renders for the CEO and the board observer (regression: 2 pages returned 500)", async ({
@@ -137,10 +167,16 @@ test("every insight page renders for the CEO and the board observer (regression:
 }) => {
   for (const who of ["Dana Levi", "Tal Ben-David"]) {
     await as(page, who);
-    await page.goto("/");
-    const links = await page
-      .locator("main a[href^='/insights/']")
-      .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
+    const links: string[] = [];
+    for (const tab of ["/risks", "/opportunities"]) {
+      await page.goto(tab);
+      links.push(
+        ...(await page
+          .locator("main a[href^='/insights/']")
+          .evaluateAll((as) => as.map((a) => a.getAttribute("href")!))),
+      );
+    }
+    links.splice(0, links.length, ...new Set(links));
     expect(links.length).toBeGreaterThanOrEqual(19);
     for (const l of links) {
       const res = await page.goto(l);

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   computeLocalPriority,
   effectiveLocal,
+  explainPriority,
   computeOpportunity,
   computePriority,
   type LocalScope,
@@ -97,5 +98,56 @@ describe("opportunity-v1 golden fixtures (separate workstream)", () => {
     const p = computeOpportunity(o);
     expect(p.score).toBe(OPP[id]);
     expect(p.band).toBe(o.expected);
+  });
+});
+
+describe("explainPriority (the one-line 'why' on every card, Phase 3)", () => {
+  const risk = (over: Partial<PriorityInput>): PriorityInput => ({
+    z: -4,
+    impactIls: 40_000,
+    breadth: "isolated",
+    hoursToImpact: 12,
+    strategicWeight: 0.8,
+    compliance: 0,
+    confidence: 0.9,
+    ...over,
+  });
+
+  it("names at most three reasons, strongest first, and never 'strategic'", () => {
+    const line = explainPriority(computePriority(risk({})));
+    expect(line.split(" · ").length).toBeLessThanOrEqual(3);
+    expect(line).not.toMatch(/strategic|core KPI/);
+    expect(line).toMatch(/σ from usual/);
+  });
+
+  it("always names a material regulatory or legal exposure first", () => {
+    const line = explainPriority(computePriority(risk({ compliance: 1, impactIls: 2_000_000, breadth: "systemic" })));
+    expect(line.split(" · ")[0]).toBe("regulator-mandated");
+    expect(explainPriority(computePriority(risk({ compliance: 0.8 })))).toMatch(/^legal deadline/);
+  });
+
+  it("does not lead with compliance below the policy threshold (0.6)", () => {
+    const line = explainPriority(computePriority(risk({ compliance: 0.3, impactIls: 900_000, breadth: "regional" })));
+    expect(line.split(" · ")[0]).not.toBe("contract terms at stake");
+  });
+
+  it("explains opportunities by upside, window and cost to capture", () => {
+    const line = explainPriority(
+      computeOpportunity({
+        valueIls: 150_000,
+        costIls: 20_000,
+        reach: "isolated",
+        hoursToClose: 72,
+        strategicFit: 0.5,
+        confidence: 0.9,
+      }),
+    );
+    expect(line).toMatch(/\/week upside/);
+    expect(line.split(" · ").length).toBeLessThanOrEqual(3);
+  });
+
+  it("is deterministic", () => {
+    const b = computePriority(risk({ compliance: 0.6 }));
+    expect(explainPriority(b)).toBe(explainPriority(b));
   });
 });

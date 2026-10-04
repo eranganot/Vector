@@ -13,28 +13,33 @@ insights**, never as the headline. This is how VECTOR avoids turning into a BI d
 ## Navigation (as built)
 
 ```text
-Sidebar (desktop) / top bar (mobile):  VECTOR · Today · Performance · Approvals (badge) · Audit* · Demo controls**
+Sidebar (desktop) / top bar (mobile):  VECTOR · Home · Risks · Opportunities · Organization · Waiting on you (badge) · Audit* · Demo controls**
 Header:                                 demo clock · persona chip ("Viewing as Dana Levi · CEO · demo") with the switcher
 * Executive and Admin   ** Admin
 ```
 
-| Route            | Screen                                                                    | Primary question it answers                             | Status     |
-| ---------------- | ------------------------------------------------------------------------- | ------------------------------------------------------- | ---------- |
-| `/login`         | Sign in / demo personas                                                   | Who am I in this demo?                                  | Built      |
-| `/`              | **Today**: waiting on you, risk lane, opportunity lane, recently resolved | What needs my attention now?                            | Built      |
-| `/performance`   | **Performance**, by position (group, region, branch, department)          | How is my area doing, and what drives it?               | Built (G2) |
-| `/insights/[id]` | Insight trace                                                             | Why am I seeing this, and what should happen?           | Built      |
-| `/approvals`     | Approvals inbox                                                           | What am I being asked to approve, and why me?           | Built      |
-| `/audit`         | Audit: chain verification (explorer later)                                | Is the log intact? (what exactly happened: Phase 4)     | Partial    |
-| `/admin/demo`    | Demo controls                                                             | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days) | Built      |
-| `/units/[id]`    | Department / Region / Branch drill-down                                   | What is happening in this unit, and who owns it?        | Phase 3    |
-| `/actions`       | Actions tracker                                                           | What's in flight, and did it work?                      | Phase 4    |
+| Route            | Screen                                                                                                                            | Primary question it answers                             | Status     |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------- |
+| `/login`         | Sign in / demo personas                                                                                                           | Who am I in this demo?                                  | Built      |
+| `/`              | **Home dashboard** of your scope (G-P3a): headline, Waiting on you, KPIs, risk/opportunity summary, dependencies, position extras | How is my area doing, and what must I do?               | Built (P3) |
+| `/risks`         | **Risks**: every risk in your scope (or `?unit=`), ranked, filterable by band                                                     | What could hurt us, and how badly?                      | Built (P3) |
+| `/opportunities` | **Opportunities**: every opportunity in scope, ranked by value (O1–O3)                                                            | What could we gain, and by when?                        | Built (P3) |
+| `/units/[id]`    | **Unit view** (group, region, branch, department): one template                                                                   | What is happening in this unit, and who owns it?        | Built (P3) |
+| `/org`           | **Organization**: the hierarchy you can see, departments owns / involved                                                          | Where is it going wrong, and how do I get there?        | Built (P3) |
+| `/performance`   | Redirects to Home (Phase 2 address)                                                                                               | —                                                       | Redirect   |
+| `/insights/[id]` | Insight trace                                                                                                                     | Why am I seeing this, and what should happen?           | Built      |
+| `/approvals`     | **Waiting on you**: decisions, approvals and your actions                                                                         | What am I being asked to decide or approve, and why me? | Built      |
+| `/audit`         | Audit: chain verification (explorer later)                                                                                        | Is the log intact? (what exactly happened: Phase 4)     | Partial    |
+| `/admin/demo`    | Demo controls                                                                                                                     | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days) | Built      |
+| `/actions`       | Actions tracker                                                                                                                   | What's in flight, and did it work?                      | Phase 4    |
 
-Search and the scope breadcrumb arrive with the unit views (Phase 3).
+Unit views carry a breadcrumb (Group › Region › Branch); every unit name links to its view, so any unit is at most two
+clicks from any screen. Search is not built yet.
 
-**Home:** everyone lands on **Today**, scoped to their role. Region and branch managers see risks ranked by local priority;
-the Performance page carries the role-specific view (performance-dashboards.md). Role-routed homes (Command Center for the
-Executive, unit view for managers) are Phase 3.
+**Home (Phase 3, G-P3a):** everyone lands on a clean dashboard of their own scope. The Executive, the board observer and
+the Admin see the group (the **Command Center**); region, branch and department managers see their unit, with risks
+banded by local priority. Risks and opportunities appear on Home only as a summary; the full ranked lists are the
+**Risks** and **Opportunities** tabs. A unit outside your scope returns 404, as an insight does.
 
 ## Visual
 
@@ -44,14 +49,18 @@ Numbers in KPI cards are large; status is always a dot plus a word, never colour
 
 ## Screen anatomy
 
-**Command Center** (Phase 3; in Phase 2 its content is split between Today and the group Performance dashboard)
+**Home dashboard** (built in Phase 3, G-P3a; screens/home-ceo.png, home-region.png, home-branch.png, home-department.png)
 
-1. Header strip: one sentence of org health ("2 regions on track, North at risk") + as-of time.
-2. **Top priorities**: ranked insight cards (P1/P2): title, affected units, impact, band, owner, status.
-3. **Decisions waiting on you**: approvals and pending decisions.
-4. Health by region: a small multiple per region (one composite status + the 2 KPIs driving it).
-5. **Opportunities**, a separate lane ranked by opportunity value (O1–O3); owners vary (Store Operations, Marketing, Trade &
-   Commercial, IT).
+1. Header: greeting and scope, one sentence of health ("Center and North need attention; Coast to watch."), and a subline
+   (P1 count, opportunities to pursue now, actions awaiting approval, overdue).
+2. **Waiting on you**: decisions to make, approvals to give, and tasks the person owns (with status and due date).
+3. **Key results**: KPI tiles (value, change vs last week, target or usual level, trend, status word), each linked to the
+   insight that explains it, or "No insight explains this yet" when it is off target.
+4. **Risks** and **Opportunities** summaries, side by side: band mix, ₪ at stake or upside, the top 3 (the first with
+   "Why:" and the recommendation), and a link to the full tab.
+5. **Dependencies**: open actions by the department that owns them (awaiting approval, overdue).
+6. For the position: CEO, health by region, what changed in 24 h, and the organization pulse; region, its branches;
+   branch, the 4-week sales trend; department, its health, who it depends on, and who depends on it.
 
 **Insight trace** (the core trust screen):
 

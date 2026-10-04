@@ -41,21 +41,25 @@ The UI reaches the application only through `src/application/facade.ts`, which b
 organization to the queries and commands. Server actions in `src/app/actions.ts` re-derive the actor from the session
 on every call.
 
-## UI (Phase 2)
+## UI (Phase 3)
 
 Dark theme, sidebar navigation (top bar on small screens). Every page requires sign-in.
 
-| Route            | What it shows                                                                                                                          | Who                        |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `/login`         | Sign-in form; demo persona list when `DEMO_PERSONAS=on`                                                                                | everyone                   |
-| `/`              | Today: risk and opportunity lanes, ranked separately, plus recently resolved. Region and branch managers see local priority            | anyone with `insight.read` |
-| `/performance`   | Dashboard for the viewer's position: group, region, branch or department (KPIs vs. target or usual level, workstreams, execution)      | anyone with `insight.read` |
-| `/insights/[id]` | Trace: signals, evidence, priority breakdown, decision, actions, approvals, outcome, and the insight's audit trail. Out of scope = 404 | anyone who can read it     |
-| `/approvals`     | Open approval requests the viewer is eligible to answer (grant or deny)                                                                | approvers                  |
-| `/audit`         | Hash-chain status of the active epoch                                                                                                  | Executive, Admin           |
-| `/admin/demo`    | Advance the demo clock; reset the demo into a new epoch                                                                                | Admin (`demo.control`)     |
+| Route                      | What it shows                                                                                                                          | Who                                          |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `/login`                   | Sign-in form; demo persona list when `DEMO_PERSONAS=on`                                                                                | everyone                                     |
+| `/`                        | Home dashboard of your scope (G-P3a): headline, waiting on you, KPIs, risk/opportunity summary, dependencies, position extras          | anyone with `insight.read`                   |
+| `/risks`, `/opportunities` | The workstream's full ranked list for your scope or `?unit=` (out of scope → 404), band filter, recently resolved                      | anyone with `insight.read`                   |
+| `/units/[id]`              | Unit view (group, region, branch, department): breadcrumb, KPIs linked to insights, lanes by local priority, actions, dependencies     | anyone whose scope covers the unit; else 404 |
+| `/org`                     | Hierarchy in scope, with each unit's worst band and counts; departments owns / involved                                                | anyone with `insight.read`                   |
+| `/performance`             | Redirect to Home                                                                                                                       | anyone with `insight.read`                   |
+| `/insights/[id]`           | Trace: signals, evidence, priority breakdown, decision, actions, approvals, outcome, and the insight's audit trail. Out of scope = 404 | anyone who can read it                       |
+| `/approvals`               | Waiting on you: decisions to make, approvals the viewer is routed (grant or deny), the viewer's own actions                            | anyone                                       |
+| `/audit`                   | Hash-chain status of the active epoch                                                                                                  | Executive, Admin                             |
+| `/admin/demo`              | Advance the demo clock; reset the demo into a new epoch                                                                                | Admin (`demo.control`)                       |
 
-The UI exposes accept/decline decision, grant/deny approval and review outcome. The other human commands
+Every server action validates its input with Zod (`src/application/inputs.ts`) before calling a command; invalid input is
+an audited-style domain refusal (`Invalid`). The UI exposes accept/decline decision, grant/deny approval and review outcome. The other human commands
 (acknowledge, dismiss, cancel, amend, retry) exist in the application layer and arrive in the UI with the unit views
 in Phase 3. A scoped audit explorer arrives in Phase 4.
 

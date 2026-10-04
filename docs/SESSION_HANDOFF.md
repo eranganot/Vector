@@ -1,73 +1,88 @@
 # Session handoff
 
-_Last updated: 2026-10-04 (evening)_
+_Last updated: 2026-10-04 (night)_
 
 ## Current phase
 
-Phase 2 — Core VECTOR chain: **built, awaiting Eran's Phase 2 gate** and the first promotion to the demo environment.
-Phase 1 approved 2026-10-04 (G1, G1-a amendment, G1-b/G1-c scenario review). Phase 2 scope extended by Eran on
-2026-10-04 (G2): dark mode, performance dashboards by position, every catalog risk and opportunity live, specs up to date.
+Phase 3, Organizational Intelligence Experience: **merged (PR #17, b2ae970) and verified on Dev**. Awaiting **Eran's Phase 3
+gate**. Phase 2 was signed off (G-P2).
+
+**Prod** (`demo` branch) is at **21733bf**: Phase 2 (9cec7c6) plus the seed-password fix (#18). It was verified with:
+
+- smoke `--phase 2`: 7/7;
+- doctor;
+- persona sign-in as Dana, Avi and Admin.
 
 ## Objective
 
-Close Phase 2: the chain Signal → Insight → Decision → Action → Outcome runs end to end with authorization, approvals and
-a hash-chained audit, on a realistic synthetic organization, with both workstreams and position-specific dashboards.
+Make the organization understandable at a glance for each role (docs/phases/PHASE_3.md).
 
-## Completed
+## Completed (Phase 3, branch `feat/phase3`)
 
-- Phase 2a–2e (PRs #5–#9): schema + audit integrity, domain core, commands + audit, detector + scenario engine, auth +
-  persona switcher + thin UI.
-- PR #10: priority-v2 (compliance), local priority, opportunity-v1, separate workstreams (ADR-006), full scenario catalog.
-- PR #11 (`feat/phase2-complete`):
-  - R11 decision: priority-v2.1-local (cost overrun vs its budget line); local priority raise-only (G2-a, proposed).
-  - Synthetic org `p2-v2`: 5 regions × 12 branches, 8 departments, 18 personas, 16 KPIs, planted background conditions.
-  - All 14 risks + 5 opportunities live (R8 from the detector, 18 from `src/infra/seed/catalog.ts`); R1, R3, O1 start
-    with approvals waiting on Dana, Yossi and Omer.
-  - `/performance` dashboards by position (group, region, branch, department); dark theme with a sidebar shell.
-  - Migration 0004 (kpi level/target, insight owner department); health reports the demo seed; smoke + doctor extended
-    (doctor verifies every epoch's audit chain and the active epoch).
-  - Authorization §5 cases 5.3, 5.5, 5.6 now tested; all 8 covered.
-  - Every doc in `docs/` and `README.md` brought in line with the code; new `docs/specs/performance-dashboards.md`;
-    built screens in `docs/specs/screens/`.
+- **G-P3a (Eran, 22:14 / 22:17): Home is a dashboard for every persona** (PR #21). Each home shows:
+  - a headline;
+  - Waiting on you, including the tasks you own;
+  - KPI tiles linked to their insights;
+  - risk and opportunity summaries;
+  - dependencies by department;
+  - what the position needs.
 
-## Verified (by running)
+  Risks and Opportunities are now sidebar tabs (`/risks`, `/opportunities`, with `?unit=` and `?band=`), and unit pages use the same dashboard. The list below describes the first Phase 3 build; where they differ, this entry wins.
 
-- Local, on the PR #11 branch: typecheck, lint, format; 426 unit tests; 37 integration tests (`vector_test`); 5 e2e tests
-  against a local build; `pnpm run doctor` (all checks incl. audit chains); `pnpm smoke` (7 checks); calibration (all three
-  models in band).
-- Dev after merging PR #11 (`03133a1`): Railway deployed, migration 0004 applied, new `p2-v2` epoch seeded on boot; `pnpm smoke --expect-sha` 7/7; `pnpm test:e2e` 5/5 against Dev; `pnpm run doctor --url` passes; Dev demo reset afterwards so it opens fresh.
-- Branch `demo` created at `03133a1` for the demo environment (not connected yet; runbook: docs/runbooks/prod-environment.md).
+- **Executive Command Center** (`/` for Executive, Viewer and Admin):
+  - a one-sentence headline;
+  - Waiting on you;
+  - the top 3 risks and the top 3 opportunities;
+  - what changed in the last 24 h (audited events);
+  - the biggest KPI moves;
+  - health by region;
+  - the department pulse.
+- **Unit views** `/units/[id]`:
+  - one template for the group, a region, a branch and a department;
+  - a breadcrumb;
+  - KPIs linked to the insights that explain them;
+  - lanes ranked by local priority, with one band per item everywhere;
+  - actions and their owners;
+  - dependencies;
+  - child units;
+  - recently resolved items.
+  - The read model is scope-checked, and a unit outside your scope returns 404.
+- **`/org` hierarchy:** the regions expand to show their branches, and each department shows what it owns and what it is involved in. Navigation is Home · Organization · Waiting on you · Audit.
+- **Role-routed home:** managers land on their own unit; `/performance` redirects there.
+- **Actionable cards:** each card shows the band and score, "Why:" (`explainPriority`), the recommendation, who it is waiting on, and the owner.
+- **Zod validation** on every server action (`src/application/inputs.ts`), which also closes the open redirect on the persona switch.
+- **Time-to-Understanding:**
+  - the protocol;
+  - the automated above-the-fold e2e check at 1440×900 for the CEO, a region manager, a branch manager and a VP;
+  - a check that any branch is two clicks from home.
+- **Fixed on the way** (root causes in STATUS.md):
+  - the branch view showed the same item as both P1 and P2;
+  - an e2e test read the URL before the redirect landed.
+
+## Verified on Dev (b2ae970, then eaac387)
+
+- smoke `--expect-sha`: 9/9;
+- e2e: 14/14 (after a demo reset);
+- doctor passes;
+- Dev reset afterwards, so the demo opens fresh.
+
+## Verified (by running, locally)
+
+- typecheck, lint, format;
+- 444 unit tests;
+- 55 integration tests (`vector_test`);
+- 14 e2e tests against a local production build after `demo:reset`;
+- `pnpm smoke`: 9 checks, including 2 new Phase 3 checks;
+- screens captured in `docs/specs/screens/`.
 
 ## Failed / broken
 
-- (none open). Fixed in PR #11 with a recorded root cause: integration tests wrote forged audit rows into the dev database
-  (STATUS.md).
-
-## Evening 2026-10-04 (PR #13)
-
-- Fixed (root causes in STATUS.md): two trace pages crashed on a source record's `days` count; the inbox listed only
-  approval requests (now "Waiting on you": decisions, approvals, your actions) and Accept/Decline showed for people who
-  may not decide.
-- G3: the recall's work sits with Legal (Dafna) and Supply Chain (Ben), approvals inside Legal, the CEO is briefed; approval
-  policy v2 and inbox routing (G3-a, proposed). Seed `p2-v3` (20 personas).
-- Prod environment (Eran, duplicate of Dev, deploys `demo`): needs `BETTER_AUTH_URL` with `https://`, `VECTOR_ENV`
-  `prod` (after `demo` moves) or `demo` (before), new secrets, "Wait for CI", then deploy. Runbook:
-  docs/runbooks/prod-environment.md.
+- (none open)
 
 ## Open decisions (for Eran)
 
-- Phase 2 gate sign-off and promotion to the demo environment (needs Eran to create the environment once: docs/runbooks/prod-environment.md).
-- G2-a: local priority raise-only (proposed by Claude).
-- D1-n: Postgres "16 or later" wording (16 in the sandbox, 18 on CI/Railway).
-- AI provider (Claude vs Gemini) at the Phase 5 gate.
-
-## Known issues from the Phase 2 gate: all five fixed (Eran: "fix them all before the next phase")
-
-Each was reproduced by a failing integration test first, then fixed (root causes in STATUS.md): (1) approval lapse now
-audits the action's move back and re-requests as `system:policy`; (2) the approval policy is re-run at execution (A7b);
-(3) AZ-3 checks the session's real age on every write; (4) the trace resolves only the people its record references;
-(5) an unknown action type is an audited domain refusal. Found on the way: trace evidence order was nondeterministic
-(fixed). An invariant test now checks that every action's last audited state is its current state.
+- Phase 3 gate (sign-off, then promotion to Prod).
+- AI provider (Claude vs Gemini), at the Phase 5 gate.
 
 ## Known limitations / deliberate deferrals
 
@@ -79,8 +94,12 @@ audits the action's move back and re-requests as `system:policy`; (2) the approv
 
 ## Next recommended action
 
-After the Phase 2 gate: promote to the demo environment (gate brief), then Phase 3 (unit views `/units/[id]`, Command
-Center polish, Time-to-Understanding test) and the open issues above.
+1. Eran: Phase 3 gate (demo on Dev: docs/phases/PHASE_3.md "Demo scenario"), then promote to Prod by moving `demo` to the
+   Phase 3 merge commit.
+2. Prod settings are applied (`env=prod`). After the secrets were rotated, persona sign-in failed. Fixed in #18 and
+   cherry-picked to `demo` (root cause in STATUS.md).
+3. Run the live Time-to-Understanding protocol with five people (docs/specs/time-to-understanding.md).
+4. Phase 4 (Operational intelligence) after the gate.
 
 ## Reproducible commands
 
@@ -96,6 +115,10 @@ See README "Commands". Deploy check: `pnpm smoke --url <dev url> --expect-sha <s
 - Start command (`start:railway`): migrate → app role → `demo:reset --if-empty` (reseeds when the seed version changes) → start
 
 ## Lessons
+
+- 2026-10-04: public smoke and doctor never sign in; verifying an environment includes one persona sign-in.
+- 2026-10-04: rotating `SEED_USER_PASSWORD` now reseeds on the next boot (`reseedReason`); before #18 it did not.
+- 2026-10-04: chain doc edits and commits with `set -e` (or `&&`); a failed edit script must stop the commit.
 
 - 2026-10-04: a merge is not done until the push-to-`main` CI run is green, not only the PR run (#28/#30 were missed).
 - 2026-10-04: never pick "the first row" for a person; a unit can have several managers (`is_head`).

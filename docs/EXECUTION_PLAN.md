@@ -20,12 +20,12 @@ that sessions work from. If the two disagree, ask Eran; do not silently pick one
 
 ## Status (2026-10-04)
 
-| Phase                       | Status                                                                                                                                                                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 0 Foundation                | Signed off by Eran                                                                                                                                                                                                                                           |
-| 1 Product & architecture    | Approved by Eran, with amendments: 5 more departments and cross-department scenarios (G1-a), the scenario and priority review (G1-b, G1-c)                                                                                                                   |
-| 2 Core VECTOR chain         | Built and verified on Dev, including the G2 additions pulled forward from Phase 3 (full synthetic org, both workstreams live, local priority, performance dashboards, dark theme). **Awaiting the Phase 2 gate** and first promotion to the demo environment |
-| 3 Organizational experience | Next. Remaining scope after G2: Command Center polish, Department and Region/Branch unit views (`/units/[id]`), Time-to-Understanding test, visual-direction gate                                                                                            |
+| Phase                       | Status                                                                                                                                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 Foundation                | Signed off by Eran                                                                                                                                                                                                                                   |
+| 1 Product & architecture    | Approved by Eran, with amendments: 5 more departments and cross-department scenarios (G1-a), the scenario and priority review (G1-b, G1-c)                                                                                                           |
+| 2 Core VECTOR chain         | **Signed off by Eran** (G-P2) and promoted to Prod (`demo` branch); the five known issues from the gate fixed before Phase 3 (PR #16)                                                                                                                |
+| 3 Organizational experience | Built (docs/phases/PHASE_3.md): Command Center, unit views `/units/[id]`, hierarchy, role-routed home, actionable cards, Zod inputs, Time-to-Understanding check. **Signed off by Eran** (G-P3, with the G-P3a home dashboards) and promoted to Prod |
 
 ## Definition of done (every phase)
 

@@ -5,13 +5,18 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Shipped
 
-| Date       | What                                                                                                  | PR     |
-| ---------- | ----------------------------------------------------------------------------------------------------- | ------ |
-| 2026-10-04 | Phase 0 foundation; close-out                                                                         | #1, #2 |
-| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                    | #3, #4 |
-| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI   | #5–#9  |
-| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492) | #10    |
-| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme    | #11    |
+| Date       | What                                                                                                  | PR      |
+| ---------- | ----------------------------------------------------------------------------------------------------- | ------- |
+| 2026-10-04 | Phase 0 foundation; close-out                                                                         | #1, #2  |
+| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                    | #3, #4  |
+| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI   | #5–#9   |
+| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492) | #10     |
+| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme    | #11     |
+| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)    | #13–#15 |
+| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                             | #16     |
+| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU   | #17     |
+| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf               | #18     |
+| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                           | #21     |
 
 ## Root-cause records
 
@@ -32,6 +37,28 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
   reseeding", rotated → "reseeding (SEED_USER_PASSWORD changed…)". CI now also runs on pushes to `demo` so Railway's "Wait
   for CI" has a check to wait for. `pnpm smoke --phase <n>` verifies an environment at the phase it runs.
 - **Lesson:** public smoke and doctor do not sign in; a Prod verification must include one persona sign-in.
+
+### 2026-10-04 · A branch manager's unit view showed the same risk as P1 and P2 (caught in Phase 3 screen review)
+
+- **Symptom:** on Avi's home (Haifa Grand Canyon) the risk card read **P1 · 77**, while the summary said "0 P1" and Waiting
+  on you showed the same item as **P2**.
+- **Proven cause:** the unit view's item cards used the local band (`local?.band ?? i.band`, priority-v2.1-local,
+  raise-only), but three other places used the stored group band: `workstreams.risks` counts and `kpiLinks` in
+  `performanceView`, and the rows of `WaitingCard` (from `listMyDecisions` / `listMyApprovals`). The Haifa story is P2
+  group-wide and P1 for its branch, so both appeared on one screen. Reproduced by the integration test "a unit view uses one
+  band per item", which failed with the counts line reverted and passes with the fix.
+- **Ruled out:** a scoring difference (both bands are correct for their scope: 77 local, P2 group); stale data from the
+  reset (same result after a fresh `demo:reset`).
+- **Fix:** local priority is computed before the counts, and `bandOf(i)` is used for counts and KPI links; the unit page
+  passes its bands to `WaitingCard`. The Command Center keeps group bands (its scope is the group).
+
+### 2026-10-04 · e2e "a unit outside your scope looks missing" got 200 (test bug, found while writing it)
+
+- **Proven cause:** the test read `page.url()` right after the persona switch, before the redirect to Avi's unit landed,
+  so it held `/`; Maya then opened her own home (200). Logged URL: `http://localhost:3100/`.
+- **Ruled out:** a scope leak: the read model returns `null` for Avi's branch as Maya (integration test), and the fixed
+  test gets 404.
+- **Fix:** wait for `/units/` before reading the URL, and assert the two URLs differ.
 
 ### 2026-10-04 · The five known issues from the Phase 2 gate (Eran: fix all before Phase 3)
 
