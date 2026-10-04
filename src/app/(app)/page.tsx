@@ -1,149 +1,101 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { api, demoNow } from "@/application/facade";
-import { Band, Card, Pill, SectionTitle } from "../_components/ui";
-import { requireActor } from "../_lib/session";
+import { Band, Card, fmtKpi, SectionTitle } from "../_components/ui";
+import { ChildTable, DepartmentPulse, Lanes } from "../_components/unit";
+import { WaitingCard } from "../_components/waiting";
+import { can, requireActor } from "../_lib/session";
 
-const STATUS: Record<string, string> = {
-  open: "Open",
-  acknowledged: "Acknowledged",
-  resolved: "Resolved",
-  dismissed: "Dismissed",
-  superseded: "Superseded",
-};
-
-const greeting = (d: Date) => {
-  const h = (d.getUTCHours() + 3) % 24; // Israel time for the synthetic org
-  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-};
-
-type Item = Awaited<ReturnType<typeof api.listInsights>>[number];
-
-function Lane({ title, hint, items, empty }: { title: string; hint: string; items: Item[]; empty: string }) {
-  return (
-    <section className="flex min-w-0 flex-col gap-3">
-      <SectionTitle aside={<span className="text-xs text-muted">{hint}</span>}>{title}</SectionTitle>
-      {items.length === 0 && <p className="text-sm text-muted">{empty}</p>}
-      {items.map((i) => {
-        const band = i.local?.band ?? i.priorityBand;
-        const score = i.local?.score ?? i.priorityScore;
-        return (
-          <Link
-            key={i.id}
-            href={`/insights/${i.id}`}
-            className="group flex items-start gap-4 rounded-xl border border-line bg-panel/90 px-4 py-3.5 no-underline transition-colors hover:border-accent/60"
-          >
-            <Band
-              band={band}
-              score={score}
-              title={i.local ? `For ${i.local.scopeName}: ${i.local.band}. Group-wide: ${i.priorityBand}.` : undefined}
-            />
-            <div className="flex min-w-0 grow flex-col gap-1">
-              <span className="text-[15px] font-semibold leading-snug group-hover:text-accent">{i.title}</span>
-              <span className="text-[13px] text-muted">
-                {i.ownerDepartmentName ? `Owner: ${i.ownerDepartmentName}` : ""}
-                {i.primaryUnitName !== i.ownerDepartmentName
-                  ? `${i.ownerDepartmentName ? " · " : ""}${i.primaryUnitName}`
-                  : ""}
-                {i.local && i.local.band !== i.priorityBand && (
-                  <>
-                    {" · "}
-                    <span className="text-ink">
-                      {i.local.band} for {i.local.scopeName}
-                    </span>{" "}
-                    (group {i.priorityBand})
-                  </>
-                )}
-              </span>
-            </div>
-            <Pill>{STATUS[i.status] ?? i.status}</Pill>
-          </Link>
-        );
-      })}
-    </section>
-  );
-}
-
+/**
+ * Home, routed by role (docs/phases/PHASE_3.md): the Executive, the board observer and the admin get the Executive
+ * Command Center; managers land on their own unit.
+ */
 export default async function Home() {
   const { actor, me } = await requireActor();
-  const [insights, approvals, decisions, now] = await Promise.all([
-    api.listInsights(actor),
+  if (!can(actor, "executive") && !can(actor, "viewer") && !can(actor, "admin")) {
+    const own = await api.performance(actor);
+    if (own) redirect(`/units/${own.scope.id}`);
+  }
+  const [cc, approvals, decisions, now] = await Promise.all([
+    api.commandCenter(actor),
     api.myApprovals(actor),
     api.myDecisions(actor),
     demoNow(),
   ]);
-  const live = insights.filter((i) => i.status === "open" || i.status === "acknowledged");
-  const closed = insights.filter((i) => i.status === "resolved" || i.status === "dismissed");
-  const risks = live.filter((i) => i.workstream === "risk");
-  const opps = live.filter((i) => i.workstream === "opportunity");
-  const top = risks.filter((i) => (i.local?.band ?? i.priorityBand) === "P1").length;
-  const first = me.name.split(" ")[0];
+  if (!cc) return <p className="text-sm text-muted">Nothing in your scope yet.</p>;
+  const h = (now.getUTCHours() + 3) % 24; // Israel time for the synthetic organization
+  const greet = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[28px] font-semibold tracking-tight">
-          {greeting(now)}, {first}
-        </h1>
         <p className="text-sm text-muted">
-          {me.title} ·{" "}
-          {live.length === 0
-            ? "Nothing needs attention in your scope right now."
-            : `${risks.length} risk${risks.length === 1 ? "" : "s"}${top ? ` (${top} P1)` : ""} and ${opps.length} opportunit${opps.length === 1 ? "y" : "ies"} in your scope.`}
+          {greet}, {me.name.split(" ")[0]} · Executive Command Center
         </p>
+        <h1 className="text-[30px] font-semibold leading-tight tracking-tight">{cc.headline}</h1>
+        <p className="text-sm text-muted">{cc.subline}</p>
       </div>
-      {approvals.length + decisions.length > 0 && (
-        <Card className="border-accent/50 shadow-[0_0_24px_rgb(34_211_238/0.08)]">
-          <SectionTitle
-            aside={
-              <Link href="/approvals" className="text-sm text-accent">
-                Review all →
-              </Link>
-            }
-          >
-            Waiting on you · {approvals.length + decisions.length}
+      <WaitingCard approvals={approvals} decisions={decisions} />
+      <Lanes items={cc.items} limit={3} />
+      <p className="-mt-2 text-sm">
+        <Link href={`/units/${cc.scope.id}`} className="text-accent">
+          All {cc.items.length} risks and opportunities, key results and departments →
+        </Link>
+      </p>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card>
+          <SectionTitle aside={<span className="text-xs text-muted">last 24 h (demo clock)</span>}>
+            What changed
           </SectionTitle>
-          <ul className="mt-3 flex flex-col gap-2">
-            {decisions.map((d) => (
-              <li key={d.decisionId} className="flex flex-wrap items-center gap-3 text-sm">
-                <Band band={d.band} />
-                <span className="text-xs uppercase tracking-wide text-accent">Decide</span>
-                <Link href={`/insights/${d.insightId}`} className="font-semibold no-underline hover:underline">
-                  {d.title}
+          {cc.changes.counts.length === 0 ? (
+            <p className="mt-3 text-sm text-muted">No change in the last 24 hours.</p>
+          ) : (
+            <>
+              <p className="mt-3 text-sm">
+                {cc.changes.counts.map((c) => `${c.n} ${c.verb.toLowerCase()}`).join(" · ")}
+              </p>
+              <ul className="mt-3 flex flex-col gap-2 text-sm">
+                {cc.changes.feed.map((f) => (
+                  <li key={f.id} className="flex items-center gap-3">
+                    <span className="w-24 shrink-0 text-xs uppercase tracking-wide text-muted">{f.verb}</span>
+                    <Band band={f.band} />
+                    <Link href={`/insights/${f.insightId}`} className="min-w-0 truncate no-underline hover:underline">
+                      {f.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </Card>
+        <Card>
+          <SectionTitle aside={<span className="text-xs text-muted">branches furthest from target this week</span>}>
+            Biggest moves
+          </SectionTitle>
+          <ul className="mt-3 flex flex-col gap-2 text-sm">
+            {cc.moves.map((m) => (
+              <li key={`${m.unitId}-${m.kpi}`} className="flex flex-wrap items-baseline gap-x-2">
+                <Link href={`/units/${m.unitId}`} className="font-semibold no-underline hover:underline">
+                  {m.unitName}
                 </Link>
-              </li>
-            ))}
-            {approvals.map((a) => (
-              <li key={a.approval.id} className="flex flex-wrap items-center gap-3 text-sm">
-                <Band band={a.band} />
-                <span className="text-xs uppercase tracking-wide text-warn">Approve</span>
-                <span className="font-semibold">{a.action.title}</span>
-                <span className="text-muted">· {a.insightTitle}</span>
+                <span>{m.kpi}</span>
+                <span className="font-mono text-p1">{fmtKpi(m.value, m.unit)}</span>
+                <span className="text-xs text-muted">
+                  vs {m.against} {fmtKpi(m.ref, m.unit)}
+                </span>
               </li>
             ))}
           </ul>
         </Card>
-      )}
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <Lane
-          title={`Risks · ${risks.length}`}
-          hint="Ranked by priority (P1–P4) for your scope"
-          items={risks}
-          empty="No risks in your scope."
-        />
-        <Lane
-          title={`Opportunities · ${opps.length}`}
-          hint="O1 pursue · O2 plan · O3 watch"
-          items={opps}
-          empty="No opportunities in your scope."
-        />
       </div>
-      {closed.length > 0 && (
-        <Lane
-          title={`Recently resolved · ${closed.length}`}
-          hint="Closed with a measured outcome or a recorded reason"
-          items={closed}
-          empty=""
-        />
-      )}
+      <Card>
+        <SectionTitle aside={<span className="text-xs text-muted">click a region to drill down</span>}>
+          Health by region
+        </SectionTitle>
+        <div className="mt-3">
+          <ChildTable rows={cc.children} unitLabel="Region" />
+        </div>
+      </Card>
+      <DepartmentPulse pulse={cc.departmentPulse} />
     </>
   );
 }

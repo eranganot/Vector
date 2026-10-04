@@ -13,6 +13,7 @@ const Icon = ({ d }: { d: string }) => (
 const ICONS = {
   today: "M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z",
   performance: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+  org: "M12 3v6M12 9H5v5M12 9h7v5M3 14h4v4H3zM10 14h4v4h-4zM17 14h4v4h-4z",
   approvals: "M9 12l2 2 4-4M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z",
   audit: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",
   demo: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
@@ -49,10 +50,10 @@ export async function Shell({
   const nav = (
     <>
       <NavLink href="/">
-        <Icon d={ICONS.today} /> Today
+        <Icon d={ICONS.today} /> Home
       </NavLink>
-      <NavLink href="/performance">
-        <Icon d={ICONS.performance} /> Performance
+      <NavLink href="/org">
+        <Icon d={ICONS.org} /> Organization
       </NavLink>
       <NavLink href="/approvals">
         <Icon d={ICONS.approvals} /> Waiting on you

@@ -202,3 +202,79 @@ export function computeOpportunity(input: OpportunityInput): OpportunityBreakdow
     band: opportunityBandFor(score),
   };
 }
+
+// ── Explanation ──────────────────────────────────────────────────────────────
+const money = (ils: number) =>
+  ils >= 1_000_000 ? `₪${(ils / 1_000_000).toFixed(1)}M` : `₪${Math.round(ils / 1000).toLocaleString("en-US")}k`;
+const when = (h: number | null, close = false) =>
+  h === null
+    ? "already happening"
+    : h < 0
+      ? "overdue"
+      : h <= 48
+        ? `${close ? "window closes" : "impact"} within ${Math.max(1, Math.round(h))} h`
+        : `${close ? "window closes" : "impact"} in ${Math.round(h / 24)} days`;
+const SPREAD: Record<Breadth, string> = {
+  isolated: "one unit",
+  local: "a few branches",
+  regional: "a whole region",
+  systemic: "company-wide",
+};
+
+/**
+ * One line saying why an item ranks where it does: the strongest contributions to its score, in plain words
+ * ("₪600k/week at stake · impact within 48 h · a whole region"). Deterministic, from the stored breakdown.
+ */
+export function explainPriority(b: {
+  model: string;
+  input: unknown;
+  factors: Record<string, number>;
+  weights: Record<string, number>;
+}): string {
+  // Strategic weight is part of every score but says little about this item, so it is not offered as a reason.
+  const top = Object.keys(b.weights)
+    .filter((k) => k !== "strategic")
+    .map((k) => ({ k, c: b.weights[k] * (b.factors[k] ?? 0) }))
+    .filter((x) => x.c > 0)
+    .sort((x, y) => y.c - x.c)
+    .map((x) => x.k);
+  if (b.model.startsWith("opportunity")) {
+    const i = b.input as OpportunityInput;
+    const phrase: Record<string, string> = {
+      value: `${money(i.valueIls)}/week upside`,
+      window: when(i.hoursToClose, true),
+      reach: SPREAD[i.reach],
+      strategic: "strong strategic fit",
+      ease:
+        (b.factors.ease ?? 0) >= 0.7
+          ? `low cost to capture (${money(i.costIls)})`
+          : `costs ${money(i.costIls)} to capture`,
+    };
+    return top
+      .slice(0, 3)
+      .map((k) => phrase[k])
+      .join(" · ");
+  }
+  const i = b.input as PriorityInput;
+  const phrase: Record<string, string> = {
+    impact: `${money(i.impactIls)}/week at stake`,
+    urgency: when(i.hoursToImpact),
+    breadth: SPREAD[i.breadth],
+    magnitude: `${Math.abs(i.z).toFixed(1)}σ from usual`,
+    strategic: i.strategicWeight >= 0.8 ? "a core KPI" : "a strategic KPI",
+    compliance:
+      i.compliance >= 1
+        ? "regulator-mandated"
+        : i.compliance >= 0.8
+          ? "legal deadline"
+          : i.compliance >= 0.6
+            ? "policy obligation"
+            : "contract terms at stake",
+  };
+  // A material regulatory or legal exposure is always named first.
+  const ordered = i.compliance >= 0.6 ? ["compliance", ...top.filter((k) => k !== "compliance")] : top;
+  return ordered
+    .slice(0, 3)
+    .map((k) => phrase[k])
+    .join(" · ");
+}

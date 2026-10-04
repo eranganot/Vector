@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 /** Sidebar link with the active state (the only client component in the shell). */
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const path = usePathname();
-  const active = href === "/" ? path === "/" || path.startsWith("/insights") : path.startsWith(href);
+  const active =
+    href === "/" ? path === "/" || path.startsWith("/insights") || path.startsWith("/units") : path.startsWith(href);
   return (
     <Link
       href={href}

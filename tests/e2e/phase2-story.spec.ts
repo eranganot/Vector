@@ -36,8 +36,9 @@ test("the recall is approved inside Legal; the CEO is informed (runs first: appr
 
 test("the Haifa story runs end to end", async ({ page }) => {
   await as(page, "Avi Mizrahi");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Avi");
-  await expect(page.getByText(/1 risk .*in your scope/)).toBeVisible();
+  // Phase 3: a branch manager's home is their branch.
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Haifa Grand Canyon");
+  await expect(page.getByText(/Risks · 1/)).toBeVisible();
   await expect(page.getByText("P1 for Haifa Grand Canyon")).toBeVisible(); // local priority (group-wide P2)
   await page
     .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
@@ -89,8 +90,8 @@ test("the Haifa story runs end to end", async ({ page }) => {
 });
 
 test("out-of-scope insights look missing (404), and viewers get no decision buttons", async ({ page }) => {
-  await as(page, "Dana Levi");
-  await page.goto("/");
+  // The Haifa insight resolved in the story above: it is listed under "Recently resolved" on Avi's branch.
+  await as(page, "Avi Mizrahi");
   await page
     .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
     .first()
@@ -106,30 +107,38 @@ test("out-of-scope insights look missing (404), and viewers get no decision butt
   await expect(page.getByRole("button", { name: "Accept recommendation" })).toHaveCount(0);
 });
 
-test("both workstreams, local priority and the performance dashboards by position", async ({ page }) => {
+test("role-routed homes: Command Center, region, branch and department views (Phase 3)", async ({ page }) => {
   await as(page, "Dana Levi");
-  await expect(page.getByText(/1\d risks \(4 P1\) and 5 opportunities/)).toBeVisible();
+  await expect(page.getByText("Executive Command Center")).toBeVisible();
   await expect(page.getByText(/Opportunities · 5/)).toBeVisible();
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Group performance" })).toBeVisible();
   await expect(page.getByText("Health by region")).toBeVisible();
   await expect(page.getByText("Organization pulse")).toBeVisible();
+  await page.getByRole("link", { name: /All \d+ risks and opportunities/ }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "VECTOR Retail Group" })).toBeVisible();
 
   await as(page, "Maya Azulay");
+  await expect(page.getByRole("heading", { level: 1, name: "Center" })).toBeVisible();
   await expect(page.getByText("P2 for Center")).toBeVisible(); // R11: P3 group-wide, P2 for the region (Eran, 2026-10-04)
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Region performance" })).toBeVisible();
   await expect(page.getByText("Branches in Center")).toBeVisible();
 
   await as(page, "Lior Ben-Ami");
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Branch performance" })).toBeVisible();
-  await expect(page.getByText("Dependencies on other departments")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Tel Aviv Dizengoff" })).toBeVisible();
+  await expect(page.getByText("Actions and owners")).toBeVisible();
 
   await as(page, "Noa Friedman");
-  await page.goto("/performance");
-  await expect(page.getByRole("heading", { name: "Department performance" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Supply Chain" })).toBeVisible();
   await expect(page.getByText(/Others depend on us/)).toBeVisible();
+  await page.goto("/performance"); // the Phase 2 address now leads to your own unit
+  await expect(page).toHaveURL(/\/units\//);
+});
+
+test("a unit outside your scope looks missing (404)", async ({ page }) => {
+  await as(page, "Avi Mizrahi");
+  await page.waitForURL(/\/units\//); // the home redirect to the branch lands after the persona switch
+  const own = page.url();
+  await as(page, "Maya Azulay");
+  expect(own).not.toBe(page.url());
+  expect((await page.goto(own))?.status()).toBe(404);
 });
 
 test("every insight page renders for the CEO and the board observer (regression: 2 pages returned 500)", async ({
@@ -137,7 +146,8 @@ test("every insight page renders for the CEO and the board observer (regression:
 }) => {
   for (const who of ["Dana Levi", "Tal Ben-David"]) {
     await as(page, who);
-    await page.goto("/");
+    await page.getByRole("link", { name: /All \d+ risks and opportunities/ }).click();
+    await page.waitForURL(/\/units\//);
     const links = await page
       .locator("main a[href^='/insights/']")
       .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
