@@ -20,6 +20,7 @@ import { createContext, loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
 import { advanceClock, resetDemo } from "@/application/scenario";
 import { commitmentsForInsight, commitmentsView } from "@/application/queries/commitments";
+import { actionsView, outcomesView } from "@/application/queries/actions";
 import { cascade, dependencyStatus } from "@/domain/commitments";
 import * as s from "@/infra/db/schema";
 import { DEMO_DAIRY_PROMO } from "@/infra/seed/commitments";
@@ -308,5 +309,24 @@ describe("commitments read model (scope, both directions, bottlenecks)", () => {
     expect(forMichal.conflicts).toHaveLength(1);
     const forAvi = (await commitmentsForInsight(appDb, orgId, await as("avi"), r7.id))!;
     expect(forAvi.commitments).toHaveLength(0);
+  });
+});
+
+describe("action and outcome tracking (P4f)", () => {
+  it("lists only actions the viewer may read; filters agree with the counts", async () => {
+    const dana = await actionsView(appDb, orgId, await as("dana"), "all");
+    const avi = await actionsView(appDb, orgId, await as("avi"), "all");
+    expect(dana.actions.length).toBeGreaterThan(avi.actions.length);
+    expect(avi.actions.every((a) => !/promo signage|Q4 campaign/i.test(a.insightTitle))).toBe(true);
+    const approval = await actionsView(appDb, orgId, await as("dana"), "approval");
+    expect(approval.actions.every((a) => a.status === "pending_approval")).toBe(true);
+    expect(approval.actions).toHaveLength(dana.counts.approval);
+    const overdue = await actionsView(appDb, orgId, await as("dana"), "overdue");
+    expect(overdue.actions.every((a) => a.overdue)).toBe(true);
+  });
+
+  it("outcomes are empty until something has executed and been measured", async () => {
+    const o = await outcomesView(appDb, orgId, await as("dana"));
+    expect(o.toReview.length + o.reviewed.length).toBe(0);
   });
 });

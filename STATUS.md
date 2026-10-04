@@ -20,6 +20,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor) | #23, #24 |
 | 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces    | #25      |
 | 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                    | #26      |
+| 2026-10-05 | P4f: Actions & outcomes tracker, lessons library, "Last time we did this"                                | #27      |
 
 ## Root-cause records
 

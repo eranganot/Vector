@@ -175,6 +175,8 @@ seeded insights. There is no commitment or dependency the system can track, so n
 - P4a plan and specs (#23). P4b commitments, dependencies, conflicts: schema, commands, seed `p4-v1`, monitor (#24).
 - P4e: approval workflow UX (why you, who else is asked, targets, due, expiry, your recent answers); acknowledge,
   dismiss, cancel, amend and retry from the trace; AZ-2 fix for amendments (#26).
+- P4f: Actions & outcomes (`/actions`): tracker with filters; outcomes being measured, waiting for a lesson, and
+  the lessons library; "Last time we did this" on traces (#27).
 - P4c/P4d: live detection on Dev; Commitments tab; the Dependencies card on every home (bottlenecks, on-time rate,
   conflicts, who waits on whom); the plans behind an insight on its trace (#25).
 
