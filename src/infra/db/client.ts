@@ -6,7 +6,11 @@ import * as schema from "./schema";
 let pool: Pool | undefined;
 
 export function getPool(): Pool {
-  pool ??= new Pool({ connectionString: config().DATABASE_URL, max: 10, connectionTimeoutMillis: 5_000 });
+  pool ??= new Pool({
+    connectionString: config().APP_DATABASE_URL ?? config().DATABASE_URL,
+    max: 10,
+    connectionTimeoutMillis: 5_000,
+  });
   return pool;
 }
 

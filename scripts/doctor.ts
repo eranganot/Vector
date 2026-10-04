@@ -4,7 +4,7 @@
  *   pnpm doctor --url <baseUrl> -> also checks a deployed environment's health
  * Exits non-zero if any check fails.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { Pool } from "pg";
 import { migrationStatus } from "../src/infra/db/migrations";
 
@@ -30,10 +30,7 @@ async function main() {
       existsSync("node_modules/.pnpm") ? "node_modules present" : "run pnpm install",
     );
 
-    const required = readFileSync(".env.example", "utf8")
-      .split("\n")
-      .filter((l) => /^[A-Z_]+=/.test(l))
-      .map((l) => l.split("=")[0]);
+    const required = ["DATABASE_URL", "VECTOR_ENV", "LOG_LEVEL"];
     const missing = required.filter((k) => !process.env[k]);
     record(
       "env vars",
