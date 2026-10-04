@@ -12,6 +12,8 @@ export const CAPABILITIES = [
   "action.execute",
   "action.cancel",
   "outcome.review",
+  "commitment.record",
+  "commitment.update",
   "audit.read",
   "config.priority_weights.propose",
   "config.priority_weights.approve",
@@ -32,6 +34,8 @@ const MANAGER: Capability[] = [
   "action.execute",
   "action.cancel",
   "outcome.review",
+  "commitment.record",
+  "commitment.update",
   "audit.read",
 ];
 

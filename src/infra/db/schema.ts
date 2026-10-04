@@ -59,6 +59,8 @@ export const approvalStatus = pgEnum("approval_status", [
   "lapsed",
 ]);
 export const outcomeStatus = pgEnum("outcome_status", ["observing", "evaluated", "reviewed"]);
+export const commitmentStatus = pgEnum("commitment_status", ["open", "overdue", "done", "cancelled"]);
+export const conflictStatus = pgEnum("conflict_status", ["open", "resolved"]);
 export const outcomeVerdict = pgEnum("outcome_verdict", ["worked", "partially_worked", "did_not_work", "inconclusive"]);
 
 // ── Organization ─────────────────────────────────────────────────────────────
@@ -365,6 +367,95 @@ export const outcome = pgTable("outcome", {
   createdAt: ts("created_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
 });
+
+// ── Commitments, dependencies, conflicts (Phase 4, domain-model.md §2, §4.6, §4.7) ──
+/** A promise by a unit, owned by a person, to deliver by a date. */
+export const commitment = pgTable(
+  "commitment",
+  {
+    id: id(),
+    orgId: orgId(),
+    title: text("title").notNull(),
+    detail: text("detail"),
+    ownerUserId: text("owner_user_id")
+      .notNull()
+      .references(() => user.id),
+    ownerUnitId: uuid("owner_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    /** Who it is owed to (the units that asked for it). */
+    beneficiaryUnitIds: uuid("beneficiary_unit_ids").array().notNull(),
+    /** Where it was made, e.g. "Weekly ops meeting · 15 Oct". */
+    source: text("source").notNull(),
+    madeAt: ts("made_at").notNull(),
+    dueAt: ts("due_at").notNull(),
+    /** ₪ per week at stake if it is late. */
+    impactIls: numeric("impact_ils", { mode: "number" }).notNull().default(0),
+    /** Regulatory or contractual exposure if late (0–1, same scale as priority-v2). */
+    compliance: doublePrecision("compliance").notNull().default(0),
+    /** [{resource, effect, windowStart, windowEnd}] for conflict-rules-v1. */
+    effects: jsonb("effects")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    /** The insight raised for it (overdue), or the catalog insight that tells its story. */
+    insightId: uuid("insight_id").references(() => insight.id),
+    completedAt: ts("completed_at"),
+    /** Renegotiations: [{from, to, by, at, rationale}]. */
+    history: jsonb("history")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    rationale: text("rationale"),
+    visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+    status: commitmentStatus("status").notNull(),
+    version: integer("version").notNull().default(1),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (t) => [index("commitment_visible_idx").using("gin", t.visibleUnitIds)],
+);
+
+/** A unit needs a commitment by a date. Its status is derived (Q4), never stored. */
+export const dependency = pgTable("dependency", {
+  id: id(),
+  orgId: orgId(),
+  commitmentId: uuid("commitment_id")
+    .notNull()
+    .references(() => commitment.id),
+  downstreamUnitId: uuid("downstream_unit_id")
+    .notNull()
+    .references(() => orgUnit.id),
+  downstreamCommitmentId: uuid("downstream_commitment_id").references(() => commitment.id),
+  needBy: ts("need_by").notNull(),
+  impactIls: numeric("impact_ils", { mode: "number" }).notNull().default(0),
+  note: text("note").notNull(),
+  createdAt: ts("created_at").notNull(),
+});
+
+/** Two commitments whose effects collide (conflict-rules-v1). */
+export const conflict = pgTable(
+  "conflict",
+  {
+    id: id(),
+    orgId: orgId(),
+    commitmentAId: uuid("commitment_a_id")
+      .notNull()
+      .references(() => commitment.id),
+    commitmentBId: uuid("commitment_b_id")
+      .notNull()
+      .references(() => commitment.id),
+    rule: text("rule").notNull(),
+    resource: text("resource").notNull(),
+    overlapStart: date("overlap_start").notNull(),
+    overlapEnd: date("overlap_end").notNull(),
+    insightId: uuid("insight_id").references(() => insight.id),
+    status: conflictStatus("status").notNull(),
+    resolvedReason: text("resolved_reason"),
+    version: integer("version").notNull().default(1),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (t) => [uniqueIndex("conflict_pair_uq").on(t.orgId, t.commitmentAId, t.commitmentBId, t.resource)],
+);
 
 // ── Simulated executor outputs (D7) ──────────────────────────────────────────
 export const task = pgTable("task", {

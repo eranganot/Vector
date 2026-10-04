@@ -20,7 +20,10 @@ export type SystemOperation =
   | "approval.expire"
   | "approval.lapse"
   | "outcome.watch"
-  | "outcome.evaluate";
+  | "outcome.evaluate"
+  | "commitment.mark_overdue"
+  | "conflict.detect"
+  | "conflict.resolve";
 
 /** What each system actor may do (authorization.md §1). They never approve. */
 export const SYSTEM_ACTOR_OPERATIONS: Record<SystemActorId, ReadonlySet<SystemOperation>> = {
@@ -31,6 +34,9 @@ export const SYSTEM_ACTOR_OPERATIONS: Record<SystemActorId, ReadonlySet<SystemOp
     "decision.recommend",
     "decision.supersede",
     "action.propose",
+    "commitment.mark_overdue",
+    "conflict.detect",
+    "conflict.resolve",
   ]),
   "system:policy": new Set(["action.submit", "decision.auto_decide"]),
   "system:executor": new Set(["action.execute", "outcome.watch"]),

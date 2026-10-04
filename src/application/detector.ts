@@ -16,7 +16,7 @@ const pct = (x: number) => `${(Math.abs(x) * 100).toFixed(1)}%`;
  * The head of a unit for a role: the person work is assigned to. A unit may have several managers
  * (Supply Chain has Noa and Ben), so this never picks "the first row": it asks for the flagged head.
  */
-async function holderOf(ctx: AppContext, unitId: string, role: "regional_manager" | "department_manager") {
+export async function holderOf(ctx: AppContext, unitId: string, role: "regional_manager" | "department_manager") {
   const heads = await ctx.db
     .select({ id: user.id, name: user.name })
     .from(roleAssignment)
