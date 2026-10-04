@@ -1,6 +1,6 @@
 /**
  * Ops bootstrap: seeds a new demo epoch and runs the detector once (no signed-in user needed).
- *   pnpm demo:reset     (DATABASE_URL; SEED_USER_PASSWORD outside local/test)
+ *   pnpm demo:reset [--if-empty]   (DATABASE_URL; SEED_USER_PASSWORD outside local/test)
  */
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -17,6 +17,13 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   try {
     const db = drizzle(pool, { schema }) as unknown as Db;
+    if (process.argv.includes("--if-empty")) {
+      const active = await pool.query("select id from organization where is_active limit 1");
+      if (active.rowCount) {
+        console.log(`demo: active epoch ${active.rows[0].id} exists; not reseeding`);
+        return;
+      }
+    }
     const r = await seed(db, { password });
     const found = await runDetector(await createContext(db, { orgId: r.orgId }));
     console.log(`demo epoch ${r.orgId}: ${found.length} insight(s) detected`);

@@ -10,6 +10,10 @@ import { ensureAppRole } from "../src/infra/db/roles";
 async function main() {
   const url = process.env.DATABASE_URL;
   const password = process.env.APP_DB_PASSWORD;
+  if (process.argv.includes("--if-configured") && !password) {
+    console.log("vector_app: skipped (APP_DB_PASSWORD not set)");
+    return;
+  }
   if (!url || !password) throw new Error("DATABASE_URL and APP_DB_PASSWORD are required");
   const pool = new Pool({ connectionString: url });
   try {
