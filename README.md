@@ -7,7 +7,7 @@ a full audit trail.
 **Signal → Insight → Decision → Action → Outcome → Learning**, governed by evidence, priority,
 authorization, human control and auditability. See [docs/product/CHARTER.md](docs/product/CHARTER.md).
 
-The prototype runs on a synthetic retail group (60 branches in 5 regions, 8 departments, 18 people). Insights come in
+The prototype runs on a synthetic retail group (60 branches in 5 regions, 8 departments, 20 people). Insights come in
 two workstreams, risks and opportunities, ranked separately; region and branch managers also see a priority relative
 to their own scope. Each person gets a performance dashboard for their position (group, region, branch or department).
 

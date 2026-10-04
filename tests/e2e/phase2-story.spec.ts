@@ -23,12 +23,26 @@ async function as(page: Page, name: string) {
   await expect(page.locator("summary")).toContainText(name);
 }
 
+test("the recall is approved inside Legal; the CEO is informed (runs first: approvals expire after 72 h)", async ({
+  page,
+}) => {
+  await as(page, "Yael Barak");
+  await page.goto("/approvals");
+  await expect(page.getByText(/Approvals to give · 4/)).toBeVisible();
+  await as(page, "Dana Levi");
+  await page.goto("/approvals");
+  await expect(page.getByText("Quarantine batch 4471", { exact: false })).toHaveCount(0);
+});
+
 test("the Haifa story runs end to end", async ({ page }) => {
   await as(page, "Avi Mizrahi");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Avi");
   await expect(page.getByText(/1 risk .*in your scope/)).toBeVisible();
   await expect(page.getByText("P1 for Haifa Grand Canyon")).toBeVisible(); // local priority (group-wide P2)
-  await page.getByRole("link", { name: /Haifa Grand Canyon net sales/ }).click();
+  await page
+    .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
+    .first()
+    .click();
   await page.waitForURL(/\/insights\//);
   await expect(page.getByRole("heading", { name: "Why am I seeing this?" })).toBeVisible();
   await expect(page.getByText("Priority breakdown")).toBeVisible();
@@ -42,7 +56,7 @@ test("the Haifa story runs end to end", async ({ page }) => {
   // The owner of the transfer (Noa) gets no approval request: separation of duties.
   await as(page, "Noa Friedman");
   await page.goto("/approvals");
-  await expect(page.getByText("Nothing is waiting for you.")).toBeVisible();
+  await expect(page.getByText("No approval request is waiting for you.")).toBeVisible();
 
   await as(page, "Yossi Cohen");
   await page.goto("/approvals");
@@ -77,7 +91,10 @@ test("the Haifa story runs end to end", async ({ page }) => {
 test("out-of-scope insights look missing (404), and viewers get no decision buttons", async ({ page }) => {
   await as(page, "Dana Levi");
   await page.goto("/");
-  await page.getByRole("link", { name: /Haifa Grand Canyon net sales/ }).click();
+  await page
+    .getByRole("link", { name: /Haifa Grand Canyon net sales/ })
+    .first()
+    .click();
   await page.waitForURL(/\/insights\//);
   const trace = page.url();
   await as(page, "Maya Azulay");
@@ -113,4 +130,46 @@ test("both workstreams, local priority and the performance dashboards by positio
   await page.goto("/performance");
   await expect(page.getByRole("heading", { name: "Department performance" })).toBeVisible();
   await expect(page.getByText(/Others depend on us/)).toBeVisible();
+});
+
+test("every insight page renders for the CEO and the board observer (regression: 2 pages returned 500)", async ({
+  page,
+}) => {
+  for (const who of ["Dana Levi", "Tal Ben-David"]) {
+    await as(page, who);
+    await page.goto("/");
+    const links = await page
+      .locator("main a[href^='/insights/']")
+      .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")!))]);
+    expect(links.length).toBeGreaterThanOrEqual(19);
+    for (const l of links) {
+      const res = await page.goto(l);
+      expect(res?.status(), `${who} ${l}`).toBe(200);
+      await expect(page.getByRole("heading", { name: "Why am I seeing this?" })).toBeVisible();
+    }
+  }
+});
+
+test("Accept/Decline appears only for people who may decide; decisions are listed in Waiting on you", async ({
+  page,
+}) => {
+  await as(page, "Eitan Rosen");
+  await page.goto("/approvals");
+  await expect(page.getByText(/Decisions to make · 3/)).toBeVisible();
+  await page
+    .locator("main a[href^='/insights/']")
+    .filter({ hasText: /dairy supplier/ })
+    .first()
+    .click();
+  await page.waitForURL(/\/insights\//);
+  await expect(page.getByRole("button", { name: "Accept recommendation" })).toBeVisible();
+  const open = page.url();
+  // A department manager outside the decision's scope sees who decides, not a button that would be refused.
+  await as(page, "Shira Katz");
+  await page.goto(open);
+  await expect(page.getByRole("button", { name: "Accept recommendation" })).toHaveCount(0);
+  await expect(page.getByText(/Waiting for a decision by the manager of Trade & Commercial/)).toBeVisible();
+  await as(page, "Tal Ben-David");
+  await page.goto(open);
+  await expect(page.getByRole("button", { name: "Accept recommendation" })).toHaveCount(0);
 });

@@ -3,7 +3,7 @@
  * 18 personas, 6 branch KPIs and 10 department KPIs. All names of people and the company are invented;
  * cities and coordinates are real (live weather arrives in Phase 6).
  */
-export const SEED_VERSION = "p2-v2";
+export const SEED_VERSION = "p2-v3";
 export const ORG_NAME = "VECTOR Retail Group";
 /** The demo story's "today": data exists up to the day before. */
 export const STORY_DAY = "2026-10-22";
@@ -160,11 +160,13 @@ export const USERS: UserSeed[] = [
   person("lior", "Lior Ben-Ami", "Branch Manager, Tel Aviv Dizengoff", "regional_manager", "TLV-DZ"),
   person("shira", "Shira Katz", "VP Store Operations", "department_manager", "D-STORE"),
   person("noa", "Noa Friedman", "VP Supply Chain", "department_manager", "D-SUPPLY"),
+  person("ben", "Ben Shalom", "Head of DC Operations, Supply Chain", "department_manager", "D-SUPPLY"),
   person("eitan", "Eitan Rosen", "VP Trade & Commercial", "department_manager", "D-TRADE"),
   person("ronit", "Ronit Shapiro", "VP Marketing", "department_manager", "D-MKT"),
   person("michal", "Michal Golan", "CFO", "department_manager", "D-FIN"),
   person("hila", "Hila Dahan", "VP HR", "department_manager", "D-HR"),
   person("yael", "Yael Barak", "General Counsel", "department_manager", "D-LEGAL"),
+  person("dafna", "Dafna Mor", "Senior Legal Counsel", "department_manager", "D-LEGAL"),
   person("amir", "Amir Klein", "CIO", "department_manager", "D-IT"),
   person("tal", "Tal Ben-David", "Board observer", "viewer", "GROUP"),
   person("admin", "Ops Admin", "System administrator", "admin", "GROUP"),

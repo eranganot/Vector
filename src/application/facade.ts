@@ -12,7 +12,14 @@ import {
 } from "./commands/lifecycle";
 import { reviewOutcome } from "./commands/outcomes";
 import { activeOrgId, createContext, loadUserActor } from "./context";
-import { getInsightTrace, listInsights, listMyApprovals } from "./queries/insights";
+import {
+  canDecide,
+  getInsightTrace,
+  listInsights,
+  listMyActions,
+  listMyApprovals,
+  listMyDecisions,
+} from "./queries/insights";
 import { performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
@@ -60,6 +67,9 @@ export const api = {
   listInsights: async (a: Actor) => listInsights(db(), await activeOrgId(db()), a),
   trace: async (a: Actor, id: string) => getInsightTrace(db(), await activeOrgId(db()), a, id),
   myApprovals: async (a: Actor) => listMyApprovals(db(), await activeOrgId(db()), a),
+  myDecisions: async (a: Actor) => listMyDecisions(db(), await activeOrgId(db()), a),
+  myActions: async (a: Actor) => listMyActions(db(), await activeOrgId(db()), a),
+  canDecide: async (a: Actor, insightId: string) => canDecide(db(), await activeOrgId(db()), a, insightId),
   performance: async (a: Actor) => performanceView(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {

@@ -72,7 +72,7 @@ export const CATALOG: CatalogItem[] = [
     whatHappened:
       "A dairy supplier recalled batch 4471 of a chilled dessert after a lab finding. The batch was delivered to all 60 branches between 18 and 21 October.",
     whyItMatters:
-      "The regulator requires the product off shelves within 12 hours and a notice within 24. About ₪180k of stock is affected, and a missed deadline is a regulatory breach.",
+      "The regulator requires the product off shelves within 12 hours and a notice within 24. About ₪180k of stock is affected, and a missed deadline is a regulatory breach. Legal & Compliance leads; Supply Chain executes the recall.",
     signalType: "external_event",
     source: "supplier_notice",
     primary: "D-LEGAL",
@@ -89,19 +89,28 @@ export const CATALOG: CatalogItem[] = [
     recommendation: {
       statement: "Pull batch 4471 from every branch now, notify the regulator, and tell affected customers",
       rationale: "A regulator-mandated action with a 12-hour clock outranks everything else.",
+      // G3 (Eran, 2026-10-04): the work and the approvals sit with Legal and Supply Chain; the CEO is notified.
       actions: [
         {
           type: "recall",
           title: "Quarantine batch 4471 at the DCs and pull it from 60 branches",
-          owner: "noa",
+          owner: "ben",
           targets: ["GROUP"],
           cost: 12000,
           dueHours: 12,
         },
         {
+          type: "schedule_change",
+          title: "Block the SKU at every POS (IT executes for Supply Chain)",
+          owner: "ben",
+          targets: ["D-SUPPLY"],
+          cost: 0,
+          dueHours: 6,
+        },
+        {
           type: "regulatory_notification",
           title: "Notify the food-safety regulator of the recall",
-          owner: "yael",
+          owner: "dafna",
           targets: ["D-LEGAL"],
           cost: 0,
           dueHours: 24,
@@ -109,19 +118,19 @@ export const CATALOG: CatalogItem[] = [
         {
           type: "customer_message",
           title: "Recall notice to loyalty customers who bought batch 4471",
-          owner: "ronit",
+          owner: "dafna",
           targets: ["GROUP"],
           cost: 0,
           dueHours: 24,
           params: { channel: "sms+email" },
         },
         {
-          type: "schedule_change",
-          title: "Block the SKU at every POS",
-          owner: "amir",
-          targets: ["D-IT"],
+          type: "notify_owner",
+          title: "Brief the CEO: recall under way, regulator notified",
+          owner: "dana",
+          targets: ["GROUP"],
           cost: 0,
-          dueHours: 6,
+          dueHours: 2,
         },
       ],
     },

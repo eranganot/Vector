@@ -13,7 +13,11 @@ describe("parseConfig", () => {
   });
 
   it("rejects an unknown environment name", () => {
-    expect(() => parseConfig({ DATABASE_URL: "postgres://x", VECTOR_ENV: "prod" })).toThrow(/VECTOR_ENV/);
+    expect(() => parseConfig({ DATABASE_URL: "postgres://x", VECTOR_ENV: "staging" })).toThrow(/VECTOR_ENV/);
+  });
+
+  it("accepts the Prod environment name as typed in Railway (case-insensitive)", () => {
+    expect(parseConfig({ DATABASE_URL: "postgres://x", VECTOR_ENV: "Prod" }).VECTOR_ENV).toBe("prod");
   });
 });
 

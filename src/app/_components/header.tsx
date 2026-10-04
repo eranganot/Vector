@@ -55,7 +55,7 @@ export async function Shell({
         <Icon d={ICONS.performance} /> Performance
       </NavLink>
       <NavLink href="/approvals">
-        <Icon d={ICONS.approvals} /> Approvals
+        <Icon d={ICONS.approvals} /> Waiting on you
         {approvals > 0 && (
           <span className="ml-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
             {approvals}

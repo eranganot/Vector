@@ -23,9 +23,9 @@ graph TD
   R2 --> B3[Branch: Tel Aviv Dizengoff]
 ```
 
-The seeded organization (`src/infra/seed/org.ts`, seed version `p2-v2`) has 5 regions (North, Coast, Center,
+The seeded organization (`src/infra/seed/org.ts`, seed version `p2-v3`) has 5 regions (North, Coast, Center,
 Jerusalem, South) of 12 branches each (60 branches) and 8 departments (Store Operations, Supply Chain, Trade &
-Commercial, Marketing, Finance, HR, Legal & Compliance, IT), plus 18 people.
+Commercial, Marketing, Finance, HR, Legal & Compliance, IT), plus 20 people.
 
 | Entity           | Purpose                                                                                                                       | Key fields                                                                                                              | Phase |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----- |

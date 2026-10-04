@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { actor, me, via } = await requireActor();
-  const approvals = (await api.myApprovals(actor)).length;
+  const [approvalList, decisionList] = await Promise.all([api.myApprovals(actor), api.myDecisions(actor)]);
+  const approvals = approvalList.length + decisionList.length;
   const roles = actor.kind === "user" ? [...new Set(actor.assignments.map((a) => a.role))] : [];
   return (
     <Shell me={{ name: me.name, title: me.title }} approvals={approvals} roles={roles} via={via}>

@@ -52,6 +52,7 @@ export default async function TracePage({
   const { actor } = await requireActor();
   const t = await api.trace(actor, id);
   if (!t) notFound(); // out of scope looks exactly like missing (authorization.md §1)
+  const mayDecide = await api.canDecide(actor, id); // cosmetic; acceptDecision re-checks
   const { insight: ins } = t;
   const unitName = (uid: string) => t.units.find((u) => u.id === uid)?.name ?? "unknown unit";
   const personName = (pid: string | null) =>
@@ -118,7 +119,8 @@ export default async function TracePage({
                 return (
                   <figure key={e.id} className="m-0 flex flex-col gap-2 rounded-lg border border-line p-3">
                     <figcaption className="text-[13px] font-semibold">{e.title}</figcaption>
-                    {p.days ? (
+                    {/* Only a KPI series is drawn; a source record's fields (which may include a "days" count) are listed. */}
+                    {e.kind === "kpi_series" && Array.isArray(p.days) ? (
                       <EvidenceChart
                         days={p.days}
                         unit={p.unit ?? ""}
@@ -284,7 +286,12 @@ export default async function TracePage({
                   </div>
                 );
               })}
-              {decision.status === "recommended" && (
+              {decision.status === "recommended" && !mayDecide && (
+                <p className="text-[13px] text-muted">
+                  Waiting for a decision by the manager of {unitName(ins.primaryUnitId)} (or someone above them).
+                </p>
+              )}
+              {decision.status === "recommended" && mayDecide && (
                 <div className="flex flex-col gap-3 rounded-lg bg-ground p-4">
                   <form action={acceptDecisionAction} className="flex flex-wrap items-center gap-3">
                     <input type="hidden" name="insightId" value={ins.id} />

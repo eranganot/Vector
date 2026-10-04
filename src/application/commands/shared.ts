@@ -32,7 +32,12 @@ export async function unitByCode(db: DbOrTx, orgId: string, code: string): Promi
   return r ? toUnitRef(r) : undefined;
 }
 
-export async function orgFacts(db: DbOrTx, orgId: string, budgetDepartmentCode?: string): Promise<OrgFacts> {
+export async function orgFacts(
+  db: DbOrTx,
+  orgId: string,
+  budgetDepartmentCode?: string,
+  ownerDepartmentId?: string | null,
+): Promise<OrgFacts> {
   const group = await unitByCode(db, orgId, "GROUP");
   if (!group) notFound("group unit");
   return {
@@ -40,6 +45,7 @@ export async function orgFacts(db: DbOrTx, orgId: string, budgetDepartmentCode?:
     supplyChain: await unitByCode(db, orgId, "D-SUPPLY"),
     legal: await unitByCode(db, orgId, "D-LEGAL"),
     budgetDepartment: budgetDepartmentCode ? await unitByCode(db, orgId, budgetDepartmentCode) : undefined,
+    ownerDepartment: ownerDepartmentId ? (await unitsByIds(db, orgId, [ownerDepartmentId]))[0] : undefined,
   };
 }
 

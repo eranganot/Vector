@@ -36,16 +36,27 @@ a hash-chained audit, on a realistic synthetic organization, with both workstrea
   against a local build; `pnpm run doctor` (all checks incl. audit chains); `pnpm smoke` (7 checks); calibration (all three
   models in band).
 - Dev after merging PR #11 (`03133a1`): Railway deployed, migration 0004 applied, new `p2-v2` epoch seeded on boot; `pnpm smoke --expect-sha` 7/7; `pnpm test:e2e` 5/5 against Dev; `pnpm run doctor --url` passes; Dev demo reset afterwards so it opens fresh.
-- Branch `demo` created at `03133a1` for the demo environment (not connected yet; runbook: docs/runbooks/demo-environment.md).
+- Branch `demo` created at `03133a1` for the demo environment (not connected yet; runbook: docs/runbooks/prod-environment.md).
 
 ## Failed / broken
 
 - (none open). Fixed in PR #11 with a recorded root cause: integration tests wrote forged audit rows into the dev database
   (STATUS.md).
 
+## Evening 2026-10-04 (PR #13)
+
+- Fixed (root causes in STATUS.md): two trace pages crashed on a source record's `days` count; the inbox listed only
+  approval requests (now "Waiting on you": decisions, approvals, your actions) and Accept/Decline showed for people who
+  may not decide.
+- G3: the recall's work sits with Legal (Dafna) and Supply Chain (Ben), approvals inside Legal, the CEO is briefed; approval
+  policy v2 and inbox routing (G3-a, proposed). Seed `p2-v3` (20 personas).
+- Prod environment (Eran, duplicate of Dev, deploys `demo`): needs `BETTER_AUTH_URL` with `https://`, `VECTOR_ENV`
+  `prod` (after `demo` moves) or `demo` (before), new secrets, "Wait for CI", then deploy. Runbook:
+  docs/runbooks/prod-environment.md.
+
 ## Open decisions (for Eran)
 
-- Phase 2 gate sign-off and promotion to the demo environment (needs Eran to create the environment once: docs/runbooks/demo-environment.md).
+- Phase 2 gate sign-off and promotion to the demo environment (needs Eran to create the environment once: docs/runbooks/prod-environment.md).
 - G2-a: local priority raise-only (proposed by Claude).
 - D1-n: Postgres "16 or later" wording (16 in the sandbox, 18 on CI/Railway).
 - AI provider (Claude vs Gemini) at the Phase 5 gate.
