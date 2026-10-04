@@ -8,7 +8,7 @@ import type { Pool } from "pg";
 import { loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
 import { listInsights } from "@/application/queries/insights";
-import { commandCenter, orgTree, performanceView } from "@/application/queries/performance";
+import { commandCenter, headlineFor, orgTree, performanceView } from "@/application/queries/performance";
 import { resetDemo } from "@/application/scenario";
 import * as s from "@/infra/db/schema";
 import { seed } from "@/infra/seed/seed";
@@ -145,5 +145,32 @@ describe("organization tree (Phase 3)", () => {
     const owned = Object.fromEntries(t.departments.map((d) => [d.name, d.owned]));
     expect(owned["Legal & Compliance"]).toBeGreaterThan(0);
     expect(owned["Supply Chain"]).toBeGreaterThan(0);
+  });
+});
+
+describe("home dashboards (Eran, 2026-10-04: KPIs, actions, risk/opportunity summary, dependencies)", () => {
+  it("every position gets one headline sentence and a subline with P1 count and approvals waiting", async () => {
+    for (const email of ["dana", "yossi", "avi", "noa"]) {
+      const v = (await performanceView(appDb, orgId, await as(`${email}@vector-retail.example`)))!;
+      const { headline, subline } = headlineFor(v);
+      expect(headline).toMatch(/\.$/);
+      expect(headline.split(". ").length).toBe(1);
+      expect(subline).toMatch(
+        /^\d+ P1 risks? (across the group|in .+) · \d+ opportunit(y|ies) to pursue now · \d+ actions? awaiting approval/,
+      );
+      expect(v.kpis.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("the CEO's and a region's dashboards list open dependencies by owning department; nothing closed", async () => {
+    for (const email of ["dana", "yossi", "avi"]) {
+      const v = (await performanceView(appDb, orgId, await as(`${email}@vector-retail.example`)))!;
+      if (!("dependencies" in v)) throw new Error("no dependencies");
+      expect(v.dependencies.length).toBeGreaterThan(0);
+      for (const d of v.dependencies) expect(["cancelled", "rejected", "executed"]).not.toContain(d.status);
+    }
+    const dana = (await performanceView(appDb, orgId, await as("dana@vector-retail.example")))!;
+    if (!("dependencies" in dana)) throw new Error("no dependencies");
+    expect(new Set(dana.dependencies.map((d) => d.department))).toContain("Legal & Compliance");
   });
 });
