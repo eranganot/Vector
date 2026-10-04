@@ -63,6 +63,16 @@ export const INPUTS = {
     windowEnd: dayStr.optional(),
   }),
   cancelCommitment: z.object({ commitmentId: id, rationale: note.min(3, "say why it is cancelled") }),
+  insight: z.object({ insightId: id }),
+  dismissInsight: z.object({ insightId: id, rationale: note.min(3, "say why it can be dismissed") }),
+  actionRef: z.object({ insightId: id, actionId: id }),
+  cancelAction: z.object({ insightId: id, actionId: id, rationale: note.min(3, "say why it is cancelled") }),
+  amendAction: z.object({
+    insightId: id,
+    actionId: id,
+    estimatedCost: z.coerce.number().min(0).max(100_000_000),
+    note: note.optional(),
+  }),
   advanceClock: z.object({
     hours: z.coerce
       .number()

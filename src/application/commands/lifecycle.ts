@@ -843,6 +843,8 @@ export async function amendAction(
       .set({
         estimatedCost: change.estimatedCost ?? act.estimatedCost,
         params: { ...(act.params as object), ...change.params },
+        // AZ-2: the amender authors this revision, so they are its proposer and may not approve it.
+        proposedBy: actorId(actor),
         revision: act.revision + 1,
         status: t.to as "proposed",
         updatedAt: now,
@@ -855,7 +857,11 @@ export async function amendAction(
       entityId: act.id,
       fromState: act.status,
       toState: t.to,
-      changes: { revision: { from: act.revision, to: act.revision + 1 }, ...change },
+      changes: {
+        revision: { from: act.revision, to: act.revision + 1 },
+        proposedBy: { from: act.proposedBy, to: actorId(actor) },
+        ...change,
+      },
     });
     const [dec] = await tx.select().from(decision).where(eq(decision.id, act.decisionId));
     if (dec.status === "decided") await submitActions(scope, dec.id);

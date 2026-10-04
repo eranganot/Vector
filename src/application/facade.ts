@@ -5,11 +5,19 @@
 import { verifyAuditChain } from "./audit";
 import {
   acceptDecision,
+  acknowledgeInsight,
+  amendAction,
+  cancelAction,
   declineDecision,
   denyApproval,
+  dismissInsight,
   executeReadyActions,
   grantApproval,
+  retryAction,
 } from "./commands/lifecycle";
+import { unitsByIds } from "./commands/shared";
+import { authorizeUser } from "@/domain/policy/authorize";
+import type { Capability } from "@/domain/policy/permissions";
 import { reviewOutcome } from "./commands/outcomes";
 import {
   cancelCommitment,
@@ -26,6 +34,7 @@ import {
   getInsightTrace,
   listInsights,
   listMyActions,
+  listMyApprovalHistory,
   listMyApprovals,
   listMyDecisions,
 } from "./queries/insights";
@@ -112,6 +121,28 @@ export const api = {
     input: { dueAt: Date; rationale: string; effects?: CommitmentEffect[] },
   ) => renegotiateCommitment(await ctx(), a, id, input),
   cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
+  approvalHistory: async (a: Actor) => listMyApprovalHistory(db(), await activeOrgId(db()), a),
+  /** Cosmetic (every command re-checks): may this person use this capability over these units? */
+  may: async (a: Actor, capability: Capability, unitIds: string[]) => {
+    if (a.kind !== "user") return false;
+    const units = await unitsByIds(db(), await activeOrgId(db()), unitIds);
+    return authorizeUser(a, capability, { targetUnits: units }).ok;
+  },
+  acknowledge: async (a: Actor, insightId: string) => acknowledgeInsight(await ctx(), a, insightId),
+  dismiss: async (a: Actor, insightId: string, rationale: string) =>
+    dismissInsight(await ctx(), a, insightId, rationale),
+  cancelAction: async (a: Actor, actionId: string, rationale: string) =>
+    cancelAction(await ctx(), a, actionId, rationale),
+  amendAction: async (a: Actor, actionId: string, estimatedCost: number, note?: string) => {
+    const c = await ctx();
+    await amendAction(c, a, actionId, { estimatedCost, ...(note ? { params: { amendNote: note } } : {}) });
+    await executeReadyActions(c); // an amendment that needs no approval goes straight to ready
+  },
+  retryAction: async (a: Actor, actionId: string) => {
+    const c = await ctx();
+    await retryAction(c, a, actionId);
+    await executeReadyActions(c);
+  },
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };

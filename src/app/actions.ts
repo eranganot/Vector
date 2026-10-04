@@ -218,3 +218,44 @@ export async function cancelCommitmentAction(form: FormData) {
   revalidatePath(COMMITMENTS_PATH);
   redirect(`${COMMITMENTS_PATH}?done=cancelled`);
 }
+
+// ── Insight and action lifecycle from the trace (Phase 4: every human command in the UI) ──
+async function onTrace(
+  form: FormData,
+  run: (actor: Awaited<ReturnType<typeof requireActor>>["actor"]) => Promise<unknown>,
+) {
+  const { actor } = await requireActor();
+  const back = backTo(form);
+  try {
+    await run(actor);
+  } catch (e) {
+    fail(back, e);
+  }
+  revalidatePath(back);
+  redirect(back);
+}
+
+export async function acknowledgeInsightAction(form: FormData) {
+  await onTrace(form, (a) => api.acknowledge(a, parseInput("insight", form).insightId));
+}
+export async function dismissInsightAction(form: FormData) {
+  await onTrace(form, (a) => {
+    const i = parseInput("dismissInsight", form);
+    return api.dismiss(a, i.insightId, i.rationale);
+  });
+}
+export async function cancelActionAction(form: FormData) {
+  await onTrace(form, (a) => {
+    const i = parseInput("cancelAction", form);
+    return api.cancelAction(a, i.actionId, i.rationale);
+  });
+}
+export async function amendActionAction(form: FormData) {
+  await onTrace(form, (a) => {
+    const i = parseInput("amendAction", form);
+    return api.amendAction(a, i.actionId, i.estimatedCost, i.note);
+  });
+}
+export async function retryActionAction(form: FormData) {
+  await onTrace(form, (a) => api.retryAction(a, parseInput("actionRef", form).actionId));
+}

@@ -225,9 +225,39 @@ export async function listMyApprovals(db: DbOrTx, orgId: string, actor: Actor) {
   );
   if (mine.length === 0) return [];
   const people = await peopleWithAssignments(db, orgId);
-  return mine.filter((r) =>
-    routeApproval(people, r.approval.requirement as ApprovalRequirement, r.action).some(([id]) => id === actor.userId),
-  );
+  const targets = await db.select({ id: orgUnit.id, name: orgUnit.name }).from(orgUnit).where(eq(orgUnit.orgId, orgId));
+  return mine
+    .map((r) => ({ r, routed: routeApproval(people, r.approval.requirement as ApprovalRequirement, r.action) }))
+    .filter(({ routed }) => routed.some(([id]) => id === actor.userId))
+    .map(({ r, routed }) => ({
+      ...r,
+      /** Who else this request is routed to (any one of them may answer it). */
+      alsoAsked: routed.filter(([id]) => id !== actor.userId).map(([, p]) => p.name),
+      targetNames: r.action.targetUnitIds.map((id) => targets.find((t) => t.id === id)?.name ?? "—"),
+    }));
+}
+
+/** The person's own recent answers to approval requests (Phase 4: approval workflow history). */
+export async function listMyApprovalHistory(db: DbOrTx, orgId: string, actor: Actor, limit = 10) {
+  if (actor.kind !== "user") return [];
+  return db
+    .select({
+      id: approval.id,
+      status: approval.status,
+      rationale: approval.rationale,
+      decidedAt: approval.decidedAt,
+      revision: approval.actionRevision,
+      actionTitle: action.title,
+      actionStatus: action.status,
+      insightId: insight.id,
+      band: insight.priorityBand,
+    })
+    .from(approval)
+    .innerJoin(action, eq(action.id, approval.actionId))
+    .innerJoin(insight, eq(insight.id, action.insightId))
+    .where(and(eq(approval.orgId, orgId), eq(approval.approverUserId, actor.userId)))
+    .orderBy(desc(approval.decidedAt))
+    .limit(limit);
 }
 
 /**

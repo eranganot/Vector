@@ -19,8 +19,27 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                              | #21      |
 | 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor) | #23, #24 |
 | 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces    | #25      |
+| 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                    | #26      |
 
 ## Root-cause records
+
+### 2026-10-05 · Whoever amended an action could approve the revision they wrote (AZ-2 gap; found while building Amend, P4e)
+
+- **Symptom:** Yossi amended "Weekend staffing uplift" (₪54k → ₪40k, revision 2); the revision-2 approval request
+  was routed to Yossi himself, and the grant command would have accepted his approval.
+- **Proven cause:** AZ-2 compares the approver with the action's `proposed_by` and owner. `amendAction` bumped the
+  revision but left `proposed_by` at the original proposer (`system:detector`), so the author of the new revision was
+  neither "proposer" nor owner. Observed in the database (rev 2 `requested`, `proposed_by = system:detector`) and in
+  Yossi's inbox; reproduced by a failing integration test.
+- **Why it was silent:** amendments existed only in the application layer (Phase 2) and its tests had the amender
+  approve nothing afterwards; Phase 4 put Amend in the UI.
+- **Ruled out:** routing alone (the grant command itself accepted him: AZ-2 had nothing to compare); the owner check
+  (Shira, the owner, was correctly excluded).
+- **Fix:** amending makes the amender the proposer of the new revision (`proposed_by` updated, old and new value in the
+  audit event), so AZ-2 excludes them from routing and from granting. Test: `lifecycle.test.ts` "AZ-2: whoever amends";
+  e2e "approval workflow".
+- **Unrelated, noted:** `lifecycle.test.ts` "§5.2" depends on the earlier tests in its file (fails when run alone, with
+  or without this change); the whole file passes.
 
 ### 2026-10-04 · The deciding unit could not see the plan its own collides with (caught by a new test before shipping, P4d)
 
