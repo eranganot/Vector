@@ -1,0 +1,1 @@
+ALTER TABLE "insight" ADD COLUMN "workstream" text DEFAULT 'risk' NOT NULL;

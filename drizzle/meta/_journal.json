@@ -22,6 +22,13 @@
       "when": 1791119514761,
       "tag": "0002_audit_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791121892287,
+      "tag": "0003_insight_workstream",
+      "breakpoints": true
     }
   ]
 }

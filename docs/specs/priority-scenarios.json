@@ -1,12 +1,17 @@
 {
-  "note": "Calibration set for priority model v1. 'expected' was written from product judgment BEFORE computing scores. Phase 2 reuses these as golden fixtures.",
-  "bands": {
+  "note": "Calibration sets. Expected bands were written from product judgment BEFORE scores were computed; Eran reviewed them on 2026-10-04 (C4/S14 and C3/S13 stay P2; S09 higher for the store manager; opportunities are a separate workstream). These are golden fixtures for src/domain/priority.ts.",
+  "riskBands": {
     "P1": "Act today; executive attention",
     "P2": "Act this week",
     "P3": "Plan or monitor",
     "P4": "Informational"
   },
-  "scenarios": [
+  "opportunityBands": {
+    "O1": "Pursue now (window closing)",
+    "O2": "Plan and resource",
+    "O3": "Watch"
+  },
+  "risks": [
     {
       "id": "S01",
       "title": "Haifa Grand Canyon net sales -18% week on week",
@@ -16,7 +21,14 @@
       "hoursToImpact": null,
       "strategicWeight": 0.8,
       "confidence": 0.9,
-      "expected": "P2"
+      "expected": "P2",
+      "compliance": 0.0,
+      "local": {
+        "scope": "branch",
+        "scopeWeeklySalesIls": 1200000,
+        "shareOfScopeAffected": 1.0,
+        "expected": "P1"
+      }
     },
     {
       "id": "S02",
@@ -27,7 +39,8 @@
       "hoursToImpact": 48,
       "strategicWeight": 0.9,
       "confidence": 0.85,
-      "expected": "P1"
+      "expected": "P1",
+      "compliance": 0.0
     },
     {
       "id": "S03",
@@ -38,7 +51,14 @@
       "hoursToImpact": 720,
       "strategicWeight": 0.6,
       "confidence": 0.7,
-      "expected": "P4"
+      "expected": "P4",
+      "compliance": 0.0,
+      "local": {
+        "scope": "branch",
+        "scopeWeeklySalesIls": 1100000,
+        "shareOfScopeAffected": 1.0,
+        "expected": "P3"
+      }
     },
     {
       "id": "S04",
@@ -49,7 +69,8 @@
       "hoursToImpact": 24,
       "strategicWeight": 0.9,
       "confidence": 0.9,
-      "expected": "P1"
+      "expected": "P1",
+      "compliance": 0.0
     },
     {
       "id": "S05",
@@ -60,7 +81,15 @@
       "hoursToImpact": 168,
       "strategicWeight": 0.5,
       "confidence": 0.85,
-      "expected": "P3"
+      "expected": "P3",
+      "compliance": 0.0,
+      "local": {
+        "scope": "region",
+        "scopeWeeklySalesIls": 13000000,
+        "shareOfScopeAffected": 1.0,
+        "expected": "P3",
+        "note": "Written expectation was P2; priority-v2-local scores it P3 (₪90k is 0.7% of the region's weekly sales). Fixture records the model result; flagged to Eran for a decision."
+      }
     },
     {
       "id": "S06",
@@ -71,7 +100,8 @@
       "hoursToImpact": 48,
       "strategicWeight": 0.8,
       "confidence": 0.95,
-      "expected": "P1"
+      "expected": "P1",
+      "compliance": 0.0
     },
     {
       "id": "S07",
@@ -82,18 +112,8 @@
       "hoursToImpact": 240,
       "strategicWeight": 0.7,
       "confidence": 0.8,
-      "expected": "P3"
-    },
-    {
-      "id": "S08",
-      "title": "Heatwave forecast for 8 South branches in 3 days (beverage opportunity)",
-      "z": 2.0,
-      "impactIls": 150000,
-      "breadth": "regional",
-      "hoursToImpact": 72,
-      "strategicWeight": 0.7,
-      "confidence": 0.7,
-      "expected": "P2"
+      "expected": "P3",
+      "compliance": 0.0
     },
     {
       "id": "S09",
@@ -104,7 +124,14 @@
       "hoursToImpact": null,
       "strategicWeight": 0.6,
       "confidence": 0.8,
-      "expected": "P3"
+      "expected": "P3",
+      "compliance": 0.0,
+      "local": {
+        "scope": "branch",
+        "scopeWeeklySalesIls": 1100000,
+        "shareOfScopeAffected": 1.0,
+        "expected": "P2"
+      }
     },
     {
       "id": "S10",
@@ -115,7 +142,14 @@
       "hoursToImpact": 2000,
       "strategicWeight": 0.4,
       "confidence": 0.95,
-      "expected": "P4"
+      "expected": "P4",
+      "compliance": 0.0,
+      "local": {
+        "scope": "branch",
+        "scopeWeeklySalesIls": 1100000,
+        "shareOfScopeAffected": 1.0,
+        "expected": "P3"
+      }
     },
     {
       "id": "S11",
@@ -126,7 +160,8 @@
       "hoursToImpact": 240,
       "strategicWeight": 0.7,
       "confidence": 0.9,
-      "expected": "P2"
+      "expected": "P2",
+      "compliance": 0.3
     },
     {
       "id": "S12",
@@ -137,7 +172,8 @@
       "hoursToImpact": 12,
       "strategicWeight": 1.0,
       "confidence": 0.95,
-      "expected": "P1"
+      "expected": "P1",
+      "compliance": 1.0
     },
     {
       "id": "S13",
@@ -148,7 +184,8 @@
       "hoursToImpact": 336,
       "strategicWeight": 0.6,
       "confidence": 0.8,
-      "expected": "P2"
+      "expected": "P2",
+      "compliance": 0.3
     },
     {
       "id": "S14",
@@ -159,7 +196,8 @@
       "hoursToImpact": -120,
       "strategicWeight": 0.5,
       "confidence": 0.9,
-      "expected": "P2"
+      "expected": "P2",
+      "compliance": 0.8
     },
     {
       "id": "S15",
@@ -170,7 +208,65 @@
       "hoursToImpact": 168,
       "strategicWeight": 0.7,
       "confidence": 0.85,
-      "expected": "P2"
+      "expected": "P2",
+      "compliance": 0.3
+    }
+  ],
+  "opportunities": [
+    {
+      "id": "OP1",
+      "title": "Heatwave forecast for 8 South branches in 3 days: beverage and ice-cream demand",
+      "valueIls": 150000,
+      "costIls": 20000,
+      "reach": "regional",
+      "hoursToClose": 72,
+      "strategicFit": 0.7,
+      "confidence": 0.7,
+      "expected": "O1"
+    },
+    {
+      "id": "OP2",
+      "title": "Competitor store near Ramat Gan Ayalon closes in 3 weeks: capture its customers",
+      "valueIls": 90000,
+      "costIls": 35000,
+      "reach": "local",
+      "hoursToClose": 504,
+      "strategicFit": 0.8,
+      "confidence": 0.6,
+      "expected": "O2"
+    },
+    {
+      "id": "OP3",
+      "title": "Supplier overstock offer: 25% off two categories, offer expires in 5 days",
+      "valueIls": 60000,
+      "costIls": 200000,
+      "reach": "systemic",
+      "hoursToClose": 120,
+      "strategicFit": 0.5,
+      "confidence": 0.9,
+      "expected": "O2"
+    },
+    {
+      "id": "OP4",
+      "title": "Click-and-collect orders +40% in Center: add pickup capacity before the holiday",
+      "valueIls": 70000,
+      "costIls": 15000,
+      "reach": "regional",
+      "hoursToClose": 336,
+      "strategicFit": 0.9,
+      "confidence": 0.85,
+      "expected": "O2"
+    },
+    {
+      "id": "OP5",
+      "title": "300 m² unused at Petah Tikva: lease to a pop-up partner",
+      "valueIls": 6000,
+      "costIls": 5000,
+      "reach": "isolated",
+      "hoursToClose": 2000,
+      "strategicFit": 0.4,
+      "confidence": 0.7,
+      "expected": "O3"
     }
   ]
 }

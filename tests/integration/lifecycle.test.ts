@@ -83,6 +83,7 @@ function haifaDetection(r: SeedResult): DetectionInput {
       affectedUnitIds: [u["D-SUPPLY"]],
       confidence: 0.9,
       priority: {
+        compliance: 0,
         z: 2.8,
         impactIls: 220_000,
         breadth: "isolated",
@@ -142,7 +143,7 @@ describe("Phase 2 story: Haifa sales drop, Signal → Outcome", () => {
     const [ins] = await appDb.select().from(s.insight).where(eq(s.insight.id, insightId));
     expect(ins.status).toBe("open");
     expect(ins.priorityBand).toBe("P2");
-    expect(ins.priorityModelVersion).toBe("priority-v1");
+    expect(ins.priorityModelVersion).toBe("priority-v2");
     const [dec] = await appDb.select().from(s.decision).where(eq(s.decision.insightId, insightId));
     expect(dec).toMatchObject({ status: "recommended", origin: "vector_recommended" });
   });

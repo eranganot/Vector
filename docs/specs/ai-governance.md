@@ -4,15 +4,13 @@ Status: **Direction for Phase 1 approval**; detailed design at the Phase 5 gate.
 
 ## Where AI is used, and where it is not
 
-| Use AI (Phase 5+)                                                         | Keep deterministic                              |
-| ------------------------------------------------------------------------- | ----------------------------------------------- |
-| Narrative: "what happened / why it matters" from evidence                 | Detection thresholds, z-scores, cascades        |
-| Weekly executive briefing across insights                                 | Priority score and bands (ADR-005)              |
-| Extracting commitments from unstructured meeting notes                    | Authorization, approval rules, execution gating |
-| Drafting recommended decisions and actions                                | State transitions and audit                     |
-| Scoped "Ask VECTOR about this" questions                                  | Outcome verdicts                                |
-| Factor inputs (e.g. relevance of an external event), bounded and recorded |                                                 |
-| Proposing priority-weight or playbook changes from outcome history (D6)   | Applying those changes (needs human approval)   |
+| Use AI (Phase 5+)                                         | Keep deterministic                              |
+| --------------------------------------------------------- | ----------------------------------------------- |
+| Narrative: "what happened / why it matters" from evidence | Detection thresholds, z-scores, cascades        |
+| Weekly executive briefing across insights                 | Priority score and bands (ADR-005)              |
+| Extracting commitments from unstructured meeting notes    | Authorization, approval rules, execution gating |
+| Drafting recommended decisions and actions                | State transitions and audit                     |
+| Scoped "Ask VECTOR about this" questions                  | Outcome verdicts                                |     | Factor inputs (e.g. compliance exposure, relevance of an external event), bounded and recorded |     |     | Proposing priority-weight or playbook changes from outcome history (D6) | Applying those changes (needs human approval) |
 
 ## Hard rules
 

@@ -1,6 +1,6 @@
 # ADR-005: Priority is a deterministic, versioned weighted score
 
-- Status: Proposed (Phase 1 gate)
+- Status: Accepted (Phase 1 gate, 2026-10-04); amended 2026-10-04 to priority-v2 (compliance factor) and extended by ADR-006
 
 ## Context
 
@@ -9,8 +9,8 @@ judgment. Executives must be able to see why something is P1.
 
 ## Decision
 
-A five-factor weighted score with a confidence multiplier (docs/specs/priority.md), versioned weights, and bands
-calibrated against a written scenario set. AI can contribute recorded factor inputs and can propose weight changes;
+A weighted score with a confidence multiplier (docs/specs/priority.md), versioned weights, and bands calibrated against a
+written scenario set. v2 has six factors: strategic weight, impact, magnitude, urgency, breadth and compliance. AI can contribute recorded factor inputs and can propose weight changes;
 it never sets a priority directly.
 
 ## Alternatives considered

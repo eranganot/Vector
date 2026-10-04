@@ -34,6 +34,7 @@ export async function listInsights(db: DbOrTx, orgId: string, actor: Actor) {
   return db
     .select({
       id: insight.id,
+      workstream: insight.workstream,
       title: insight.title,
       priorityScore: insight.priorityScore,
       priorityBand: insight.priorityBand,

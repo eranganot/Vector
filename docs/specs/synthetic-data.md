@@ -25,7 +25,7 @@ that phase needs.
 | Users           | 8                                             | ~25                                                                                             |
 | KPIs            | 4                                             | ~10                                                                                             |
 | History         | 12 weeks daily                                | 52 weeks daily                                                                                  |
-| Planted stories | 1 (Haifa sales drop)                          | 5 charter scenarios + 3–4 decoys                                                                |
+| Planted stories | 1 (Haifa sales drop)                          | 14 risk + 5 opportunity stories + 3–4 decoys                                                    |
 
 ## Phase 2 contents
 
@@ -73,9 +73,9 @@ value = base(size_class) × weekday_shape × holiday_factor × trend(t) × regio
 
 ## Phase 3+ planted stories
 
-The full catalog, with departments, dependency chains and approvals, is in [scenarios.md](scenarios.md). There are 11
-cross-department stories (C1–C5 plus the six earlier ones), covering all five charter §36 scenario types, plus 3–4 decoys
-(noise spikes, a resolved outage) that prove VECTOR doesn't cry wolf.
+The full catalog, with departments, dependency chains, priorities and approvals, is in [scenarios.md](scenarios.md): 14
+risk-workstream stories (R1–R14) and 5 opportunity-workstream stories (O1–O5), covering all five charter §36 scenario types,
+plus 3–4 decoys (noise spikes, a resolved outage) that prove VECTOR doesn't cry wolf.
 
 Each department gets a manager persona in Phase 3: Store Operations, Supply Chain (Noa Friedman), Trade & Commercial,
 Marketing (Ronit Shapiro), Finance, HR, Legal & Compliance, IT.

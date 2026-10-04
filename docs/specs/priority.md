@@ -1,72 +1,104 @@
-# Priority model v1
+# Prioritization models
 
-Status: **Draft for Phase 1 approval**. Implements charter §14: transparent, consistent, reproducible,
-explainable, auditable.
+Status: **Revised 2026-10-04 (v2)** after Eran's scenario review. ADR-005 (deterministic priority), as amended, and
+ADR-006 (separate workstreams, local priority). Implemented in `src/domain/priority.ts`; golden fixtures in
+`src/domain/priority.test.ts`; calibration report: `pnpm exec tsx scripts/calibrate-priority.ts`.
 
-## Formula
+There are three deterministic, versioned models. All of them store their full breakdown with the insight, so the
+"Why am I seeing this?" panel shows exactly what was computed.
+
+| Model               | Used for                                                                  | Bands                                                                           |
+| ------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `priority-v2`       | Risk workstream, organizational view (Executive, departments)             | P1 ≥ 67 act today · P2 ≥ 51 this week · P3 ≥ 38 plan/monitor · P4 informational |
+| `priority-v2-local` | Risk workstream, seen by a regional or branch manager for their own scope | same bands                                                                      |
+| `opportunity-v1`    | Opportunity workstream (never ranked against risks)                       | O1 ≥ 60 pursue now · O2 ≥ 33 plan and resource · O3 watch                       |
+
+## Risk priority (priority-v2)
 
 ```latex
 \text{Priority} = 100 \cdot \Big(\sum_i w_i f_i\Big) \cdot (0.6 + 0.4\,c)
 ```
 
-Each factor f is in [0, 1]; the weights w sum to 1; c is the insight's confidence in [0, 1]. Low confidence can remove up to
-40% of the score but never zeroes it: an uncertain, important signal still surfaces, labelled as uncertain.
+| Factor               | Weight | Definition                                                                                                                                                                                 |
+| -------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Strategic weight     |   0.30 | How much the executive team says this KPI or area matters (governed configuration)                                                                                                         |
+| Impact               |   0.20 | ₪ at stake per week, log scale: ₪5k → 0, ₪1M → 1                                                                                                                                           |
+| Magnitude            |   0.15 | `min(                                                                                                                                                                                      | z   | , 4) / 4`, the deviation from the unit's own usual level |
+| Urgency              |   0.15 | Hours until impact or due date: ≤ 24 h or overdue 1.0 · ≤ 72 h 0.75 · ≤ 7 d 0.5 · ≤ 30 d 0.25 · later 0.1 · already happening 0.75                                                         |
+| Breadth              |   0.10 | isolated 0.25 · local (2–3 branches) 0.5 · regional 0.75 · systemic 1.0                                                                                                                    |
+| **Compliance** (new) |   0.10 | Regulatory or contractual exposure if unhandled: 0 none · 0.3 contractual terms · 0.6 internal policy obligation · 0.8 legal/regulatory deadline · 1.0 safety or regulator-mandated action |
 
-| Factor           | Weight v1 | Definition                                                                                                                                                              |
-| ---------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Magnitude        | 0.20      | `min(                                                                                                                                                                   | z   | , 4) / 4`, where z is the deviation from the unit's own trailing 28-day same-weekday baseline |
-| Business impact  | 0.30      | Revenue or margin at stake per week, log-scaled: `log10(x / ₪5k) / log10(₪1M / ₪5k)`, clamped to [0, 1]                                                                 |
-| Breadth          | 0.15      | isolated (1 branch) 0.25 · local (2–3 branches, one region) 0.5 · regional (≥ 4 branches or a whole region) 0.75 · systemic (≥ 2 regions, or group/department-wide) 1.0 |
-| Urgency          | 0.20      | Hours until impact or due date: ≤ 24 h 1.0 · ≤ 72 h 0.75 · ≤ 7 d 0.5 · ≤ 30 d 0.25 · later 0.1 · already happening 0.75                                                 |
-| Strategic weight | 0.15      | Per-KPI weight set by the executive team (governed configuration)                                                                                                       |
+c = confidence (0–1); low confidence removes up to 40% of the score but never hides the item.
 
-## Bands
+### Why these weights
 
-| Band | Score     | Meaning                        |
-| ---- | --------- | ------------------------------ |
-| P1   | ≥ 70      | Act today; executive attention |
-| P2   | 55 – 69.9 | Act this week                  |
-| P3   | 40 – 54.9 | Plan or monitor                |
-| P4   | < 40      | Informational                  |
+Weights and thresholds were searched together over a grid (each weight 0.10–0.30, step 0.05) to reproduce every expected
+band with the widest gap between bands. Two constraints came from Eran's review:
 
-## Calibration (how the thresholds were set, not invented)
+- **C4 (wage rule, S14) stays P2.** That caps the compliance weight at 0.10: at 0.15 or more it becomes P1.
+- **Urgency stays at 0.15**, because "act today" is the product's promise. The best grid point with urgency at 0.10 had
+  slightly wider gaps (5.9 vs. 3.9 points), but it would under-rank imminent items.
 
-Fifteen scenarios ([priority-scenarios.json](priority-scenarios.json); S11–S15 added with the cross-department catalog in [scenarios.md](scenarios.md)) were written with an expected band **before**
-any score was computed. `pnpm exec tsx scripts/calibrate-priority.ts` scores them:
+### Calibration (14 risk scenarios; all reproduce their expected band)
 
-| Scenario                                                    | Score | Expected | Result |
-| ----------------------------------------------------------- | ----: | -------- | ------ |
-| S04 DC delay → 14 branches, 2 regions, < 24 h               |  85.4 | P1       | P1     |
-| S02 Top-SKU stock-outs, 9 North branches, holiday in 2 days |  79.3 | P1       | P1     |
-| S06 Promo assets late for all 60 branches, launch in 2 days |  76.1 | P1       | P1     |
-| S01 Haifa Grand Canyon sales −18% WoW                       |  60.2 | P2       | P2     |
-| S08 Heatwave forecast, 8 South branches, 3 days             |  58.1 | P2       | P2     |
-| S05 Labor cost +6%, Center region                           |  52.7 | P3       | P3     |
-| S09 Single-branch shrinkage spike                           |  52.5 | P3       | P3     |
-| S07 Promo vs. delisting conflict, 5 branches                |  44.8 | P3       | P3     |
-| S10 2-hour POS outage, resolved                             |  33.7 | P4       | P4     |
-| S03 Single-branch NPS −4                                    |  28.1 | P4       | P4     |
+| Scenario                                 | Score | Band |
+| ---------------------------------------- | ----: | ---- |
+| R1 Food-safety recall (S12)              |  91.7 | P1   |
+| R2 DC delay cascade (S04)                |  77.0 | P1   |
+| R3 North stock-outs before holiday (S02) |  72.3 | P1   |
+| R4 Promo assets late (S06)               |  68.7 | P1   |
+| R5 Wage rule, pay tables overdue (S14)   |  64.8 | P2   |
+| R6 Supplier cost vs. planned promo (S11) |  59.4 | P2   |
+| R7 Spend freeze vs. campaign (S15)       |  59.4 | P2   |
+| R8 Haifa Grand Canyon sales drop (S01)   |  57.8 | P2   |
+| R9 POS upgrade inside peak (S13)         |  54.1 | P2   |
+| R10 Shrinkage spike (S09)                |  48.5 | P3   |
+| R11 Labor cost, Center (S05)             |  46.2 | P3   |
+| R12 Promo vs. delisting (S07)            |  43.9 | P3   |
+| R13 POS outage, resolved (S10)           |  32.1 | P4   |
+| R14 Branch NPS down (S03)                |  30.3 | P4   |
 
-All fifteen land in their expected band. **Caveats:**
+Tightest gaps: P1/P2 3.9 points (68.7 vs. 64.8), which is narrower than v1's 8.4 because the compliance factor lifts R5
+toward P1; and P2/P3 5.6 points (54.1 vs. 48.5), slightly wider than v1's 5.4. The live Phase 2 detector scores the
+real (synthetic) Haifa data at 64.4, P2, under v2; under v1 it scored 69.3.
 
-- Two margins are tight: P1/P2 (S14 at 67.7 vs. the 70 line) and P2/P3 (58.1 vs. 52.7). Phase 3's larger dataset will re-run calibration with
-  more scenarios before the investor demo.
-- S10 shows why magnitude alone is not priority: the largest statistical deviation (z = 4) ranks near the bottom,
-  because almost nothing is at stake and it is already over.
+## Local priority (priority-v2-local)
 
-## Explainability
+The same formula and bands, but **impact** and **breadth** are measured against the viewer's own scope:
 
-Each insight stores `priority_breakdown`: factor values, their inputs (e.g. z = 2.8 vs. baseline ₪41.2k/day),
-weights, the confidence multiplier, the model version (`priority-v1`) and the weights version. The UI's "Why am I
-seeing this?" panel renders exactly this object. The same inputs and versions always produce the same score
-(golden-fixture test in Phase 2).
+- impact = ₪ at stake as a share of the scope's weekly sales, log scale: 0.5% → 0, 10% → 1;
+- breadth = share of the scope affected: ≥ 50% → 1.0 · ≥ 25% → 0.75 · ≥ 10% → 0.5 · otherwise 0.25.
+
+The organizational priority stays the reference for the Command Center and department views. Region and branch views
+rank by local priority and show both, e.g. "P3 for the group · **P2 for your branch**".
+
+| Scenario                 | Viewer           | Org     | Local                                    |
+| ------------------------ | ---------------- | ------- | ---------------------------------------- |
+| R8 Haifa sales drop      | Branch manager   | P2 57.8 | **P1 72.7**                              |
+| R10 Shrinkage spike      | Branch manager   | P3 48.5 | **P2 60.4**                              |
+| R14 Branch NPS down      | Branch manager   | P4 30.3 | P3 39.1                                  |
+| R13 POS outage, resolved | Branch manager   | P4 32.1 | P3 40.2                                  |
+| R11 Labor cost, Center   | Regional manager | P3 46.2 | P3 40.3 (expected P2: **open question**) |
+
+## Opportunity value (opportunity-v1)
+
+Opportunities answer a different question: what is it worth, and how soon must we move? They are scored and ranked
+on their own and never mixed with risks.
+
+| Factor        | Weight | Definition                                             |
+| ------------- | -----: | ------------------------------------------------------ |
+| Value         |   0.30 | Upside per week (₪), log scale like impact             |
+| Window        |   0.25 | Hours until the window closes, same buckets as urgency |
+| Strategic fit |   0.20 | Governed configuration                                 |
+| Ease          |   0.15 | value / (value + cost to capture)                      |
+| Reach         |   0.10 | isolated · local · regional · systemic                 |
+
+× (0.6 + 0.4 × confidence). Calibration: O1 64.0 · O4 55.5 · O3 48.0 · O2 45.7 · O5 19.5. All five reproduce their
+expected band (O1 ≥ 60, O2 ≥ 33); the O1/O2 gap is 8.5 points.
 
 ## Governance
 
-- Weights and per-KPI strategic weights are versioned configuration. A change is proposed (`config.priority_weights.propose`),
-  approved by an Executive, audited, and applied only to insights created afterwards. Existing insights keep the version
-  they were scored with; a re-score is an explicit, audited operation.
-- This is the main lever for "learning" (D6): from Phase 5, AI may _propose_ weight changes from outcome history.
-  A human approves them like any other consequential change.
-- AI may supply a **factor input** (e.g. how relevant a weather event is to a branch). It is recorded with its
-  `AiGeneration` id and bounded to [0, 1]. The formula stays deterministic.
+- Weights, bands and per-KPI strategic weights are versioned configuration (`weights-v2`). Changing them is a proposed,
+  Executive-approved, audited operation, and applies only to insights created afterwards.
+- AI (Phase 5+) may supply factor inputs (e.g. compliance exposure, relevance of an external event), recorded with their
+  `AiGeneration` id; the formulas stay deterministic. AI may propose weight changes from outcome history (D6); a human approves them.

@@ -12,6 +12,9 @@ Turn the charter into approved specs before core code: domain model, authorizati
 
 ## Completed
 
+- Phase 2a–2e merged and live on Dev (schema + audit integrity, domain core, commands + hash-chained audit, detector + scenario engine, auth + persona switcher + thin UI); Phase 2 smoke passes on Dev
+- Scenario review applied: priority-v2 (compliance), priority-v2-local, opportunity-v1, separate workstreams (ADR-006), full scenario catalog (R1–R14, O1–O5)
+
 - Phase 1 specs in `docs/specs/` (domain-model, authorization, security, priority + calibration, synthetic-data, demo-narrative, ai-governance, testing, information-architecture), `docs/architecture.md`, ADR-003/004/005, wireframes (design canvas + `docs/specs/wireframes/`)
 - Priority calibration: 10 scenarios, all expected bands reproduced (`pnpm exec tsx scripts/calibrate-priority.ts`)
 
@@ -36,6 +39,8 @@ Turn the charter into approved specs before core code: domain model, authorizati
 - (none open)
 
 ## Open decisions
+
+- R11 (S05) local band: model says P3, Eran's expectation was P2 (DECISIONS G1-c)
 
 - AI provider (Claude vs Gemini) — at Phase 5 gate
 

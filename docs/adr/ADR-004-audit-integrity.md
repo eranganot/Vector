@@ -1,6 +1,6 @@
 # ADR-004: Transactional, insert-only, hash-chained audit trail
 
-- Status: Proposed (Phase 1 gate)
+- Status: Accepted (Phase 1 gate, 2026-10-04)
 
 ## Context
 

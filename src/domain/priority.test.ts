@@ -1,46 +1,76 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { computePriority, type PriorityInput } from "./priority";
+import {
+  computeLocalPriority,
+  computeOpportunity,
+  computePriority,
+  type LocalScope,
+  type OpportunityInput,
+  type PriorityInput,
+} from "./priority";
 
-type Scenario = PriorityInput & { id: string; expected: string };
-const { scenarios } = JSON.parse(readFileSync("docs/specs/priority-scenarios.json", "utf8")) as {
-  scenarios: Scenario[];
+type Risk = PriorityInput & { id: string; expected: string; local?: LocalScope & { expected: string } };
+type Opp = OpportunityInput & { id: string; expected: string };
+const data = JSON.parse(readFileSync("docs/specs/priority-scenarios.json", "utf8")) as {
+  risks: Risk[];
+  opportunities: Opp[];
 };
 
-// Golden scores from the approved calibration (docs/specs/priority.md).
-const GOLDEN: Record<string, number> = {
-  S01: 60.2,
-  S02: 79.3,
-  S03: 28.1,
-  S04: 85.4,
-  S05: 52.7,
-  S06: 76.1,
-  S07: 44.8,
-  S08: 58.1,
-  S09: 52.5,
-  S10: 33.7,
-  S11: 62.5,
-  S12: 88.5,
-  S13: 58.7,
-  S14: 67.7,
-  S15: 63.0,
+// Golden scores from the 2026-10-04 v2 calibration (docs/specs/priority.md).
+const RISK: Record<string, number> = {
+  S01: 57.8,
+  S02: 72.3,
+  S03: 30.3,
+  S04: 77,
+  S05: 46.2,
+  S06: 68.7,
+  S07: 43.9,
+  S09: 48.5,
+  S10: 32.1,
+  S11: 59.4,
+  S12: 91.7,
+  S13: 54.1,
+  S14: 64.8,
+  S15: 59.4,
 };
+const LOCAL: Record<string, number> = { S01: 72.7, S03: 39.1, S05: 40.3, S09: 60.4, S10: 40.2 };
+const OPP: Record<string, number> = { OP1: 64, OP2: 45.7, OP3: 48, OP4: 55.5, OP5: 19.5 };
 
-describe("priority-v1 golden fixtures", () => {
-  it.each(scenarios.map((s) => [s.id, s] as const))("%s keeps its calibrated score and band", (id, s) => {
+describe("priority-v2 (risks) golden fixtures", () => {
+  it.each(data.risks.map((s) => [s.id, s] as const))("%s keeps its calibrated score and band", (id, s) => {
     const p = computePriority(s);
-    expect(p.score).toBe(GOLDEN[id]);
+    expect(p.score).toBe(RISK[id]);
     expect(p.band).toBe(s.expected);
   });
-
   it("is reproducible and records its versions", () => {
-    const a = computePriority(scenarios[0]);
-    expect(computePriority(scenarios[0])).toEqual(a);
-    expect(a.model).toBe("priority-v1");
-    expect(a.weightsVersion).toBe("weights-v1");
+    const a = computePriority(data.risks[0]);
+    expect(computePriority(data.risks[0])).toEqual(a);
+    expect([a.model, a.weightsVersion]).toEqual(["priority-v2", "weights-v2"]);
   });
+  it("treats overdue as maximally urgent", () =>
+    expect(computePriority({ ...data.risks[0], hoursToImpact: -5 }).factors.urgency).toBe(1));
+  it("C4 (S14) stays P2 even with its compliance exposure (Eran, 2026-10-04)", () =>
+    expect(computePriority(data.risks.find((s) => s.id === "S14")!).band).toBe("P2"));
+});
 
-  it("treats overdue as maximally urgent", () => {
-    expect(computePriority({ ...scenarios[0], hoursToImpact: -5 }).factors.urgency).toBe(1);
+describe("priority-v2-local (scope-relative)", () => {
+  const withLocal = data.risks.filter((s) => s.local);
+  it.each(withLocal.map((s) => [s.id, s] as const))("%s local score and band", (id, s) => {
+    const p = computeLocalPriority(s, s.local!);
+    expect(p.score).toBe(LOCAL[id]);
+    expect(p.band).toBe(s.local!.expected);
+  });
+  it("S09 shrinkage is P3 for the group but higher (P2) for the store manager", () => {
+    const s = data.risks.find((x) => x.id === "S09")!;
+    expect(computePriority(s).band).toBe("P3");
+    expect(computeLocalPriority(s, s.local!).band).toBe("P2");
+  });
+});
+
+describe("opportunity-v1 golden fixtures (separate workstream)", () => {
+  it.each(data.opportunities.map((o) => [o.id, o] as const))("%s keeps its calibrated score and band", (id, o) => {
+    const p = computeOpportunity(o);
+    expect(p.score).toBe(OPP[id]);
+    expect(p.band).toBe(o.expected);
   });
 });
