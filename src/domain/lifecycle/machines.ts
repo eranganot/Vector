@@ -13,6 +13,8 @@ export type ActionState =
   "proposed" | "pending_approval" | "rejected" | "ready" | "executing" | "executed" | "failed" | "cancelled";
 export type ApprovalState = "requested" | "granted" | "denied" | "expired" | "withdrawn" | "lapsed";
 export type OutcomeState = "observing" | "evaluated" | "reviewed";
+export type CommitmentState = "open" | "overdue" | "done" | "cancelled";
+export type ConflictState = "open" | "resolved";
 
 export const INSIGHT: Row<InsightState, string>[] = [
   { id: "I1", from: "∅", command: "create", to: "open" },
@@ -71,12 +73,32 @@ export const OUTCOME: Row<OutcomeState, string>[] = [
   { id: "O3", from: "evaluated", command: "review", to: "reviewed" },
 ];
 
+/** Phase 4 (domain-model.md §4.6). */
+export const COMMITMENT: Row<CommitmentState, string>[] = [
+  { id: "C1", from: "∅", command: "record", to: "open" },
+  { id: "C2", from: "open", command: "complete", to: "done" },
+  { id: "C3", from: "open", command: "mark_overdue", to: "overdue" },
+  { id: "C4", from: "overdue", command: "complete", to: "done" },
+  { id: "C5", from: "open", command: "renegotiate", to: "open" },
+  { id: "C5", from: "overdue", command: "renegotiate", to: "open" },
+  { id: "C6", from: "open", command: "cancel", to: "cancelled" },
+  { id: "C6", from: "overdue", command: "cancel", to: "cancelled" },
+];
+
+/** Phase 4 (domain-model.md §4.7). */
+export const CONFLICT: Row<ConflictState, string>[] = [
+  { id: "K1", from: "∅", command: "detect", to: "open" },
+  { id: "K2", from: "open", command: "resolve", to: "resolved" },
+];
+
 export const MACHINES = {
   insight: INSIGHT,
   decision: DECISION,
   action: ACTION,
   approval: APPROVAL,
   outcome: OUTCOME,
+  commitment: COMMITMENT,
+  conflict: CONFLICT,
 } as const;
 export type MachineName = keyof typeof MACHINES;
 

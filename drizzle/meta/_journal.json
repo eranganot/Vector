@@ -43,6 +43,13 @@
       "when": 1791134199649,
       "tag": "0005_role_assignment_head",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791144972825,
+      "tag": "0006_commitments_dependencies_conflicts",
+      "breakpoints": true
     }
   ]
 }

@@ -5,18 +5,19 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Shipped
 
-| Date       | What                                                                                                  | PR      |
-| ---------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| 2026-10-04 | Phase 0 foundation; close-out                                                                         | #1, #2  |
-| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                    | #3, #4  |
-| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI   | #5–#9   |
-| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492) | #10     |
-| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme    | #11     |
-| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)    | #13–#15 |
-| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                             | #16     |
-| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU   | #17     |
-| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf               | #18     |
-| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                           | #21     |
+| Date       | What                                                                                                     | PR       |
+| ---------- | -------------------------------------------------------------------------------------------------------- | -------- |
+| 2026-10-04 | Phase 0 foundation; close-out                                                                            | #1, #2   |
+| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                       | #3, #4   |
+| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI      | #5–#9    |
+| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492)    | #10      |
+| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme       | #11      |
+| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)       | #13–#15  |
+| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                                | #16      |
+| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU      | #17      |
+| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf                  | #18      |
+| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                              | #21      |
+| 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor) | #23, #24 |
 
 ## Root-cause records
 
