@@ -15,7 +15,7 @@ One TypeScript codebase deployed as one service:
 - Next.js App Router (React Server Components) for UI and thin route handlers.
 - A framework-free domain core (`src/domain`) holding state machines, policy and priority; an application
   layer (`src/application`) of commands/queries that authorize and audit inside DB transactions.
-- PostgreSQL 16 via Drizzle ORM with SQL migrations in git.
+- PostgreSQL (18 on Railway, CI and Compose) via Drizzle ORM with SQL migrations in git.
 - Better Auth for authentication (Phase 2); authorization is our own policy module.
 - Vitest (unit + real-Postgres integration) and Playwright (E2E).
 - Layer boundaries enforced by ESLint `no-restricted-imports`.

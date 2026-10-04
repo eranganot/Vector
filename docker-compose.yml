@@ -1,7 +1,7 @@
 # Local development database. Production/dev/demo use Railway Postgres.
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: vector
       POSTGRES_PASSWORD: vector
@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - vector-pg:/var/lib/postgresql/data
+      - vector-pg:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vector"]
       interval: 2s
