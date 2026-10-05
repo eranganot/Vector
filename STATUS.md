@@ -25,9 +25,23 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                   | #29      |
 | 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates | #30      |
 | 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)    | #31      |
-| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` merged into `demo`)                              | —        |
+| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` 0ecc8e1 merged into `demo` as e8ff6ab)           | —        |
+| 2026-10-05 | Prod verified at e8ff6ab: health ok, migrations 8/8, seed p4-v1; smoke 11/11; CEO persona sign-in and home   | —        |
+| 2026-10-05 | Phase 5 (AI intelligence) parked by Eran; no Phase 5 work until he resumes it                                | —        |
 
 ## Root-cause records
+
+### 2026-10-05 · CI `verify` failed on `main` at 0776804 (ship-rules commit to CLAUDE.md)
+
+- **Symptom:** run 37279180356 on `main` failed at `pnpm format:check`; every later step was skipped. Dev still deployed
+  0776804 (Railway does not wait for CI on Dev), so the failure was silent there.
+- **Proven cause:** the new "Ship rules" section in `CLAUDE.md` had no blank line after its heading and no final newline;
+  `prettier --check CLAUDE.md` failed locally and passes after `prettier --write` (the only change).
+- **Ruled out:** the 165 files a Windows checkout flags locally: CRLF line endings from `core.autocrlf=true` only
+  (`prettier --check --end-of-line auto .` passes; CI on Linux passed them at d91c9f9).
+- **Why silent:** the commit was made without running the repo checks (docs only, assumed safe).
+- **Fix:** formatted in 0ecc8e1 (CI green). Lesson: run `pnpm format:check` (with `--end-of-line auto` on Windows) before
+  every commit, docs included.
 
 ### 2026-10-05 · Whoever amended an action could approve the revision they wrote (AZ-2 gap; found while building Amend, P4e)
 

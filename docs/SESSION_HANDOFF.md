@@ -1,14 +1,15 @@
 # Session handoff
 
-_Last updated: 2026-10-05 (11:10)_
+_Last updated: 2026-10-05 (11:50)_
 
 ## Current phase
 
-**Phase 4, Operational Intelligence: signed off (G-P4, 2026-10-05 11:06); Prod promoted to Phase 4. Next: Phase 5.**
+**Phase 4, Operational Intelligence: signed off (G-P4, 2026-10-05 11:06); Prod promoted to Phase 4. Phase 5 parked by Eran.**
 
 - Phase 4 was signed off (G-P4), including G-P4a (#30, #31) and the G4-Q choices (Q1–Q5).
 - **Prod** (`demo` branch): promoted by merging `main` into `demo` (no force). The boot runs migrations 0006 and 0007
-  and the `p4-v1` reseed. Verification is recorded in STATUS.md.
+  and the `p4-v1` reseed. Prod at e8ff6ab: health ok, migrations 8/8, seed p4-v1, smoke 11/11, CEO persona sign-in.
+  Not run on Prod: doctor's database checks (Prod Postgres has no public address) and e2e (it resets the demo).
 - **Dev** (`main`) runs the same code. Seed `p4-v1` (20 commitments, 14 dependencies).
 
 ## Objective
@@ -65,7 +66,8 @@ lessons (docs/phases/PHASE_4.md).
 
 ## Open decisions (for Eran)
 
-- The AI provider (Claude vs Gemini), key, spend cap and eval thresholds, at the Phase 5 gate.
+- Phase 5 is **parked** (Eran, 2026-10-05). When resumed: the AI provider (Claude vs Gemini), key, spend cap and eval
+  thresholds, at its gate.
 
 ## Known limitations / deliberate deferrals
 
@@ -82,7 +84,7 @@ lessons (docs/phases/PHASE_4.md).
 
 ## Next recommended action
 
-1. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
+1. Phase 5 (AI intelligence) is parked; nothing to start until Eran resumes it. When resumed, it needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
    the reader's language (ADR-007, consequences).
 
 ## Reproducible commands
