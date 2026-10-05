@@ -25,6 +25,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                   | #29      |
 | 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates | #30      |
 | 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)    | #31      |
+| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` merged into `demo`)                              | —        |
 
 ## Root-cause records
 

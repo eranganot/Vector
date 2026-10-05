@@ -1,14 +1,15 @@
 # Session handoff
 
-_Last updated: 2026-10-05 (night)_
+_Last updated: 2026-10-05 (11:10)_
 
 ## Current phase
 
-**Phase 4, Operational Intelligence: built and verified on Dev; awaiting Eran's Phase 4 gate.**
+**Phase 4, Operational Intelligence: signed off (G-P4, 2026-10-05 11:06); Prod promoted to Phase 4. Next: Phase 5.**
 
-- Phase 3 was signed off (G-P3, 2026-10-04 22:49) and Prod was promoted to it.
-- **Prod** (`demo` branch) is at **d5f15db**: the Phase 3 code, identical to `main` at 687dbe0.
-- **Dev** (`main`) runs Phase 4. Seed `p4-v1` (20 commitments, 14 dependencies) reseeded on boot.
+- Phase 4 was signed off (G-P4), including G-P4a (#30, #31) and the G4-Q choices (Q1–Q5).
+- **Prod** (`demo` branch): promoted by merging `main` into `demo` (no force). The boot runs migrations 0006 and 0007
+  and the `p4-v1` reseed. Verification is recorded in STATUS.md.
+- **Dev** (`main`) runs the same code. Seed `p4-v1` (20 commitments, 14 dependencies).
 
 ## Objective
 
@@ -64,14 +65,7 @@ lessons (docs/phases/PHASE_4.md).
 
 ## Open decisions (for Eran)
 
-- **The Phase 4 gate**, with choices Q1–Q4 to confirm:
-  - Q1: who decides a conflict;
-  - Q2: when an overdue commitment becomes an insight;
-  - Q3: moving a date without approval;
-  - Q4: dependency status is derived.
-- **Q5:** allow amending after a denial? This changes the approved lifecycle and is not built.
-- **Promotion of Phase 4 to Prod** after sign-off. The promotion runs migration 0006 and the `p4-v1` reseed.
-- The AI provider (Claude vs Gemini), at the Phase 5 gate.
+- The AI provider (Claude vs Gemini), key, spend cap and eval thresholds, at the Phase 5 gate.
 
 ## Known limitations / deliberate deferrals
 
@@ -88,9 +82,7 @@ lessons (docs/phases/PHASE_4.md).
 
 ## Next recommended action
 
-1. Eran: the Phase 4 demo on Dev (docs/phases/PHASE_4.md, "Demo scenario"), then the gate (confirm Q1–Q4, decide Q5).
-2. After sign-off: promote to Prod by merging `main` into `demo` (no force), then verify with smoke, doctor, e2e and a persona sign-in.
-3. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
+1. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
    the reader's language (ADR-007, consequences).
 
 ## Reproducible commands

@@ -31,6 +31,7 @@ Report in five lines before working (session-kickoff skill).
 - Playwright: set `PW_CHROMIUM_PATH` to the preinstalled Chromium under `/opt/pw-browsers` instead of downloading browsers.
 
 ## Ship rules (added by setup-claude-local.ps1)
+
 - Read STATUS.md first; update it last.
 - Before commit: run the repo's checks (see the ship-it skill / README). Never commit failing typecheck or tests.
 - Commit messages via git commit -F <file> written WITHOUT a BOM. One commit per round; check git log -1 so a re-run never duplicates a commit.
