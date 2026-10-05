@@ -3,6 +3,9 @@
  * days that elapse (so outcomes depend on what was actually decided and executed), runs the clock
  * jobs, the outcome evaluator and the detector, and resets the demo into a fresh organization epoch.
  */
+import { CATALOG } from "@/infra/seed/catalog";
+import { runCommitmentMonitor } from "./commands/commitments";
+import { seedCommitments } from "./commitments-seed";
 import { and, eq, inArray } from "drizzle-orm";
 import { addDays } from "@/domain/calendar";
 import { DomainError } from "@/domain/errors";
@@ -111,7 +114,8 @@ export async function advanceClock(db: Db, actor: Actor, hours: number) {
   await executeReadyActions(after);
   const outcomes = await evaluateDueOutcomes(after);
   const detections = dayOf(from) !== dayOf(to) ? await runDetector(after) : [];
-  return { from, to, generated, clock, outcomes, detections };
+  const commitments = await runCommitmentMonitor(after);
+  return { from, to, generated, clock, outcomes, detections, commitments };
 }
 
 /**
@@ -123,7 +127,10 @@ export async function bootstrapEpoch(db: Db, password: string) {
   const ctx = await createContext(db, { orgId: r.orgId });
   const detections = await runDetector(ctx);
   const catalog = await seedCatalog(await createContext(db, { orgId: r.orgId }));
-  return { orgId: r.orgId, detections, catalog };
+  // Phase 4: the commitment register and dependency graph; catalog stories link to their commitments.
+  const catalogIds = new Map(CATALOG.map((c, i) => [c.id, catalog[i].insightId]));
+  const commitments = await seedCommitments(await createContext(db, { orgId: r.orgId }), catalogIds);
+  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor };
 }
 
 /** Starts a fresh demo epoch (new organization; history of the old one stays intact). */

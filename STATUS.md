@@ -5,20 +5,59 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Shipped
 
-| Date       | What                                                                                                  | PR      |
-| ---------- | ----------------------------------------------------------------------------------------------------- | ------- |
-| 2026-10-04 | Phase 0 foundation; close-out                                                                         | #1, #2  |
-| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                    | #3, #4  |
-| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI   | #5–#9   |
-| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492) | #10     |
-| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme    | #11     |
-| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)    | #13–#15 |
-| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                             | #16     |
-| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU   | #17     |
-| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf               | #18     |
-| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                           | #21     |
+| Date       | What                                                                                                         | PR       |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | -------- |
+| 2026-10-04 | Phase 0 foundation; close-out                                                                                | #1, #2   |
+| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                           | #3, #4   |
+| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI          | #5–#9    |
+| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492)        | #10      |
+| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme           | #11      |
+| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)           | #13–#15  |
+| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                                    | #16      |
+| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU          | #17      |
+| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf                      | #18      |
+| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                                  | #21      |
+| 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor)     | #23, #24 |
+| 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces        | #25      |
+| 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                        | #26      |
+| 2026-10-05 | P4f: Actions & outcomes tracker, lessons library, "Last time we did this"                                    | #27      |
+| 2026-10-05 | P4g: scoped audit explorer; audit entity ids always UUIDs on refusal paths                                   | #28      |
+| 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                   | #29      |
+| 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates | #30      |
+| 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)    | #31      |
+| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` merged into `demo`)                              | —        |
 
 ## Root-cause records
+
+### 2026-10-05 · Whoever amended an action could approve the revision they wrote (AZ-2 gap; found while building Amend, P4e)
+
+- **Symptom:** Yossi amended "Weekend staffing uplift" (₪54k → ₪40k, revision 2); the revision-2 approval request
+  was routed to Yossi himself, and the grant command would have accepted his approval.
+- **Proven cause:** AZ-2 compares the approver with the action's `proposed_by` and owner. `amendAction` bumped the
+  revision but left `proposed_by` at the original proposer (`system:detector`), so the author of the new revision was
+  neither "proposer" nor owner. Observed in the database (rev 2 `requested`, `proposed_by = system:detector`) and in
+  Yossi's inbox; reproduced by a failing integration test.
+- **Why it was silent:** amendments existed only in the application layer (Phase 2) and its tests had the amender
+  approve nothing afterwards; Phase 4 put Amend in the UI.
+- **Ruled out:** routing alone (the grant command itself accepted him: AZ-2 had nothing to compare); the owner check
+  (Shira, the owner, was correctly excluded).
+- **Fix:** amending makes the amender the proposer of the new revision (`proposed_by` updated, old and new value in the
+  audit event), so AZ-2 excludes them from routing and from granting. Test: `lifecycle.test.ts` "AZ-2: whoever amends";
+  e2e "approval workflow".
+- **Unrelated, noted:** `lifecycle.test.ts` "§5.2" depends on the earlier tests in its file (fails when run alone, with
+  or without this change); the whole file passes.
+
+### 2026-10-04 · The deciding unit could not see the plan its own collides with (caught by a new test before shipping, P4d)
+
+- **Symptom:** in the integration test "an insight's trace shows the plans behind it", Michal (Finance, who decides the
+  R7 conflict) saw only Finance's spend freeze, not Marketing's ₪350k campaign it collides with.
+- **Proven cause:** a commitment's `visible_unit_ids` covered its owner and beneficiaries (and their ancestors) only.
+  Marketing's campaign is owed to Trade & Commercial and Store Operations, not to Finance, so the read filter
+  (`canRead`) correctly hid it from Finance. Nothing widened visibility when a conflict paired the two.
+- **Ruled out:** the trace query only (it was also building from position-relative lists, fixed too, but the commitment
+  was unreadable for Finance at the source); a scope bug in `canRead` (it behaved as specified).
+- **Fix:** when a conflict is detected (K1), each side becomes visible to the other side's unit, in the same audited
+  transaction; the trace uses every commitment the viewer may read. Test: `tests/integration/phase4.test.ts`.
 
 ### 2026-10-04 · Prod: persona sign-in failed ("Persona sign-in failed: check SEED_USER_PASSWORD") after the secrets were rotated
 

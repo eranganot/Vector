@@ -60,7 +60,15 @@ an insight lists departments among its affected units, and names the department 
 Every mutable row also carries `version` (incremented on each change). Simulated executor output lives in `task` and
 `outbox_message` (D7), and the demo clock in `demo_clock` (one row per organization).
 
-Later phases add `Commitment` and `Dependency` (P4), `AiGeneration` (P5), `ExternalItem` (P6).
+Phase 4 adds (docs/phases/PHASE_4.md):
+
+| Entity       | What it is                                                   | Key fields                                                                                                                                                                                                                                                                    | Lifecycle     |
+| ------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| `Commitment` | A promise by a unit, owned by a person, to deliver by a date | title, owner_user_id, owner_unit_id, beneficiary_unit_ids[], source, made_at, due_at, impact_ils (per week if late), compliance (0–1), effects[] ({resource, effect, window_start, window_end}), insight_id, completed_at, history (renegotiations), visible_unit_ids, status | State machine |
+| `Dependency` | A unit needs a commitment by a date                          | commitment_id (upstream), downstream_unit_id, downstream_commitment_id (optional: the downstream promise that relies on it), need_by, impact_ils, note. **Status is derived, never stored** (Q4): `met`, `waiting`, `at_risk`, `blocked`                                      | Derived       |
+| `Conflict`   | Two commitments whose effects collide                        | commitment_a_id, commitment_b_id, rule (`conflict-rules-v1` pair), resource, overlap_start, overlap_end, insight_id, status (`open`, `resolved`), resolved_reason                                                                                                             | State machine |
+
+Later phases add `AiGeneration` (P5) and `ExternalItem` (P6).
 
 ## 3. Rules that hold everywhere
 
@@ -242,8 +250,32 @@ Verdict rule (deterministic, P2): compare the mean of the metric over the window
 if ≥ 50% of it; `did_not_work` otherwise; `inconclusive` if data coverage < 80% of window days.
 
 **Learning (D6)** in Phase 2 = outcome verdicts and human lessons, stored on the outcome and in the audit trail.
-Querying them per action type, and AI-proposed adjustments to priority weights and playbooks (themselves approved
+Phase 4 queries them per action type ("Last time we did this" on traces, the lessons library on /actions). AI-proposed adjustments to priority weights and playbooks (themselves approved
 through this same Approval mechanism), arrive in Phases 4–5.
+
+### 4.6 Commitment (Phase 4)
+
+| #   | From → To                  | Command                 | Actor                                         | Guard                                                                                                       | Audit                                                                |
+| --- | -------------------------- | ----------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| C1  | ∅ → open                   | `recordCommitment`      | `commitment.record` over owner unit           | due_at in the future; owner holds a role in the owner unit's subtree; effects have resource, effect, window | `commitment.recorded`; then the conflict detector runs               |
+| C2  | open → done                | `completeCommitment`    | owner, or `commitment.update` over owner unit | —                                                                                                           | `commitment.completed`                                               |
+| C3  | open → overdue             | `runCommitmentMonitor`  | `system:detector`                             | due_at < now (`commitment-monitor-v1`)                                                                      | `commitment.overdue`; an insight when the escalation rule holds (Q2) |
+| C4  | overdue → done             | `completeCommitment`    | as C2                                         | —                                                                                                           | `commitment.completed` (late: true)                                  |
+| C5  | open / overdue → open      | `renegotiateCommitment` | as C2                                         | new due_at in the future; rationale required (Q3); dependents notified                                      | `commitment.renegotiated` (old and new due date)                     |
+| C6  | open / overdue → cancelled | `cancelCommitment`      | as C2                                         | rationale required                                                                                          | `commitment.cancelled`                                               |
+
+Overdue becomes an insight (Q2) only with dependents, ≥ ₪10k/week at stake, or compliance ≥ 0.6.
+
+### 4.7 Conflict (Phase 4)
+
+| #   | From → To               | Command                                         | Actor             | Guard                                                                                                     | Audit                                                                                                   |
+| --- | ----------------------- | ----------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| K1  | ∅ → open                | conflict detector (after C1, C5)                | `system:detector` | both open/overdue, different owner units, same resource, overlapping windows, opposing effects (rules v1) | `conflict.detected`; each side becomes visible to the other side's unit                                 |
+| K2  | open → resolved         | after C5/C6 on either side, or insight resolved | `system:detector` | the pair no longer collides, or the conflict's insight is resolved/dismissed                              | `conflict.resolved`                                                                                     |
+| K3  | open → open (escalated) | `escalateConflicts` (in the commitment monitor) | `system:detector` | decision still `recommended` 48 h after detection or 2 days before the overlap (Q1)                       | `conflict.escalated`, `insight.escalated`: the deciding unit becomes the two owners' lowest common unit |
+
+Opposing effects (`conflict-rules-v1`): promote × delist, spend × freeze_spend, cutover × peak_trading. The conflict's
+insight is decided by the manager of the unit whose commitment came second; undecided, it escalates to the two units' common manager (Q1, Eran 2026-10-05).
 
 ## 5. Mapping to the charter's ten questions
 
@@ -255,7 +287,7 @@ through this same Approval mechanism), arrive in Phases 4–5.
 | How important is it?                  | priority_score / band + breakdown (plus local priority for managers) |
 | What should we do?                    | Decision (recommended) + proposed Actions                            |
 | Who should act?                       | Action.owner_user_id                                                 |
-| What dependencies or approvals exist? | Action.approval_requirement + Approval (P4: Dependency)              |
+| What dependencies or approvals exist? | Action.approval_requirement + Approval; Dependency + Commitment (P4) |
 | What happened after the action?       | Outcome.observed                                                     |
 | Did it work?                          | Outcome.verdict                                                      |
 | What should we learn?                 | Outcome.lesson (P2), approved weight/playbook adjustments (P4–5)     |

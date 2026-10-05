@@ -9,3 +9,5 @@ test-results/
 tsconfig.tsbuildinfo
 next-env.d.ts
 .scratch/
+
+.claude/settings.local.json

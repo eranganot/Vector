@@ -5,18 +5,38 @@
 import { verifyAuditChain } from "./audit";
 import {
   acceptDecision,
+  acknowledgeInsight,
+  amendAction,
+  cancelAction,
   declineDecision,
   denyApproval,
+  dismissInsight,
   executeReadyActions,
   grantApproval,
+  retryAction,
 } from "./commands/lifecycle";
+import { unitsByIds } from "./commands/shared";
+import { authorizeUser } from "@/domain/policy/authorize";
+import type { Capability } from "@/domain/policy/permissions";
 import { reviewOutcome } from "./commands/outcomes";
+import {
+  cancelCommitment,
+  completeCommitment,
+  recordCommitment,
+  type RecordCommitmentInput,
+  renegotiateCommitment,
+} from "./commands/commitments";
+import { commitmentFormOptions, commitmentsForInsight, commitmentsView } from "./queries/commitments";
+import { type ActionFilter, actionsView, lessonsForInsight, outcomesView } from "./queries/actions";
+import { type AuditFilter, auditExplorer } from "./queries/audit";
+import type { CommitmentEffect } from "@/domain/commitments";
 import { activeOrgId, createContext, loadUserActor } from "./context";
 import {
   canDecide,
   getInsightTrace,
   listInsights,
   listMyActions,
+  listMyApprovalHistory,
   listMyApprovals,
   listMyDecisions,
 } from "./queries/insights";
@@ -91,10 +111,50 @@ export const api = {
   },
   deny: async (a: Actor, actionId: string, rationale: string) => denyApproval(await ctx(), a, actionId, rationale),
   review: async (a: Actor, outcomeId: string, lesson: string) => reviewOutcome(await ctx(), a, outcomeId, { lesson }),
+  commitments: async (a: Actor, unitId?: string) => commitmentsView(db(), await activeOrgId(db()), a, unitId),
+  commitmentsForInsight: async (a: Actor, insightId: string) =>
+    commitmentsForInsight(db(), await activeOrgId(db()), a, insightId),
+  commitmentFormOptions: async (a: Actor) => commitmentFormOptions(db(), await activeOrgId(db()), a),
+  recordCommitment: async (a: Actor, input: RecordCommitmentInput) => recordCommitment(await ctx(), a, input),
+  completeCommitment: async (a: Actor, id: string) => completeCommitment(await ctx(), a, id),
+  renegotiateCommitment: async (
+    a: Actor,
+    id: string,
+    input: { dueAt: Date; rationale: string; effects?: CommitmentEffect[] },
+  ) => renegotiateCommitment(await ctx(), a, id, input),
+  cancelCommitment: async (a: Actor, id: string, rationale: string) => cancelCommitment(await ctx(), a, id, rationale),
+  audit: async (a: Actor, f?: AuditFilter) => auditExplorer(db(), await activeOrgId(db()), a, f),
+  actions: async (a: Actor, filter?: ActionFilter, unitId?: string) =>
+    actionsView(db(), await activeOrgId(db()), a, filter, unitId),
+  outcomes: async (a: Actor, unitId?: string) => outcomesView(db(), await activeOrgId(db()), a, unitId),
+  lessonsFor: async (a: Actor, insightId: string) => lessonsForInsight(db(), await activeOrgId(db()), a, insightId),
+  approvalHistory: async (a: Actor) => listMyApprovalHistory(db(), await activeOrgId(db()), a),
+  /** Cosmetic (every command re-checks): may this person use this capability over these units? */
+  may: async (a: Actor, capability: Capability, unitIds: string[]) => {
+    if (a.kind !== "user") return false;
+    const units = await unitsByIds(db(), await activeOrgId(db()), unitIds);
+    return authorizeUser(a, capability, { targetUnits: units }).ok;
+  },
+  acknowledge: async (a: Actor, insightId: string) => acknowledgeInsight(await ctx(), a, insightId),
+  dismiss: async (a: Actor, insightId: string, rationale: string) =>
+    dismissInsight(await ctx(), a, insightId, rationale),
+  cancelAction: async (a: Actor, actionId: string, rationale: string) =>
+    cancelAction(await ctx(), a, actionId, rationale),
+  amendAction: async (a: Actor, actionId: string, estimatedCost: number, note?: string) => {
+    const c = await ctx();
+    await amendAction(c, a, actionId, { estimatedCost, ...(note ? { params: { amendNote: note } } : {}) });
+    await executeReadyActions(c); // an amendment that needs no approval goes straight to ready
+  },
+  retryAction: async (a: Actor, actionId: string) => {
+    const c = await ctx();
+    await retryAction(c, a, actionId);
+    await executeReadyActions(c);
+  },
   advanceClock: (a: Actor, hours: number) => advanceClock(db(), a, hours),
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
 export type { KpiStat, PerformanceView } from "./queries/performance";
 export { headlineFor } from "./queries/performance";
+export type { ActionFilter } from "./queries/actions";
 
 export { parseInput } from "./inputs";

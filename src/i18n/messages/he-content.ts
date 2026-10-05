@@ -1,0 +1,580 @@
+/**
+ * Hebrew for data (see ../content.ts). HE_CONTENT: exact strings (names, seeded texts). HE_TEMPLATES: sentences the
+ * system builds, with {placeholders} for the parts that vary; each captured part is translated in turn. Lists joined
+ * with " · " or " × " are translated part by part. Codes (AP-1, sku-set:…, catalog:R3) are never translated.
+ */
+export const HE_CONTENT: Record<string, string> = {
+  // ── Organization
+  "VECTOR Retail Group": "קבוצת VECTOR קמעונאות",
+  North: "צפון",
+  Coast: "שרון והחוף",
+  Center: "מרכז",
+  Jerusalem: "ירושלים",
+  South: "דרום",
+  "Trade & Commercial": "סחר ומסחר",
+  Marketing: "שיווק",
+  "Supply Chain": "שרשרת אספקה",
+  "Store Operations": "תפעול סניפים",
+  Finance: "כספים",
+  HR: "משאבי אנוש",
+  IT: "מערכות מידע",
+  "Legal & Compliance": "משפטית ורגולציה",
+  "North DC": "מרלו״ג צפון",
+  "Center DC": "מרלו״ג מרכז",
+  "This branch": "הסניף הזה",
+  Departments: "מחלקות",
+  "Regions & branches": "אזורים וסניפים",
+  "Leadership & admin": "הנהלה וניהול מערכת",
+  // Branches
+  "Haifa Grand Canyon": "חיפה גרנד קניון",
+  "Haifa Downtown": "חיפה מרכז העיר",
+  Nazareth: "נצרת",
+  "Kiryat Ata": "קריית אתא",
+  Karmiel: "כרמיאל",
+  Akko: "עכו",
+  Nahariya: "נהריה",
+  Tiberias: "טבריה",
+  Afula: "עפולה",
+  "Kiryat Shmona": "קריית שמונה",
+  Yokneam: "יקנעם",
+  Safed: "צפת",
+  "Netanya Poleg": "נתניה פולג",
+  "Netanya Center": "נתניה מרכז",
+  Herzliya: "הרצליה",
+  Hadera: "חדרה",
+  "Kfar Saba": "כפר סבא",
+  "Ra'anana": "רעננה",
+  "Hod HaSharon": "הוד השרון",
+  "Zikhron Ya'akov": "זכרון יעקב",
+  "Or Akiva": "אור עקיבא",
+  "Pardes Hanna": "פרדס חנה",
+  Binyamina: "בנימינה",
+  "Kfar Yona": "כפר יונה",
+  "Tel Aviv Dizengoff": "תל אביב דיזנגוף",
+  "Ramat Gan Ayalon": "רמת גן איילון",
+  "Petah Tikva": "פתח תקווה",
+  "Tel Aviv Ramat Aviv": "תל אביב רמת אביב",
+  "Tel Aviv Florentin": "תל אביב פלורנטין",
+  Givatayim: "גבעתיים",
+  "Bnei Brak": "בני ברק",
+  Holon: "חולון",
+  "Bat Yam": "בת ים",
+  "Rishon LeZion": "ראשון לציון",
+  Rehovot: "רחובות",
+  "Modi'in": "מודיעין",
+  "Jerusalem Malha": "ירושלים מלחה",
+  "Jerusalem Talpiot": "ירושלים תלפיות",
+  "Jerusalem City Center": "ירושלים מרכז העיר",
+  "Jerusalem Gilo": "ירושלים גילה",
+  "Jerusalem Ramot": "ירושלים רמות",
+  "Jerusalem Pisgat Ze'ev": "ירושלים פסגת זאב",
+  "Jerusalem Baka": "ירושלים בקעה",
+  "Beit Shemesh": "בית שמש",
+  "Mevaseret Zion": "מבשרת ציון",
+  "Ma'ale Adumim": "מעלה אדומים",
+  "Givat Ze'ev": "גבעת זאב",
+  "Abu Ghosh": "אבו גוש",
+  "Be'er Sheva Grand": "באר שבע גרנד",
+  "Be'er Sheva Old City": "באר שבע העיר העתיקה",
+  Ashdod: "אשדוד",
+  Ashkelon: "אשקלון",
+  "Kiryat Gat": "קריית גת",
+  Sderot: "שדרות",
+  Netivot: "נתיבות",
+  Ofakim: "אופקים",
+  Dimona: "דימונה",
+  Arad: "ערד",
+  Yeruham: "ירוחם",
+  Eilat: "אילת",
+  // People
+  "Amir Klein": "אמיר קליין",
+  "Avi Mizrahi": "אבי מזרחי",
+  "Ben Shalom": "בן שלום",
+  "Dafna Mor": "דפנה מור",
+  "Dana Levi": "דנה לוי",
+  "Eitan Rosen": "איתן רוזן",
+  "Gil Peretz": "גיל פרץ",
+  "Hila Dahan": "הילה דהן",
+  "Lior Ben-Ami": "ליאור בן-עמי",
+  "Maya Azulay": "מאיה אזולאי",
+  "Michal Golan": "מיכל גולן",
+  "Noa Friedman": "נועה פרידמן",
+  "Omer Biton": "עומר ביטון",
+  "Rina Avraham": "רינה אברהם",
+  "Ronit Shapiro": "רונית שפירו",
+  "Shira Katz": "שירה כץ",
+  "Tal Ben-David": "טל בן-דוד",
+  "Yael Barak": "יעל ברק",
+  "Yossi Cohen": "יוסי כהן",
+  // Titles
+  CEO: "מנכ״ל",
+  CFO: "סמנכ״ל כספים",
+  CIO: "סמנכ״ל מערכות מידע",
+  "General Counsel": "יועץ/ת משפטי/ת ראשי/ת",
+  "Senior Legal Counsel": "יועץ/ת משפטי/ת בכיר/ה",
+  "Board observer": "משקיף/ה מטעם הדירקטוריון",
+  "Ops Admin": "מנהל/ת תפעול מערכת",
+  "System administrator": "מנהל/ת מערכת",
+  "VP HR": "סמנכ״ל/ית משאבי אנוש",
+  "VP Marketing": "סמנכ״ל/ית שיווק",
+  "VP Store Operations": "סמנכ״ל/ית תפעול סניפים",
+  "VP Supply Chain": "סמנכ״ל/ית שרשרת אספקה",
+  "VP Trade & Commercial": "סמנכ״ל/ית סחר ומסחר",
+  "Head of DC Operations, Supply Chain": "מנהל/ת תפעול מרלו״גים, שרשרת אספקה",
+  // KPIs
+  "Campaigns on schedule": "קמפיינים בזמן",
+  "Compliance items on time": "פריטי ציות בזמן",
+  "Customer NPS": "NPS לקוחות",
+  "DC deliveries on time": "משלוחי מרלו״ג בזמן",
+  "Gross margin": "רווח גולמי",
+  "Labor cost % of sales": "עלות עבודה כ-% מהמכירות",
+  "Mandatory training complete": "השלמת הדרכות חובה",
+  "Net sales": "מכירות נטו",
+  "On-shelf availability": "זמינות מדף",
+  "Open IT incidents": "תקלות IT פתוחות",
+  "Open store positions": "משרות פתוחות בסניפים",
+  "Operating spend vs budget": "הוצאה תפעולית מול תקציב",
+  "POS uptime": "זמינות קופות",
+  "Shrinkage % of sales": "פחת כ-% מהמכירות",
+  "Supplier fill rate": "שיעור אספקת ספקים",
+  Transactions: "עסקאות",
+  // Waiting labels, feed verbs, statuses that arrive as data
+  Executing: "בביצוע",
+  "Actions done; watching the outcome": "הפעולות הושלמו; עוקבים אחרי התוצאה",
+  Executed: "בוצעה",
+  Approved: "אושר",
+  Denied: "נדחה",
+  New: "חדש",
+  Decided: "הוחלט",
+  Declined: "נדחה",
+  Resolved: "נסגר",
+  "Re-prioritized": "תועדף מחדש",
+  "Needs approval again": "דורש אישור מחדש",
+  "Outcome measured": "התוצאה נמדדה",
+  "Stock is the cause": "המלאי הוא הסיבה",
+  "health & beauty": "טואלטיקה וקוסמטיקה",
+  "sms+email": "SMS ודוא״ל",
+  // Explanation phrases (domain/priority.ts)
+  "already happening": "כבר קורה",
+  overdue: "באיחור",
+  "one unit": "יחידה אחת",
+  "a few branches": "כמה סניפים",
+  "a whole region": "אזור שלם",
+  "company-wide": "בכל החברה",
+  "strong strategic fit": "התאמה אסטרטגית חזקה",
+  "a core KPI": "מדד ליבה",
+  "a strategic KPI": "מדד אסטרטגי",
+  "regulator-mandated": "חובה רגולטורית",
+  "legal deadline": "מועד חוקי",
+  "policy obligation": "חובת מדיניות",
+  "contract terms at stake": "תנאי חוזה בסיכון",
+  // Approval rules (names; the AP codes stay)
+  "External communication": "תקשורת חיצונית",
+  "Cross-region": "חוצה אזורים",
+  Cost: "עלות",
+  "Inventory transfer": "העברת מלאי",
+  "High priority": "עדיפות גבוהה",
+  "Staffing change": "שינוי כוח אדם",
+  "Legal and regulatory": "משפטי ורגולטורי",
+  // System reasons (audit trail, conflicts)
+  "a commitment was cancelled": "התחייבות בוטלה",
+  "loop closed: outcomes evaluated": "המעגל נסגר: התוצאות הוערכו",
+  "decision declined": "ההחלטה נדחתה",
+  "previous approval lapsed": "האישור הקודם פקע",
+  "policy requirement grew before execution": "דרישת המדיניות גדלה לפני הביצוע",
+  "action cancelled": "הפעולה בוטלה",
+  "action changed": "הפעולה שונתה",
+  "undecided 48 h after detection or 2 days before the overlap (Q1)":
+    "לא הוכרע 48 שעות אחרי הזיהוי או יומיים לפני החפיפה (Q1)",
+  // Domain errors shown as notices
+  "cancel the insight's in-flight actions before dismissing it": "בטלו את הפעולות שבביצוע לפני דחיית התובנה",
+  "the action changed after this approval was requested": "הפעולה שונתה אחרי שהאישור התבקש",
+  "a unit cannot depend on its own commitment": "יחידה אינה יכולה להיות תלויה בהתחייבות של עצמה",
+  "advance between 1 hour and 14 days": "קדמו בין שעה ל-14 ימים",
+  "an effect window needs a start and an end date, start ≤ end":
+    "לחלון השפעה נדרשים תאריך התחלה ותאריך סיום, התחלה ≤ סיום",
+  "impact ≥ 0, compliance 0–1": "השפעה ≥ 0, ציות 0–1",
+  "say what was promised (at least 5 characters)": "כתבו מה הובטח (לפחות 5 תווים)",
+  "the due date must be in the future": "תאריך היעד חייב להיות בעתיד",
+  "the new date must be in the future": "התאריך החדש חייב להיות בעתיד",
+  "the owner must work in the owning unit": "האחראי/ת חייב/ת לעבוד ביחידה האחראית",
+  "AD-1 does not allow an automatic decision here": "AD-1 אינו מתיר כאן החלטה אוטומטית",
+  "AZ-2: you cannot approve an action you own": "AZ-2: אי אפשר לאשר פעולה שבאחריותך",
+  "AZ-2: you cannot approve an action you proposed": "AZ-2: אי אפשר לאשר פעולה שהצעת",
+  "AZ-4: only a person can approve": "AZ-4: רק אדם יכול לאשר",
+  "demo controls are disabled in this environment": "בקרת ההדגמה כבויה בסביבה זו",
+  "no active organization; run the seed": "אין ארגון פעיל; הריצו את הזריעה",
+
+  // ── Seeded insights, recommendations and actions (scenario catalog)
+  "2-hour POS outage at Tel Aviv Dizengoff, already resolved": "תקלת קופות של שעתיים בתל אביב דיזנגוף, כבר נפתרה",
+  "300 m² unused at Petah Tikva: lease to a pop-up partner": "300 מ״ר לא מנוצלים בפתח תקווה: השכרה לשותף פופ-אפ",
+  "8 branches; Nazareth is already staffed": "8 סניפים; בנצרת כבר יש כוח אדם",
+  "A (synthetic) wage rule takes effect on 21 November. HR committed to publish updated pay tables by 17 October; compliance items on time fell to 80%.":
+    "תקנת שכר (סינתטית) נכנסת לתוקף ב-21 בנובמבר. משאבי אנוש התחייבו לפרסם טבלאות שכר מעודכנות עד 17 באוקטובר; פריטי הציות בזמן ירדו ל-80%.",
+  "A competing supermarket 600 m from Ramat Gan Ayalon announced it will close on 12 November.":
+    "סופרמרקט מתחרה במרחק 600 מ׳ מרמת גן איילון הודיע שייסגר ב-12 בנובמבר.",
+  "A cut-over during peak trading puts about ₪400k per week of sales at risk, plus payment reconciliation work for Finance.":
+    "מעבר מערכת בשיא המכירות מסכן כ-₪400k מכירות בשבוע, ועוד עבודת התאמת תשלומים לכספים.",
+  "A dairy supplier recalled batch 4471 of a chilled dessert after a lab finding. The batch was delivered to all 60 branches between 18 and 21 October.":
+    "ספק חלב ריקל את אצווה 4471 של קינוח מצונן בעקבות ממצא מעבדה. האצווה סופקה לכל 60 הסניפים בין 18 ל-21 באוקטובר.",
+  "A key dairy supplier notified a 7% cost increase on 120 SKUs from 1 November. Marketing's November promotion covers 30 of those SKUs at the old cost.":
+    "ספק חלב מרכזי הודיע על העלאת מחיר של 7% על 120 פריטים מ-1 בנובמבר. מבצע נובמבר של השיווק כולל 30 מהם במחיר הישן.",
+  "A late promise with people waiting on it is cheaper to fix now than after their deadlines pass.":
+    "הבטחה מאחרת שאחרים ממתינים לה זולה יותר לתיקון עכשיו מאשר אחרי שהמועדים שלהם יעברו.",
+  "A partial set on time beats a full set late; co-funding needs in-store execution on day one.":
+    "סט חלקי בזמן עדיף על סט מלא באיחור; מימון משותף מחייב ביצוע בחנות מהיום הראשון.",
+  "A pop-up lease would bring about ₪6k per week. Low urgency; worth keeping in view.":
+    "השכרת פופ-אפ תכניס כ-₪6k בשבוע. דחיפות נמוכה; כדאי לעקוב.",
+  "A snacks supplier offers two categories at 25% off for a ₪200k volume commitment.":
+    "ספק חטיפים מציע שתי קטגוריות ב-25% הנחה תמורת התחייבות לכמות של ₪200k.",
+  "A space review found 300 m² of unused floor space at Petah Tikva since the pharmacy moved out.":
+    "סקר שטחים מצא 300 מ״ר לא מנוצלים בפתח תקווה מאז שבית המרקחת עזב.",
+  "About ₪15k per week of repeat visits at risk if it persists.": "כ-₪15k בשבוע של ביקורים חוזרים בסיכון אם זה יימשך.",
+  "About ₪40k per week is being lost. Evidence handling may involve the police.":
+    "כ-₪40k בשבוע הולכים לאיבוד. הטיפול בראיות עשוי לערב את המשטרה.",
+  "About ₪450k of weekly sales is at stake within 24 hours, including promo items Marketing is advertising this week.":
+    "כ-₪450k ממכירות השבוע בסיכון בתוך 24 שעות, כולל פריטי מבצע שהשיווק מפרסם השבוע.",
+  "About ₪60k of extra margin if it sells through within six weeks; it ties up cash and storage.":
+    "כ-₪60k רווח נוסף אם יימכר תוך שישה שבועות; זה מרתק מזומנים ושטח אחסון.",
+  "About ₪80k of promo spend on items that will be gone, and empty promo shelf space.":
+    "כ-₪80k הוצאת מבצע על פריטים שייעלמו, ושטח מדף מבצע ריק.",
+  "About ₪8k of sales was lost and needs reconciling. Unusual, but resolved.":
+    "כ-₪8k מכירות אבדו ודורשים התאמה. חריג, אבל נפתר.",
+  "About ₪90k per week over the labor budget. Rosters have not been updated since the summer schedule.":
+    "כ-₪90k בשבוע מעל תקציב כוח האדם. סידורי העבודה לא עודכנו מאז לוח הקיץ.",
+  "Accept half the volume and pair it with a sell-through promotion": "לקבל חצי מהכמות ולשלב מבצע למכירתה",
+  "Add evening pickup slots in the ordering system": "הוספת חלונות איסוף ערב במערכת ההזמנות",
+  "Add security staff in the evening shift and audit health & beauty stock":
+    "תגבור אבטחה במשמרת הערב וספירת מלאי טואלטיקה וקוסמטיקה",
+  "Afternoon staff uplift during the heatwave": "תגבור כוח אדם אחר הצהריים בגל החום",
+  "Agree the response to Dairy Co.'s +7% price increase": "סיכום התגובה להעלאת המחיר של 7%+ של חברת החלב",
+  "Agree. Holiday weekend is the priority.": "מסכים/ה. סוף שבוע החג בעדיפות.",
+  "Ask Legal to draft a short-term lease template and shortlist partners":
+    "לבקש מהמחלקה המשפטית טיוטת חוזה שכירות קצר ורשימת שותפים",
+  "Autumn rosters for 12 Center branches": "סידורי סתיו ל-12 סניפי המרכז",
+  "Block the SKU at every POS (IT executes for Supply Chain)":
+    "חסימת הפריט בכל הקופות (מערכות מידע מבצעים עבור שרשרת אספקה)",
+  "Book POS training for the 5 pilot branches": "תיאום הדרכת קופות ל-5 סניפי הפיילוט",
+  "Brief North and Center branch managers on revised delivery times":
+    "עדכון מנהלי סניפי הצפון והמרכז על זמני האספקה המעודכנים",
+  "Brief the CEO: recall under way, regulator notified": "עדכון המנכ״ל: הריקול בתהליך, הרגולטור עודכן",
+  "Buy ₪100k of the offer (half volume)": "רכישת ₪100k מההצעה (חצי מהכמות)",
+  "Campaigns on schedule vs. target": "קמפיינים בזמן מול יעד",
+  "Cheap to prepare; no rush.": "זול להכין; אין דחיפות.",
+  "Click-and-collect orders +40% in Center: add pickup capacity before the holiday":
+    "הזמנות איסוף עצמי +40% במרכז: להוסיף קיבולת איסוף לפני החג",
+  "Click-and-collect orders in Center are up 40% for four weeks; evening slots sell out by noon.":
+    "הזמנות האיסוף העצמי במרכז עלו ב-40% במשך ארבעה שבועות; חלונות הערב נגמרים עד הצהריים.",
+  "Coast promotion on 14 slow-moving items": "מבצע בשרון והחוף על 14 פריטים איטיים",
+  "Comparable heatwaves lifted beverage and ice-cream sales about ₪150k across the eight branches.":
+    "גלי חום דומים העלו את מכירות המשקאות והגלידה בכ-₪150k בשמונת הסניפים.",
+  "Competitor store near Ramat Gan Ayalon closes in 3 weeks": "חנות מתחרה ליד רמת גן איילון נסגרת בעוד 3 שבועות",
+  "Compliance items on time vs. target": "פריטי ציות בזמן מול יעד",
+  "Compliant holiday rosters for 60 branches": "סידורי חג תואמי חוק ל-60 סניפים",
+  "Customer NPS at Tel Aviv Dizengoff 4 points below its range": "NPS הלקוחות בתל אביב דיזנגוף 4 נקודות מתחת לטווח",
+  "Customer NPS, Tel Aviv Dizengoff, vs. target": "NPS לקוחות, תל אביב דיזנגוף, מול יעד",
+  "DC deliveries on time vs. target": "משלוחי מרלו״ג בזמן מול יעד",
+  "Delist 14 slow items at 5 Coast branches": "הוצאת 14 פריטים איטיים מהמגוון ב-5 סניפי שרון והחוף",
+  "Delist 6 dairy items at South branches": "הוצאת 6 פריטי חלב מהמגוון בסניפי הדרום",
+  "Demand is proven; capacity is the constraint.": "הביקוש מוכח; הקיבולת היא המגבלה.",
+  "Emek Dairy (synthetic)": "מחלבת העמק (סינתטי)",
+  "Galil Dairies (synthetic)": "מחלבות הגליל (סינתטי)",
+  "Escalate to the agency and print a reduced asset set in-house for launch day":
+    "הסלמה מול סוכנות הפרסום והדפסת סט חומרים מצומצם בבית ליום ההשקה",
+  "Escalation to the creative agency: deliver by Friday 10:00": "הסלמה מול סוכנות הקריאייטיב: אספקה עד שישי 10:00",
+  "Evening security guard for 2 weeks": "מאבטח ערב לשבועיים",
+  "Extra beverage and ice-cream deliveries to 8 South branches": "משלוחי משקאות וגלידה נוספים ל-8 סניפי הדרום",
+  "Finance spend freeze vs. Marketing's committed ₪350k Q4 campaign":
+    "הקפאת ההוצאות של כספים מול קמפיין Q4 של השיווק בסך ₪350k שכבר התחייבו לו",
+  "Food-safety recall: chilled dessert batch off shelves in all 60 branches within 12 h":
+    "ריקול בטיחות מזון: אצוות הקינוח המצונן יורדת מהמדפים בכל 60 הסניפים בתוך 12 שעות",
+  "Food-safety refresher for fresh counters": "ריענון בטיחות מזון לדלפקי הטרי",
+  "Formal response to the supplier's notice": "תגובה רשמית להודעת הספק",
+  "Four of eight tills at Tel Aviv Dizengoff were down for two hours on 21 October. IT fixed it the same day.":
+    "ארבע משמונה הקופות בתל אביב דיזנגוף היו מושבתות שעתיים ב-21 באוקטובר. מערכות מידע תיקנו באותו יום.",
+  "Freeze Q4 discretionary spend": "הקפאת הוצאות שיקול דעת ב-Q4",
+  "Fresh stock for 5 Center branches": "מלאי טרי ל-5 סניפי המרכז",
+  "Fresh stock for 9 North branches": "מלאי טרי ל-9 סניפי הצפון",
+  "Gross margin vs. plan": "רווח גולמי מול תוכנית",
+  "Halves the cash and storage risk and keeps most of the margin.":
+    "חוצה את סיכון המזומנים והאחסון ושומר על רוב הרווח.",
+  "Heatwave in the South in 3 days: beverage and ice-cream demand": "גל חום בדרום בעוד 3 ימים: ביקוש למשקאות וגלידה",
+  "Holiday peak staffing plan for 60 branches": "תוכנית כוח אדם לשיא החג ב-60 סניפים",
+  "Holiday promo assets for 60 branches 3 days late; launch in 2 days":
+    "חומרי מבצע החג ל-60 סניפים מאחרים ב-3 ימים; ההשקה בעוד יומיים",
+  "Holiday promo signage and shelf talkers for 60 branches": "שילוט מבצע החג ומדבקות מדף ל-60 סניפים",
+  "Holiday promo signage": "שילוט מבצע החג",
+  "Holiday promotion live in all 60 branches": "מבצע החג פעיל בכל 60 הסניפים",
+  "Hours still follow the summer peak while sales have normalised.": "השעות עדיין לפי שיא הקיץ בעוד שהמכירות התייצבו.",
+  "IT scheduled the POS upgrade for all 60 branches in the two weeks before the holiday. HR has not booked the training sessions.":
+    "מערכות מידע תזמנו את שדרוג הקופות בכל 60 הסניפים בשבועיים שלפני החג. משאבי אנוש לא תיאמו את ההדרכות.",
+  "Invoke the 30-day price-protection clause and reprice the promotion only if it fails":
+    "להפעיל את סעיף הגנת המחיר ל-30 יום ולתמחר מחדש את המבצע רק אם זה נכשל",
+  "Invoke the 30-day price-protection clause": "הפעלת סעיף הגנת המחיר ל-30 יום",
+  "Its customers will look for a new store. Capturing a third of them is worth about ₪90k per week.":
+    "הלקוחות שלה יחפשו חנות חדשה. משיכת שליש מהם שווה כ-₪90k בשבוע.",
+  "Keep the campaign, funded by deferring the IT project's second phase":
+    "לשמור על הקמפיין, במימון דחיית השלב השני של פרויקט ה-IT",
+  "Keep the six items through the holiday": "השארת ששת הפריטים עד אחרי החג",
+  "Keeps the promotion and clears the conflict in one change.": "שומר על המבצע ופותר את ההתנגשות בשינוי אחד.",
+  "Keeps the upgrade moving without a cut-over in peak weeks.": "השדרוג ממשיך בלי מעבר מערכת בשבועות השיא.",
+  "Key dairy supplier +7% on 120 SKUs in 10 days; a promo is planned on 30 of them":
+    "ספק חלב מרכזי +7% על 120 פריטים בעוד 10 ימים; מתוכנן מבצע על 30 מהם",
+  "Labor cost % of sales, Center region, vs. target": "עלות עבודה כ-% מהמכירות, אזור המרכז, מול יעד",
+  "Labor cost 6% over plan across the Center region": "עלות העבודה 6% מעל התוכנית בכל אזור המרכז",
+  "Labor cost as a share of sales has run about 6% above plan in all 12 Center branches for three weeks.":
+    "עלות העבודה כחלק מהמכירות גבוהה בכ-6% מהתוכנית בכל 12 סניפי המרכז כבר שלושה שבועות.",
+  "Launch-day execution in the region's 12 branches": "ביצוע ביום ההשקה ב-12 סניפי האזור",
+  "Local welcome campaign around Ramat Gan Ayalon": "קמפיין קבלת פנים מקומי סביב רמת גן איילון",
+  "Margin falls about ₪250k per week if prices hold. The supply contract has a 30-day price-protection clause (contractual exposure).":
+    "הרווח יורד בכ-₪250k בשבוע אם המחירים יישארו. בחוזה האספקה יש סעיף הגנת מחיר ל-30 יום (חשיפה חוזית).",
+  "Marketing plan · 2 Oct": "תוכנית שיווק · 2 באוק׳",
+  "Marketing scheduled a promotion in 10 days on 14 items that Trade & Commercial is delisting at 5 Coast branches.":
+    "השיווק תזמן מבצע בעוד 10 ימים על 14 פריטים שסחר ומסחר מוציאים מהמגוון ב-5 סניפי שרון והחוף.",
+  "More slots before the holiday are worth about ₪70k per week of online sales.":
+    "יותר חלונות לפני החג שווים כ-₪70k בשבוע במכירות אונליין.",
+  "Move Center rosters to the autumn schedule": "העברת סידורי המרכז ללוח הסתיו",
+  "Move stock from a sister branch within 24 h; it beats waiting for the DC":
+    "העברת מלאי מסניף אחות בתוך 24 שעות; עדיף על המתנה למרלו״ג",
+  "Move the 60-branch POS cut-over after the holiday; pilot in 5 branches":
+    "דחיית מעבר הקופות ב-60 הסניפים לאחרי החג; פיילוט ב-5 סניפים",
+  "NPS at Tel Aviv Dizengoff has been about 4 points below its usual range for two weeks; comments mention queues.":
+    "ה-NPS בתל אביב דיזנגוף נמוך בכ-4 נקודות מהטווח הרגיל כבר שבועיים; התגובות מזכירות תורים.",
+  "New wage rule in 30 days; HR's updated pay tables are 5 days overdue":
+    "תקנת שכר חדשה בעוד 30 יום; טבלאות השכר של משאבי אנוש מאחרות ב-5 ימים",
+  "North DC back to full delivery waves": "מרלו״ג צפון חוזר לגלי אספקה מלאים",
+  "North DC delivery delays cascading to 14 branches in North and Center":
+    "עיכובי אספקה במרלו״ג צפון מתגלגלים ל-14 סניפים בצפון ובמרכז",
+  "Notify the food-safety regulator of the recall": "הודעה לרגולטור בטיחות המזון על הריקול",
+  "On-shelf availability of the top-50 SKUs fell to about 91% in 9 North branches over the last two days. Supplier fill rate dropped to 93% in the same days.":
+    "זמינות המדף של 50 הפריטים המובילים ירדה לכ-91% ב-9 סניפי הצפון ביומיים האחרונים. שיעור האספקה של הספקים ירד ל-93% באותם ימים.",
+  "On-shelf availability, 9 North branches, vs. target": "זמינות מדף, 9 סניפי הצפון, מול יעד",
+  "Open 30% more evening slots in Center and staff the pickup points":
+    "פתיחת 30% יותר חלונות ערב במרכז ואיוש נקודות האיסוף",
+  "Open an extra till at peak hours and follow up with detractors":
+    "פתיחת קופה נוספת בשעות השיא ומעקב מול המלקטים לשלילה",
+  "Operating spend vs. budget (100 = on budget)": "הוצאה תפעולית מול תקציב (100 = בתקציב)",
+  "POS upgrade cut-over in all 60 branches": "מעבר לשדרוג הקופות בכל 60 הסניפים",
+  "POS upgrade scheduled inside the holiday peak across 60 branches": "שדרוג הקופות תוזמן בתוך שיא החג ב-60 סניפים",
+  "POS uptime vs. target": "זמינות קופות מול יעד",
+  "Pickers for the extra evening slots": "מלקטים לחלונות הערב הנוספים",
+  "Pre-stock beverages and ice cream and add afternoon staff in 8 South branches":
+    "מילוי מוקדם של משקאות וגלידה ותגבור צוות אחר הצהריים ב-8 סניפי הדרום",
+  "Print a reduced in-house asset set for 60 branches": "הדפסת סט חומרים מצומצם בבית ל-60 סניפים",
+  "Promo calendar": "לוח מבצעים",
+  "Promotion planned on items Trade & Commercial is delisting (5 branches)":
+    "מבצע מתוכנן על פריטים שסחר ומסחר מוציאים מהמגוון (5 סניפים)",
+  "Publish the pay tables this week and re-forecast labor cost for Q4":
+    "פרסום טבלאות השכר השבוע ותחזית מחודשת לעלות העבודה ב-Q4",
+  "Publish updated pay tables (HR) and confirm with Legal":
+    "פרסום טבלאות שכר מעודכנות (משאבי אנוש) ואישור מול המחלקה המשפטית",
+  "Publish updated pay tables for the new wage rule": "פרסום טבלאות שכר מעודכנות לתקנת השכר החדשה",
+  "Pull batch 4471 from every branch now, notify the regulator, and tell affected customers":
+    "להוריד את אצווה 4471 מכל סניף עכשיו, לעדכן את הרגולטור ולהודיע ללקוחות שנפגעו",
+  "Q4 campaign: ₪350k media and in-store": "קמפיין Q4: ₪350k מדיה ובחנויות",
+  "Q4 labor cost re-forecast": "תחזית מחודשת לעלות העבודה ב-Q4",
+  "Q4 margin forecast to the board": "תחזית רווח Q4 לדירקטוריון",
+  "Quarantine batch 4471 at the DCs and pull it from 60 branches": "הסגר אצווה 4471 במרלו״גים והורדתה מ-60 סניפים",
+  "Queue complaints line up with the evening peak.": "התלונות על תורים חופפות לשיא הערב.",
+  "Re-forecast Q4 labor cost (+₪120k/week)": "תחזית מחודשת לעלות העבודה ב-Q4 (+₪120k לשבוע)",
+  "Ready-to-use notices for a recall": "הודעות ריקול מוכנות לשימוש",
+  "Reallocate ₪350k from IT phase 2 to the Q4 campaign": "הסטת ₪350k משלב 2 של ה-IT לקמפיין Q4",
+  "Recall notice templates for all branches": "תבניות הודעת ריקול לכל הסניפים",
+  "Recall notice to loyalty customers who bought batch 4471": "הודעת ריקול ללקוחות המועדון שקנו את אצווה 4471",
+  "Reconcile 21 October card payments": "התאמת תשלומי האשראי של 21 באוקטובר",
+  "Reconcile the day's payments and close the incident": "התאמת תשלומי היום וסגירת התקלה",
+  "Regulator-mandated. Go.": "חובה רגולטורית. לבצע.",
+  "Reroute 2 trucks via the Center DC for 3 days": "הסטת 2 משאיות דרך מרלו״ג מרכז ל-3 ימים",
+  "Reroute two trucks via the Center DC until the North DC catches up":
+    "הסטת שתי משאיות דרך מרלו״ג מרכז עד שמרלו״ג צפון ישלים פערים",
+  "Rosters must be compliant on the effective date, and the labor forecast rises about ₪120k per week. Compliance exposure: a legal deadline.":
+    "סידורי העבודה חייבים לעמוד בחוק במועד התחולה, ותחזית העבודה עולה בכ-₪120k בשבוע. חשיפה רגולטורית: מועד חוקי.",
+  "Rosters need two pay cycles of lead time before the effective date.":
+    "סידורי העבודה צריכים שני מחזורי שכר מראש לפני מועד התחולה.",
+  "Rosters need two pay cycles of lead time before the rule takes effect":
+    "סידורי העבודה צריכים שני מחזורי שכר מראש לפני שהתקנה נכנסת לתוקף",
+  "Run a 5-branch pilot now and move the full rollout after the holiday":
+    "להריץ פיילוט ב-5 סניפים עכשיו ולדחות את הפריסה המלאה לאחרי החג",
+  "Run a local welcome campaign and add capacity at Ramat Gan Ayalon":
+    "להריץ קמפיין קבלת פנים מקומי ולהוסיף קיבולת ברמת גן איילון",
+  "Seasonal hiring; plan updated next week": "גיוס עונתי; התוכנית תעודכן בשבוע הבא",
+  "Self-checkout firmware fix at Center branches": "תיקון קושחה לקופות בשירות עצמי בסניפי המרכז",
+  "Self-checkout lanes back for the weekend": "הקופות בשירות עצמי חוזרות לסוף השבוע",
+  "Service refresher for the evening team": "ריענון שירות לצוות הערב",
+  "Shortlist pop-up partners for Petah Tikva": "רשימה קצרה של שותפי פופ-אפ לפתח תקווה",
+  "Shrinkage % of sales, Tel Aviv Dizengoff, vs. target": "פחת כ-% מהמכירות, תל אביב דיזנגוף, מול יעד",
+  "Shrinkage at Tel Aviv Dizengoff rose from about 1.4% to 4.4% of sales over the last five days, concentrated in health & beauty.":
+    "הפחת בתל אביב דיזנגוף עלה מכ-1.4% ל-4.4% מהמכירות בחמשת הימים האחרונים, בעיקר בטואלטיקה וקוסמטיקה.",
+  "Shrinkage spike at Tel Aviv Dizengoff": "זינוק בפחת בתל אביב דיזנגוף",
+  "Signage and shelf talkers committed at the weekly ops meeting were due on 19 October and have not shipped. Campaigns on schedule fell to 72%.":
+    "השילוט ומדבקות המדף שהובטחו בישיבת התפעול השבועית היו אמורים להגיע ב-19 באוקטובר ולא נשלחו. הקמפיינים בזמן ירדו ל-72%.",
+  "Signage must be in branches a day before the promotion goes live": "השילוט חייב להיות בסניפים יום לפני שהמבצע עולה",
+  "Stock audit: health & beauty": "ספירת מלאי: טואלטיקה וקוסמטיקה",
+  "Stock-outs on top-50 SKUs in 9 North branches before the holiday weekend":
+    "חוסרים ב-50 הפריטים המובילים ב-9 סניפי הצפון לפני סוף שבוע החג",
+  "Supplier overstock offer: 25% off two categories, expires in 5 days":
+    "הצעת עודפי מלאי מספק: 25% הנחה על שתי קטגוריות, פוקעת בעוד 5 ימים",
+  "Swap 14 delisted items for their replacements in the promo": "החלפת 14 הפריטים שיוצאים מהמגוון בתחליפים במבצע",
+  "Swap the 14 items in the promotion for their replacements": "החלפת 14 הפריטים במבצע בתחליפים שלהם",
+  "The Center DC has spare capacity tonight; rerouting costs less than one day of lost sales.":
+    "למרלו״ג מרכז יש קיבולת פנויה הלילה; ההסטה זולה מיום אחד של מכירות אבודות.",
+  "The North DC missed two delivery waves on 20–21 October (on-time deliveries fell from 95% to 78%). 14 branches in North and Center are short of fresh stock.":
+    "מרלו״ג צפון החמיץ שני גלי אספקה ב-20–21 באוקטובר (המשלוחים בזמן ירדו מ-95% ל-78%). ל-14 סניפים בצפון ובמרכז חסר מלאי טרי.",
+  "The Q4 labor re-forecast uses the new pay tables": "התחזית המחודשת לעלות העבודה ב-Q4 מבוססת על טבלאות השכר החדשות",
+  "The clause buys a month at the old cost, which covers the promotion.":
+    "הסעיף קונה חודש במחיר הישן, מה שמכסה את המבצע.",
+  "The first two weeks after a closure decide where customers settle.":
+    "השבועיים הראשונים אחרי סגירה קובעים לאן הלקוחות עוברים.",
+  "The forecast shows 38–41°C in the South from 25 to 28 October. Eight South branches sell most of the region's beverages.":
+    "התחזית מראה 38–41°C בדרום בין 25 ל-28 באוקטובר. שמונה סניפי דרום מוכרים את רוב המשקאות באזור.",
+  "The holiday weekend starts in 48 hours; about ₪600k of weekly sales is at stake if shelves are not refilled.":
+    "סוף שבוע החג מתחיל בעוד 48 שעות; כ-₪600k ממכירות השבוע בסיכון אם המדפים לא יתמלאו.",
+  "The losses cluster in evening hours in one category.": "ההפסדים מרוכזים בשעות הערב בקטגוריה אחת.",
+  "The margin forecast needs the agreed dairy price": "תחזית הרווח צריכה את מחיר החלב המוסכם",
+  "The outage is fixed; only reconciliation is left.": "התקלה תוקנה; נשארה רק ההתאמה.",
+  "The promotion launches in 48 hours in every branch; promo stock is already on its way and supplier co-funding depends on in-store execution (about ₪300k).":
+    "המבצע עולה בעוד 48 שעות בכל סניף; מלאי המבצע כבר בדרך והמימון המשותף של הספקים תלוי בביצוע בחנויות (כ-₪300k).",
+  "The regulator requires the product off shelves within 12 hours and a notice within 24. About ₪180k of stock is affected, and a missed deadline is a regulatory breach. Legal & Compliance leads; Supply Chain executes the recall.":
+    "הרגולטור מחייב להוריד את המוצר מהמדפים בתוך 12 שעות ולפרסם הודעה בתוך 24. כ-₪180k מלאי מושפע, והחמצת המועד היא הפרה רגולטורית. המחלקה המשפטית מובילה; שרשרת אספקה מבצעת את הריקול.",
+  "The two commitments (commitment register)": "שתי ההתחייבויות (מרשם ההתחייבויות)",
+  "Transfer stock from the Center DC and add weekend staff to refill shelves before the holiday":
+    "העברת מלאי ממרלו״ג מרכז ותגבור צוות בסוף השבוע למילוי המדפים לפני החג",
+  "Transfer top-50 SKU stock from the Center DC to 9 North branches":
+    "העברת מלאי 50 הפריטים המובילים ממרלו״ג מרכז ל-9 סניפי הצפון",
+  "Update holiday opening hours on the website": "עדכון שעות הפתיחה בחג באתר",
+  "Weekend dairy discount in South": "הנחת חלב לסוף השבוע בדרום",
+  "Weekend dairy pricing in the flyer": "תמחור החלב לסוף השבוע בעלון",
+  "Weekend staffing uplift, 9 North branches": "תגבור כוח אדם לסוף השבוע, 9 סניפי הצפון",
+  "Yes — let's be ready.": "כן — בואו נהיה מוכנים.",
+  "A regulator-mandated action with a 12-hour clock outranks everything else.":
+    "פעולה שהרגולטור מחייב עם שעון של 12 שעות קודמת לכל דבר אחר.",
+  "Stock exists in the network; the gap is allocation and shelf time.": "יש מלאי ברשת; הפער הוא בהקצאה ובזמן עד המדף.",
+  "Finance froze Q4 discretionary spend after an IT project and two refurbishments overran (operating spend at 106% of budget). Marketing's ₪350k campaign is contracted and starts in 7 days.":
+    "כספים הקפיאו את הוצאות שיקול הדעת ב-Q4 אחרי חריגה בפרויקט IT ובשני שיפוצים (הוצאה תפעולית ב-106% מהתקציב). הקמפיין של השיווק בסך ₪350k כבר חתום ומתחיל בעוד 7 ימים.",
+  "Either the freeze or the campaign has to give. Cancelling has agency penalties and loses supplier co-funding.":
+    "או ההקפאה או הקמפיין צריכים לוותר. ביטול כרוך בקנסות מהסוכנות ובאובדן מימון משותף מספקים.",
+  "The campaign has co-funding and cancellation penalties; the IT phase has neither.":
+    "לקמפיין יש מימון משותף וקנסות ביטול; לשלב ה-IT אין אף אחד מהם.",
+  "Deliveries must leave the DC within 48 hours to land before the peak.":
+    "המשלוחים חייבים לצאת מהמרלו״ג בתוך 48 שעות כדי להגיע לפני השיא.",
+};
+
+export const HE_TEMPLATES: Record<string, string> = {
+  // Dates and sources ("Weekly ops meeting · 15 Oct" is split on " · ")
+  "{d} Oct": "{d} באוק׳",
+  "{d} Nov": "{d} בנוב׳",
+  "{d} Dec": "{d} בדצמ׳",
+  "{d} Sep": "{d} בספט׳",
+  "Weekly ops meeting": "ישיבת תפעול שבועית",
+  "Board calendar": "לוח הדירקטוריון",
+  "Branch call": "שיחת סניף",
+  "Change calendar": "לוח שינויים",
+  "Compliance register": "מרשם הציות",
+  "Daily supply call": "שיחת אספקה יומית",
+  "Finance committee": "ועדת כספים",
+  "Monthly finance review": "סקירת כספים חודשית",
+  "Quarterly compliance review": "סקירת ציות רבעונית",
+  "Range review": "סקירת מגוון",
+  "{from} to {to}": "{from} עד {to}",
+  // Waiting labels and explanations
+  "Decision by the manager of {unit}": "החלטה בידי המנהל/ת של {unit}",
+  "{n} action(s) awaiting approval": "{n} פעולות ממתינות לאישור",
+  "{m}/week at stake": "{m} לשבוע בסיכון",
+  "{m}/week upside": "{m} לשבוע פוטנציאל",
+  "impact within {h} h": "השפעה בתוך {h} שעות",
+  "window closes within {h} h": "החלון נסגר בתוך {h} שעות",
+  "impact in {d} days": "השפעה בעוד {d} ימים",
+  "window closes in {d} days": "החלון נסגר בעוד {d} ימים",
+  "low cost to capture ({m})": "עלות מימוש נמוכה ({m})",
+  "costs {m} to capture": "מימוש עולה {m}",
+  "{z}σ from usual": "{z}σ מהרגיל",
+  // Approval rule reasons
+  "estimated cost ₪{n}": "עלות משוערת ₪{n}",
+  "targets span {n} region(s)": "היעדים משתרעים על {n} אזורים",
+  "insight band {band}": "דרגת התובנה {band}",
+  "insight band {band}, internal notice": "דרגת התובנה {band}, הודעה פנימית",
+  "policy now also requires {rules}": "המדיניות דורשת כעת גם {rules}",
+  // Detector (rule:kpi-deviation)
+  "{unit} net sales −{pct} vs. usual": "מכירות נטו ב{unit} −{pct} לעומת הרגיל",
+  "Net sales at {unit} were {pct} below their usual level over {n} trading days to {date} ({actual} vs. {expected} expected).":
+    "המכירות נטו ב{unit} היו נמוכות ב-{pct} מהרמה הרגילה ב-{n} ימי מסחר עד {date} ({actual} לעומת {expected} צפוי).",
+  "About {m} of weekly sales is at stake. On-shelf availability is {pts} points below usual, which points to a stock problem rather than weaker demand.":
+    "כ-{m} ממכירות השבוע בסיכון. זמינות המדף נמוכה ב-{pts} נקודות מהרגיל, מה שמצביע על בעיית מלאי ולא על ביקוש חלש.",
+  "About {m} of weekly sales is at stake. No availability problem was found; the cause needs investigation.":
+    "כ-{m} ממכירות השבוע בסיכון. לא נמצאה בעיית זמינות; הסיבה דורשת בירור.",
+  "Net sales vs. usual level, {unit}": "מכירות נטו לעומת הרמה הרגילה, {unit}",
+  "On-shelf availability vs. usual level, {unit}": "זמינות מדף לעומת הרמה הרגילה, {unit}",
+  "Restore availability at {unit} with a stock transfer from {source}": "החזרת הזמינות ב{unit} בהעברת מלאי מ{source}",
+  "Investigate the sales drop at {unit}": "בירור ירידת המכירות ב{unit}",
+  "Transfer top-category stock {source} → {unit}": "העברת מלאי קטגוריות מובילות {source} ← {unit}",
+  "Brief {name} on the sales drop and incoming stock": "עדכון {name} על ירידת המכירות והמלאי שבדרך",
+  "Brief {name} on the sales drop": "עדכון {name} על ירידת המכירות",
+  "Replenishment request to the North DC ({unit})": "בקשת השלמה למרלו״ג צפון ({unit})",
+  "Source record ({source}, synthetic)": "רשומת מקור ({source}, סינתטי)",
+  "kpi observation": "תצפית מדד",
+  "change calendar": "לוח שינויים",
+  "compliance register": "מרשם הציות",
+  "dc feed": "הזנת מרלו״ג",
+  "decision register": "מרשם ההחלטות",
+  "facility data": "נתוני מתקנים",
+  "it incidents": "תקלות IT",
+  "market news": "חדשות שוק",
+  "meeting commitments": "התחייבויות מישיבות",
+  "online orders": "הזמנות אונליין",
+  "supplier notice": "הודעת ספק",
+  "supplier offer": "הצעת ספק",
+  "weather forecast": "תחזית מזג אוויר",
+  // Commitment monitor
+  "{unit}: “{title}” is {n} days overdue": "{unit}: „{title}” באיחור של {n} ימים",
+  "{unit}: “{title}” is 1 day overdue": "{unit}: „{title}” באיחור של יום",
+  "{name} committed to this at {source}, due {date}. It has not been delivered.":
+    "{name} התחייב/ה לכך ב{source}, עד {date}. זה לא סופק.",
+  "{units} is waiting on it ({m}/week at stake).": "{units} ממתינה לזה ({m} לשבוע בסיכון).",
+  "{units} are waiting on it ({m}/week at stake).": "{units} ממתינות לזה ({m} לשבוע בסיכון).",
+  "{units} is waiting on it ({m}/week at stake), and 1 downstream commitment is now at risk.":
+    "{units} ממתינה לזה ({m} לשבוע בסיכון), והתחייבות אחת בהמשך השרשרת בסיכון כעת.",
+  "{units} are waiting on it ({m}/week at stake), and 1 downstream commitment is now at risk.":
+    "{units} ממתינות לזה ({m} לשבוע בסיכון), והתחייבות אחת בהמשך השרשרת בסיכון כעת.",
+  "{units} is waiting on it ({m}/week at stake), and {n} downstream commitments are now at risk.":
+    "{units} ממתינה לזה ({m} לשבוע בסיכון), ו-{n} התחייבויות בהמשך השרשרת בסיכון כעת.",
+  "{units} are waiting on it ({m}/week at stake), and {n} downstream commitments are now at risk.":
+    "{units} ממתינות לזה ({m} לשבוע בסיכון), ו-{n} התחייבויות בהמשך השרשרת בסיכון כעת.",
+  "{m}/week at stake, with compliance exposure.": "{m} לשבוע בסיכון, עם חשיפה רגולטורית.",
+  "{m}/week at stake.": "{m} לשבוע בסיכון.",
+  "{a}, {b}": "{a}, {b}",
+  "Deliver “{title}” now, or agree a new date with the teams waiting on it":
+    "לספק את „{title}” עכשיו, או לסכם תאריך חדש עם הצוותים שממתינים לה",
+  "Deliver or renegotiate: {title}": "לספק או לתאם מחדש: {title}",
+  "Plan around the late “{title}” ({unit})": "תכנון סביב „{title}” המאחרת ({unit})",
+  "Commitment record ({source})": "רשומת התחייבות ({source})",
+  // Conflicts
+  "{a}'s “{x}” collides with {b}'s “{y}”": "„{x}” של {a} מתנגשת ב„{y}” של {b}",
+  "{a} promotes {res} ({w1}) while {b} delists it ({w2}). They overlap {o}.":
+    "{a} מקדמת את {res} ({w1}) בזמן ש{b} מוציאה אותו מהמגוון ({w2}). החפיפה: {o}.",
+  "{a} delists {res} ({w1}) while {b} promotes it ({w2}). They overlap {o}.":
+    "{a} מוציאה את {res} מהמגוון ({w1}) בזמן ש{b} מקדמת אותו ({w2}). החפיפה: {o}.",
+  "{a} spends from {res} ({w1}) while {b} freezes it ({w2}). They overlap {o}.":
+    "{a} מוציאה מ-{res} ({w1}) בזמן ש{b} מקפיאה אותו ({w2}). החפיפה: {o}.",
+  "{a} freezes {res} ({w1}) while {b} spends from it ({w2}). They overlap {o}.":
+    "{a} מקפיאה את {res} ({w1}) בזמן ש{b} מוציאה ממנו ({w2}). החפיפה: {o}.",
+  "{a} cuts over {res} ({w1}) while {b} runs peak trading on it ({w2}). They overlap {o}.":
+    "{a} מבצעת מעבר מערכת ב-{res} ({w1}) בזמן ש{b} בשיא מכירות בו ({w2}). החפיפה: {o}.",
+  "{a} runs peak trading on {res} ({w1}) while {b} cuts over it ({w2}). They overlap {o}.":
+    "{a} בשיא מכירות ב-{res} ({w1}) בזמן ש{b} מבצעת בו מעבר מערכת ({w2}). החפיפה: {o}.",
+  "Both cannot happen: about {m}/week is at stake, and the overlap starts {date}.":
+    "שתיהן לא יכולות לקרות: כ-{m} לשבוע בסיכון, והחפיפה מתחילה ב-{date}.",
+  "Move “{title}” out of {o}, or agree with {unit} which plan stands":
+    "להזיז את „{title}” אל מחוץ ל-{o}, או לסכם עם {unit} איזו תוכנית נשארת",
+  "{a} introduced the overlap (recorded later), so it adjusts first; {b} confirms.":
+    "{a} יצרה את החפיפה (נרשמה מאוחר יותר), ולכן היא מתאימה ראשונה; {b} מאשרת.",
+  "Adjust or withdraw: {title}": "להתאים או לבטל: {title}",
+  "Confirm your plan with {unit}: {title}": "לאשר את התוכנית שלכם מול {unit}: {title}",
+  // Domain errors with values
+  "{what} not found": "{what} לא נמצא",
+  "{what} requires a rationale": "{what} דורש נימוק",
+  "retried {n} times; limit is {max}": "נוסה {n} פעמים; המגבלה היא {max}",
+  "cannot execute: {reason}": "אי אפשר לבצע: {reason}",
+  "outcome is {status}": "התוצאה במצב {status}",
+  "Branch Manager, {unit}": "מנהל/ת סניף, {unit}",
+  "Regional Manager, {unit}": "מנהל/ת אזור, {unit}",
+};

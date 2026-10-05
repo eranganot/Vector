@@ -133,6 +133,39 @@ const checks: Check[] = [
       return "no external next";
     },
   },
+  {
+    phase: 4,
+    name: "Phase 4: commitments, actions and audit require sign-in; the demo runs the commitment register (seed p4+)",
+    run: async (base) => {
+      for (const path of ["/commitments", "/actions", "/audit"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+      }
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 7)
+        throw new Error(`expected the Phase 4 schema (>= 7 migrations), got ${body.migrations.applied}`);
+      if (!/^p[4-9]/.test(body.demo?.seedVersion ?? "")) throw new Error(`seed ${body.demo?.seedVersion}`);
+      return `→ /login · migrations ${body.migrations.applied} · seed ${body.demo.seedVersion}`;
+    },
+  },
+  {
+    phase: 4,
+    name: "Hebrew: the language cookie turns the app right-to-left; English stays the default (ADR-007)",
+    run: async (base) => {
+      const en = (await get(base, "/login")).text;
+      if (!/<html[^>]*dir="ltr"/.test(en) || !en.includes(">Sign in<")) throw new Error("default is not English LTR");
+      const res = await fetch(new URL("/login", base), {
+        headers: { cookie: "vector_lang=he" },
+        signal: AbortSignal.timeout(15_000),
+      });
+      const he = await res.text();
+      if (!/<html[^>]*lang="he"[^>]*dir="rtl"|<html[^>]*dir="rtl"[^>]*lang="he"/.test(he)) throw new Error("no rtl");
+      if (!he.includes("כניסה")) throw new Error("sign-in page not in Hebrew");
+      return "en → ltr · he → rtl";
+    },
+  },
 ];
 
 async function main() {

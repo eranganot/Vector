@@ -13,25 +13,26 @@ insights**, never as the headline. This is how VECTOR avoids turning into a BI d
 ## Navigation (as built)
 
 ```text
-Sidebar (desktop) / top bar (mobile):  VECTOR · Home · Risks · Opportunities · Organization · Waiting on you (badge) · Audit* · Demo controls**
+Sidebar (desktop) / top bar (mobile):  VECTOR · Home · Risks · Opportunities · Commitments · Actions & outcomes · Organization · Waiting on you (badge) · Audit* · Demo controls**
 Header:                                 demo clock · persona chip ("Viewing as Dana Levi · CEO · demo") with the switcher
 * Executive and Admin   ** Admin
 ```
 
-| Route            | Screen                                                                                                                            | Primary question it answers                             | Status     |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------- |
-| `/login`         | Sign in / demo personas                                                                                                           | Who am I in this demo?                                  | Built      |
-| `/`              | **Home dashboard** of your scope (G-P3a): headline, Waiting on you, KPIs, risk/opportunity summary, dependencies, position extras | How is my area doing, and what must I do?               | Built (P3) |
-| `/risks`         | **Risks**: every risk in your scope (or `?unit=`), ranked, filterable by band                                                     | What could hurt us, and how badly?                      | Built (P3) |
-| `/opportunities` | **Opportunities**: every opportunity in scope, ranked by value (O1–O3)                                                            | What could we gain, and by when?                        | Built (P3) |
-| `/units/[id]`    | **Unit view** (group, region, branch, department): one template                                                                   | What is happening in this unit, and who owns it?        | Built (P3) |
-| `/org`           | **Organization**: the hierarchy you can see, departments owns / involved                                                          | Where is it going wrong, and how do I get there?        | Built (P3) |
-| `/performance`   | Redirects to Home (Phase 2 address)                                                                                               | —                                                       | Redirect   |
-| `/insights/[id]` | Insight trace                                                                                                                     | Why am I seeing this, and what should happen?           | Built      |
-| `/approvals`     | **Waiting on you**: decisions, approvals and your actions                                                                         | What am I being asked to decide or approve, and why me? | Built      |
-| `/audit`         | Audit: chain verification (explorer later)                                                                                        | Is the log intact? (what exactly happened: Phase 4)     | Partial    |
-| `/admin/demo`    | Demo controls                                                                                                                     | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days) | Built      |
-| `/actions`       | Actions tracker                                                                                                                   | What's in flight, and did it work?                      | Phase 4    |
+| Route            | Screen                                                                                                                                                                       | Primary question it answers                               | Status     |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ---------- |
+| `/login`         | Sign in / demo personas                                                                                                                                                      | Who am I in this demo?                                    | Built      |
+| `/`              | **Home dashboard** of your scope (G-P3a): headline, Waiting on you, KPIs, risk/opportunity summary, dependencies, position extras                                            | How is my area doing, and what must I do?                 | Built (P3) |
+| `/risks`         | **Risks**: every risk in your scope (or `?unit=`), ranked, filterable by band                                                                                                | What could hurt us, and how badly?                        | Built (P3) |
+| `/opportunities` | **Opportunities**: every opportunity in scope, ranked by value (O1–O3)                                                                                                       | What could we gain, and by when?                          | Built (P3) |
+| `/commitments`   | **Commitments** (P4): overdue, what your unit owes, what is owed to it, delivered; record, complete, move or cancel; dependencies and bottlenecks                            | Who promised what to whom, and who is waiting on it?      | Built (P4) |
+| `/units/[id]`    | **Unit view** (group, region, branch, department): one template                                                                                                              | What is happening in this unit, and who owns it?          | Built (P3) |
+| `/org`           | **Organization**: the hierarchy you can see, departments owns / involved                                                                                                     | Where is it going wrong, and how do I get there?          | Built (P3) |
+| `/performance`   | Redirects to Home (Phase 2 address)                                                                                                                                          | —                                                         | Redirect   |
+| `/insights/[id]` | Insight trace                                                                                                                                                                | Why am I seeing this, and what should happen?             | Built      |
+| `/approvals`     | **Waiting on you**: decisions, approvals and your actions                                                                                                                    | What am I being asked to decide or approve, and why me?   | Built      |
+| `/audit`         | **Audit explorer** (P4): every event in your scope (and your own refused attempts), filtered by subject, person, operation, refusals; chain status                           | What exactly happened, by whom, and was anything refused? | Built (P4) |
+| `/admin/demo`    | Demo controls                                                                                                                                                                | Reset, advance the clock (+1 h, +1 day, +73 h, +8 days)   | Built      |
+| `/actions`       | **Actions & outcomes** (P4): actions in scope (in flight, waiting for approval, overdue, mine, done); outcomes being measured, waiting for a lesson, and the lessons library | What is in flight, with whom, and did it work?            | Built (P4) |
 
 Unit views carry a breadcrumb (Group › Region › Branch); every unit name links to its view, so any unit is at most two
 clicks from any screen. Search is not built yet.

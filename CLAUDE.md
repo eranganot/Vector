@@ -29,3 +29,11 @@ Report in five lines before working (session-kickoff skill).
 
 - Docker containers have no port networking here; use the native Postgres 16 cluster (`sudo pg_ctlcluster 16 main start`), role/db `vector`/`vector` and `vector_test`.
 - Playwright: set `PW_CHROMIUM_PATH` to the preinstalled Chromium under `/opt/pw-browsers` instead of downloading browsers.
+
+## Ship rules (added by setup-claude-local.ps1)
+
+- Read STATUS.md first; update it last.
+- Before commit: run the repo's checks (see the ship-it skill / README). Never commit failing typecheck or tests.
+- Commit messages via git commit -F <file> written WITHOUT a BOM. One commit per round; check git log -1 so a re-run never duplicates a commit.
+- Never force-push. Never commit secrets (.env, agent keys, tokens).
+- Deploys happen on push to main (Railway). After pushing, read the deploy logs and confirm a line only the new code emits.

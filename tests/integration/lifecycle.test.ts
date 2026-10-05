@@ -373,6 +373,16 @@ describe("approval lifecycle edge cases", () => {
     expect(rules).toEqual(["AP-3", "AP-4"]); // ₪12k now also needs AP-3
   });
 
+  it("AZ-2: whoever amends an action authors that revision, so they may not approve it (regression, P4e)", async () => {
+    const { r, ctx, transferId } = await pending();
+    const yossi = await person(r, "yossi");
+    await amendAction(ctx, yossi, transferId, { estimatedCost: 12_000 });
+    const [a] = await appDb.select().from(s.action).where(eq(s.action.id, transferId));
+    expect(a.proposedBy).toBe(yossi.kind === "user" ? yossi.userId : "");
+    expect((await listMyApprovals(appDb, r.orgId, yossi)).map((x) => x.action.id)).not.toContain(transferId);
+    await expectDenied(grantApproval(ctx, yossi, transferId), /AZ-2: you cannot approve an action you proposed/);
+  });
+
   it("a granted approval lapses after 7 days unused and must be requested again", async () => {
     const { r, ctx, transferId } = await pending();
     await grantApproval(ctx, await person(r, "yossi"), transferId);

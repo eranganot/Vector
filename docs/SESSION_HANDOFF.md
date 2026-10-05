@@ -1,88 +1,71 @@
 # Session handoff
 
-_Last updated: 2026-10-04 (night)_
+_Last updated: 2026-10-05 (11:10)_
 
 ## Current phase
 
-Phase 3, Organizational Intelligence Experience: **merged (PR #17, b2ae970) and verified on Dev**. Awaiting **Eran's Phase 3
-gate**. Phase 2 was signed off (G-P2).
+**Phase 4, Operational Intelligence: signed off (G-P4, 2026-10-05 11:06); Prod promoted to Phase 4. Next: Phase 5.**
 
-**Prod** (`demo` branch) is at **21733bf**: Phase 2 (9cec7c6) plus the seed-password fix (#18). It was verified with:
-
-- smoke `--phase 2`: 7/7;
-- doctor;
-- persona sign-in as Dana, Avi and Admin.
+- Phase 4 was signed off (G-P4), including G-P4a (#30, #31) and the G4-Q choices (Q1–Q5).
+- **Prod** (`demo` branch): promoted by merging `main` into `demo` (no force). The boot runs migrations 0006 and 0007
+  and the `p4-v1` reseed. Verification is recorded in STATUS.md.
+- **Dev** (`main`) runs the same code. Seed `p4-v1` (20 commitments, 14 dependencies).
 
 ## Objective
 
-Make the organization understandable at a glance for each role (docs/phases/PHASE_3.md).
+Move from awareness to coordination: commitments, dependencies, conflicts, approvals, action and outcome tracking with
+lessons (docs/phases/PHASE_4.md).
 
-## Completed (Phase 3, branch `feat/phase3`)
+## Completed (Phase 4, PRs #23–#28, plus the gate docs)
 
-- **G-P3a (Eran, 22:14 / 22:17): Home is a dashboard for every persona** (PR #21). Each home shows:
-  - a headline;
-  - Waiting on you, including the tasks you own;
-  - KPI tiles linked to their insights;
-  - risk and opportunity summaries;
-  - dependencies by department;
-  - what the position needs.
+- **#23** The plan and specs: Commitment, Dependency and Conflict, their state machines (C1–C6, K1–K2) and the new capabilities.
+- **#24** Commitments, dependencies and conflicts:
+  - migration 0006;
+  - audited commands;
+  - conflict-rules-v1 and commitment-monitor-v1, live on every clock advance;
+  - catalog stories linked to their commitments.
+- **#25** The Commitments tab:
+  - recording a commitment runs the conflict rules immediately;
+  - the Dependencies card on every home: who waits on whom, at risk or blocked, bottlenecks, on-time rate, conflicts;
+  - the plans behind an insight on its trace.
+  - Fix: each side of a conflict can see the other side's commitment.
+- **#26** The approval workflow UX:
+  - who else is asked, targets, due date, expiry, your recent answers;
+  - acknowledge, dismiss, cancel, amend and retry from the trace.
+  - Fix (AZ-2): whoever amends an action becomes its proposer, so they cannot approve their own revision.
+- **#27** Actions & outcomes: the tracker with filters; outcomes being measured, waiting for a lesson, and reviewed; the lessons library; "Last time we did this".
+- **#28** The scoped audit explorer for every `audit.read` holder: filters, refusals, and your own attempts.
 
-  Risks and Opportunities are now sidebar tabs (`/risks`, `/opportunities`, with `?unit=` and `?band=`), and unit pages use the same dashboard. The list below describes the first Phase 3 build; where they differ, this entry wins.
+- **#31** Hebrew and right-to-left (G-P4a, before Phase 5): EN / עברית switch per user, every screen mirrored and
+  translated, names and seeded and generated text shown in Hebrew; the database stays English (ADR-007, P-6a).
+  Verified locally: 514 unit, 79 integration, 24 e2e (English unchanged + the Hebrew path); a crawl of every persona
+  and page in Hebrew finds no untranslated data string.
 
-- **Executive Command Center** (`/` for Executive, Viewer and Admin):
-  - a one-sentence headline;
-  - Waiting on you;
-  - the top 3 risks and the top 3 opportunities;
-  - what changed in the last 24 h (audited events);
-  - the biggest KPI moves;
-  - health by region;
-  - the department pulse.
-- **Unit views** `/units/[id]`:
-  - one template for the group, a region, a branch and a department;
-  - a breadcrumb;
-  - KPIs linked to the insights that explain them;
-  - lanes ranked by local priority, with one band per item everywhere;
-  - actions and their owners;
-  - dependencies;
-  - child units;
-  - recently resolved items.
-  - The read model is scope-checked, and a unit outside your scope returns 404.
-- **`/org` hierarchy:** the regions expand to show their branches, and each department shows what it owns and what it is involved in. Navigation is Home · Organization · Waiting on you · Audit.
-- **Role-routed home:** managers land on their own unit; `/performance` redirects there.
-- **Actionable cards:** each card shows the band and score, "Why:" (`explainPriority`), the recommendation, who it is waiting on, and the owner.
-- **Zod validation** on every server action (`src/application/inputs.ts`), which also closes the open redirect on the persona switch.
-- **Time-to-Understanding:**
-  - the protocol;
-  - the automated above-the-fold e2e check at 1440×900 for the CEO, a region manager, a branch manager and a VP;
-  - a check that any branch is two clicks from home.
-- **Fixed on the way** (root causes in STATUS.md):
-  - the branch view showed the same item as both P1 and P2;
-  - an e2e test read the URL before the redirect landed.
+## Verified (by running)
 
-## Verified on Dev (b2ae970, then eaac387)
-
-- smoke `--expect-sha`: 9/9;
-- e2e: 14/14 (after a demo reset);
-- doctor passes;
-- Dev reset afterwards, so the demo opens fresh.
-
-## Verified (by running, locally)
-
-- typecheck, lint, format;
-- 444 unit tests;
-- 55 integration tests (`vector_test`);
-- 14 e2e tests against a local production build after `demo:reset`;
-- `pnpm smoke`: 9 checks, including 2 new Phase 3 checks;
-- screens captured in `docs/specs/screens/`.
+- **Local:**
+  - typecheck, lint, format;
+  - 503 unit and 78 integration tests;
+  - 22 e2e tests against a production build after a fresh reset;
+  - smoke 10/10;
+  - gitleaks clean.
+- **Dev (649eb1a):**
+  - smoke 10/10;
+  - e2e 22/22 after a reset;
+  - doctor passes;
+  - Dev reset afterwards.
 
 ## Failed / broken
 
-- (none open)
+- (none open). The root causes fixed in Phase 4 are in STATUS.md:
+  - the conflict-visibility gap;
+  - the AZ-2 amend gap;
+  - a gitleaks false positive on help text;
+  - Prod persona sign-in after the secret rotation.
 
 ## Open decisions (for Eran)
 
-- Phase 3 gate (sign-off, then promotion to Prod).
-- AI provider (Claude vs Gemini), at the Phase 5 gate.
+- The AI provider (Claude vs Gemini), key, spend cap and eval thresholds, at the Phase 5 gate.
 
 ## Known limitations / deliberate deferrals
 
@@ -91,15 +74,16 @@ Make the organization understandable at a glance for each role (docs/phases/PHAS
 
 - The cloud workspace cannot reach Docker container ports, so Claude's local loop uses native Postgres 16;
   the README path (Docker Compose) is exercised by Eran's machine and CI uses a Postgres service.
+- Audit explorer and commitment read models load an epoch's rows and filter in the application layer (fine at demo
+  scale: ~1–2k events); move to SQL filters before real data volumes.
+- `tests/integration/lifecycle.test.ts` "§5.2" depends on the tests before it in its file (fails when run alone).
+- A branch manager does not see region-level dependencies (North waits on the DC): consistent with insight scoping
+  (a branch sees only what touches the branch).
 
 ## Next recommended action
 
-1. Eran: Phase 3 gate (demo on Dev: docs/phases/PHASE_3.md "Demo scenario"), then promote to Prod by moving `demo` to the
-   Phase 3 merge commit.
-2. Prod settings are applied (`env=prod`). After the secrets were rotated, persona sign-in failed. Fixed in #18 and
-   cherry-picked to `demo` (root cause in STATUS.md).
-3. Run the live Time-to-Understanding protocol with five people (docs/specs/time-to-understanding.md).
-4. Phase 4 (Operational intelligence) after the gate.
+1. Phase 5 (AI intelligence): needs the provider, key, spend cap and eval thresholds at its gate. AI text must follow
+   the reader's language (ADR-007, consequences).
 
 ## Reproducible commands
 

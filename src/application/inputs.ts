@@ -13,6 +13,14 @@ const appPath = z
   .regex(/^\/(?!\/)[A-Za-z0-9\-._~/?=&%]*$/, "must be a path inside VECTOR")
   .max(300);
 
+/** A datetime-local value ("2026-10-25T12:00"), read as UTC like every time in the synthetic organization. */
+const when = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "pick a date and time")
+  .transform((v) => new Date(`${v}:00Z`));
+const dayStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "pick a date");
+const ownerId = z.string().trim().min(1).max(100);
+
 export const INPUTS = {
   signIn: z.object({ email: z.string().trim().email("enter a valid email"), password: z.string().min(1).max(200) }),
   switchPersona: z.object({ email: z.string().trim().email(), next: appPath.optional() }),
@@ -24,6 +32,47 @@ export const INPUTS = {
   }),
   approve: z.object({ actionId: id, verdict: z.enum(["grant", "deny"]), rationale: note.optional() }),
   reviewOutcome: z.object({ insightId: id, outcomeId: id, lesson: note.min(1, "write the lesson") }),
+  recordCommitment: z
+    .object({
+      title: z.string().trim().min(5, "say what was promised").max(200),
+      ownerUserId: ownerId,
+      ownerUnitId: id,
+      beneficiaryUnitIds: z.array(id).max(20).default([]),
+      source: z.string().trim().min(3, "where was it promised?").max(200),
+      dueAt: when,
+      impactIls: z.coerce.number().min(0).max(100_000_000).optional(),
+      compliance: z.coerce.number().min(0).max(1).optional(),
+      resource: z
+        .string()
+        .trim()
+        .regex(/^[a-z0-9:_-]{3,80}$/, "a resource name like sku-set:south-dairy-6")
+        .optional(),
+      effect: z.enum(["promote", "delist", "spend", "freeze_spend", "cutover", "peak_trading"]).optional(),
+      windowStart: dayStr.optional(),
+      windowEnd: dayStr.optional(),
+    })
+    .refine((v) => (v.resource ? !!(v.effect && v.windowStart && v.windowEnd) : !v.effect), {
+      message: "an effect needs a resource, an effect and its window",
+    }),
+  commitment: z.object({ commitmentId: id }),
+  renegotiateCommitment: z.object({
+    commitmentId: id,
+    dueAt: when,
+    rationale: note.min(3, "say why the date moves"),
+    windowStart: dayStr.optional(),
+    windowEnd: dayStr.optional(),
+  }),
+  cancelCommitment: z.object({ commitmentId: id, rationale: note.min(3, "say why it is cancelled") }),
+  insight: z.object({ insightId: id }),
+  dismissInsight: z.object({ insightId: id, rationale: note.min(3, "say why it can be dismissed") }),
+  actionRef: z.object({ insightId: id, actionId: id }),
+  cancelAction: z.object({ insightId: id, actionId: id, rationale: note.min(3, "say why it is cancelled") }),
+  amendAction: z.object({
+    insightId: id,
+    actionId: id,
+    estimatedCost: z.coerce.number().min(0).max(100_000_000),
+    note: note.optional(),
+  }),
   advanceClock: z.object({
     hours: z.coerce
       .number()

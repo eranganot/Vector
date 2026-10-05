@@ -26,14 +26,14 @@ An **actor** is either a signed-in user or a system actor:
 - **System actors:** named, non-human principals with fixed, minimal capabilities (`SYSTEM_ACTOR_OPERATIONS` in
   `authorize.ts`). They never approve.
 
-| System actor               | Can do                                                                       | Cannot do                             |
-| -------------------------- | ---------------------------------------------------------------------------- | ------------------------------------- |
-| `system:detector`          | create signals and insights; recommend decisions; propose actions            | decide, approve, execute              |
-| `system:policy`            | submit actions of `decided` decisions; auto-decide under AD rules            | approve, change rules                 |
-| `system:executor`          | execute `ready` actions; complete or fail executions; start outcome watches  | approve, change targets               |
-| `system:outcome-evaluator` | evaluate outcomes; resolve insights whose loop has closed                    | review or override verdicts           |
-| `system:clock`             | expire approval requests; lapse approvals                                    | anything else                         |
-| `system:ai` (P5)           | same as `system:detector`, lower trust: its outputs are always `recommended` | decide, approve, execute, auto-decide |
+| System actor               | Can do                                                                                                                         | Cannot do                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `system:detector`          | create signals and insights; recommend decisions; propose actions; mark commitments overdue; detect and resolve conflicts (P4) | decide, approve, execute; complete, renegotiate or cancel a commitment |
+| `system:policy`            | submit actions of `decided` decisions; auto-decide under AD rules                                                              | approve, change rules                                                  |
+| `system:executor`          | execute `ready` actions; complete or fail executions; start outcome watches                                                    | approve, change targets                                                |
+| `system:outcome-evaluator` | evaluate outcomes; resolve insights whose loop has closed                                                                      | review or override verdicts                                            |
+| `system:clock`             | expire approval requests; lapse approvals                                                                                      | anything else                                                          |
+| `system:ai` (P5)           | same as `system:detector`, lower trust: its outputs are always `recommended`                                                   | decide, approve, execute, auto-decide                                  |
 
 **Read visibility.** A user can read an insight (and its signals, evidence, decision, actions, approvals,
 outcomes, audit) if the primary unit **or any affected unit** is inside one of their scopes. This lets a
@@ -57,6 +57,8 @@ unit), not in SQL; Phase 3 moves them to SQL filters.
 | `action.execute` (manual trigger/retry) |       |     ✓     |         ✓          |             ✓             |        |
 | `action.cancel`                         |       |     ✓     |         ✓          |             ✓             |        |
 | `outcome.review`                        |       |     ✓     |         ✓          |             ✓             |        |
+| `commitment.record` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
+| `commitment.update` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
 | `audit.read` (in scope)                 |   ✓   |     ✓     |         ✓          |             ✓             |        |
 | `config.priority_weights.propose`       |   ✓   |     ✓     |                    |                           |        |
 | `config.priority_weights.approve`       |       |     ✓     |                    |                           |        |
@@ -73,16 +75,18 @@ Manager for each of the 5 regions; two Branch Managers (Avi at Haifa Grand Canyo
 Viewer at the group root (Tal, board observer); and an Admin at the group root. A Branch Manager is the
 `regional_manager` role assigned at a branch unit; there is no separate role.
 
-How the UI applies `audit.read` in Phase 2: the group-wide `/audit` page (chain status) is shown to Executive and
-Admin only. Department and regional managers see the audit trail of each insight they can read on its trace page.
-A scoped audit explorer arrives in Phase 4.
+How the UI applies `audit.read` (Phase 4): `/audit` is a scoped explorer for everyone holding `audit.read`. An event is
+visible when its subject is (an insight, action or commitment by its visible units; a decision, approval or outcome
+through its insight or action; a conflict when either commitment is visible). Organization-level events (demo reset,
+clock) and refusals against a unit are visible to group-scope readers (Executive, Admin). Everyone sees their own
+actions, including their refused attempts. Each insight's own trail stays on its trace page.
 
 ## 3. Authorization rules (context)
 
 | Code | Rule                                                                                                                                                                                                                                                                                    |
 | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | AZ-1 | The target entity's primary unit (or, for actions and outcomes, **every** target unit) must be inside the actor's scope for that capability                                                                                                                                             |
-| AZ-2 | Separation of duties: approver ≠ action proposer, approver ≠ action owner                                                                                                                                                                                                               |
+| AZ-2 | Separation of duties: approver ≠ action proposer, approver ≠ action owner. The proposer is the author of the current revision: amending an action makes you its proposer (Phase 4)                                                                                                      |
 | AZ-3 | Writes require a fresh session (≤ 12 h, real time). Enforced twice: Better Auth sessions expire 12 h after sign-in and are not extended (observed 2026-10-04), and every write checks the session's age, which the request carries into the actor (`sessionAgeHours`; integration test) |
 | AZ-4 | System actors cannot hold user roles; users cannot act as system actors                                                                                                                                                                                                                 |
 | AZ-5 | The persona switcher signs in as a seeded user through the normal sign-in path. Every audit row records `via_demo_switcher = true` and the session id. The switcher works only when `DEMO_PERSONAS=on` (checked at run time) and lists the people of the active organization            |

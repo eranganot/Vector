@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { api, demoNow } from "@/application/facade";
+import { demoNow } from "@/application/facade";
+import { api } from "@/app/_lib/api";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { approveAction } from "../../actions";
 import { Band, Card, Notice, Pill, SectionTitle } from "../../_components/ui";
+import { getT } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -18,34 +20,45 @@ export default async function ApprovalsPage({
 }) {
   const { error, done } = await searchParams;
   const { actor } = await requireActor();
-  const [items, decisions, mine, now] = await Promise.all([
+  const t = await getT();
+  const [items, decisions, mine, now, history] = await Promise.all([
     api.myApprovals(actor),
     api.myDecisions(actor),
     api.myActions(actor),
     demoNow(),
+    api.approvalHistory(actor),
   ]);
   const ACTION_STATE: Record<string, string> = {
-    proposed: "Waiting for the decision",
-    pending_approval: "Waiting for approval",
-    ready: "Ready to execute",
-    executing: "Executing",
-    failed: "Failed: retry or cancel",
+    proposed: t("Waiting for the decision"),
+    pending_approval: t("Waiting for approval"),
+    ready: t("Ready to execute"),
+    executing: t("Executing"),
+    failed: t("Failed: retry or cancel"),
   };
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="text-[26px] font-semibold tracking-tight">Waiting on you</h1>
+        <h1 className="text-[26px] font-semibold tracking-tight">{t("Waiting on you")}</h1>
         <p className="text-sm text-muted">
-          {decisions.length} decision{decisions.length === 1 ? "" : "s"} to make · {items.length} approval
-          {items.length === 1 ? "" : "s"} to give · {mine.length} of your action{mine.length === 1 ? "" : "s"} in flight
+          {decisions.length === 1
+            ? t("{n} decision to make", { n: decisions.length })
+            : t("{n} decisions to make", { n: decisions.length })}{" "}
+          ·{" "}
+          {items.length === 1
+            ? t("{n} approval to give", { n: items.length })
+            : t("{n} approvals to give", { n: items.length })}{" "}
+          ·{" "}
+          {mine.length === 1
+            ? t("{n} of your action in flight", { n: mine.length })
+            : t("{n} of your actions in flight", { n: mine.length })}
         </p>
       </div>
       <section className="flex flex-col gap-3">
-        <SectionTitle aside={<span className="text-xs text-muted">VECTOR recommends; you decide</span>}>
-          Decisions to make · {decisions.length}
+        <SectionTitle aside={<span className="text-xs text-muted">{t("VECTOR recommends; you decide")}</span>}>
+          {t("Decisions to make · {n}", { n: decisions.length })}
         </SectionTitle>
         {decisions.length === 0 && (
-          <p className="text-sm text-muted">No recommendation is waiting for your decision.</p>
+          <p className="text-sm text-muted">{t("No recommendation is waiting for your decision.")}</p>
         )}
         {decisions.map((d) => (
           <Link
@@ -56,25 +69,27 @@ export default async function ApprovalsPage({
             <Band band={d.band} score={d.score} />
             <span className="flex min-w-0 grow flex-col gap-1">
               <span className="text-[15px] font-semibold">{d.title}</span>
-              <span className="text-[13px] text-muted">Recommendation: {d.statement}</span>
+              <span className="text-[13px] text-muted">
+                {t("Recommendation: {statement}", { statement: d.statement })}
+              </span>
             </span>
-            <span className="text-sm text-accent">Accept or decline →</span>
+            <span className="text-sm text-accent">{t("Accept or decline →")}</span>
           </Link>
         ))}
       </section>
-      <SectionTitle>Approvals to give · {items.length}</SectionTitle>
+      <SectionTitle>{t("Approvals to give · {n}", { n: items.length })}</SectionTitle>
       <Notice
         error={error}
         done={
           done === "grant"
-            ? "Approved. Execution started (simulated)."
+            ? t("Approved. Execution started (simulated).")
             : done === "deny"
-              ? "Denied. The action is rejected."
+              ? t("Denied. The action is rejected.")
               : undefined
         }
       />
-      {items.length === 0 && <p className="text-sm text-muted">No approval request is waiting for you.</p>}
-      {items.map(({ approval, action, insightTitle, band, insightId }) => {
+      {items.length === 0 && <p className="text-sm text-muted">{t("No approval request is waiting for you.")}</p>}
+      {items.map(({ approval, action, insightTitle, band, insightId, alsoAsked, targetNames }) => {
         const req = approval.requirement as ApprovalRequirement;
         const matched = req.rules.filter((r) => r.matched);
         const hoursLeft = Math.max(0, 72 - (now.getTime() - approval.requestedAt.getTime()) / 3_600_000);
@@ -83,33 +98,52 @@ export default async function ApprovalsPage({
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <Band band={band} />
               <span className="text-muted">
-                For insight: {insightTitle} ·{" "}
+                {t("For insight: {title}", { title: insightTitle })} ·{" "}
                 <Link href={`/insights/${insightId}`} className="underline">
-                  open full trace
+                  {t("open full trace")}
                 </Link>
               </span>
             </div>
             <h2 className="text-xl font-semibold">{action.title}</h2>
             <div className="flex flex-col gap-1 rounded-lg bg-ground px-4 py-3 text-sm">
-              <b>Why you are asked</b>
+              <b>{t("Why you are asked")}</b>
               {matched.map((r) => (
                 <span key={r.rule}>
                   {r.rule} {r.name} ({r.reason}) →{" "}
-                  {[...new Set(r.eligible.map((o) => ROLE_LABEL[o.role] ?? o.role))].join(" or ")}
+                  {[...new Set(r.eligible.map((o) => (ROLE_LABEL[o.role] ? t(ROLE_LABEL[o.role]) : o.role)))].join(
+                    ` ${t("or")} `,
+                  )}
                 </span>
               ))}
               <span className="text-[13px] text-muted">
-                You are eligible under every rule, and you neither proposed nor own this action.
+                {t("You are eligible under every rule, and you neither proposed nor own this action.")}{" "}
+                {alsoAsked.length > 0
+                  ? t("Also asked: {names} (the first answer counts).", { names: alsoAsked.join(", ") })
+                  : t("Nobody else is asked.")}
               </span>
             </div>
             <div className="font-mono text-[13px] text-muted">
-              Cost ₪{Number(action.estimatedCost).toLocaleString("en-US")} · revision {action.revision} · request
-              expires in about {Math.round(hoursLeft)} h (demo clock)
+              {t("Cost")} <span className="num">₪{Number(action.estimatedCost).toLocaleString("en-US")}</span> ·{" "}
+              {t("for {names}", { names: targetNames.join(", ") })}
+              {action.dueAt ? (
+                <>
+                  {" "}
+                  · {t("due")} <span className="num">{action.dueAt.toISOString().slice(5, 16).replace("T", " ")}</span>
+                </>
+              ) : (
+                ""
+              )}{" "}
+              · {t("revision")} <span className="num">{action.revision}</span> ·{" "}
+              <span className={hoursLeft < 12 ? "text-warn" : ""}>
+                {t("request expires in about {hours} h (demo clock); unanswered, it goes back to the owner", {
+                  hours: Math.round(hoursLeft),
+                })}
+              </span>
             </div>
             <form action={approveAction} className="flex flex-col gap-3">
               <input type="hidden" name="actionId" value={action.id} />
               <label htmlFor={`note-${approval.id}`} className="text-[13px] font-semibold">
-                Note (required if you deny)
+                {t("Note (required if you deny)")}
               </label>
               <textarea
                 id={`note-${approval.id}`}
@@ -123,13 +157,13 @@ export default async function ApprovalsPage({
                   value="grant"
                   className="rounded-lg bg-accent px-5 py-2.5 font-semibold text-accent-ink"
                 >
-                  Approve
+                  {t("Approve")}
                 </button>
                 <button name="verdict" value="deny" className="rounded-lg border border-ink bg-panel px-5 py-2.5">
-                  Deny
+                  {t("Deny")}
                 </button>
                 <span className="text-xs text-muted">
-                  Recorded with your name, time and session. Silence never approves.
+                  {t("Recorded with your name, time and session. Silence never approves.")}
                 </span>
               </div>
             </form>
@@ -137,10 +171,10 @@ export default async function ApprovalsPage({
         );
       })}
       <section className="flex flex-col gap-3">
-        <SectionTitle aside={<span className="text-xs text-muted">actions you own</span>}>
-          Your actions in flight · {mine.length}
+        <SectionTitle aside={<span className="text-xs text-muted">{t("actions you own")}</span>}>
+          {t("Your actions in flight · {n}", { n: mine.length })}
         </SectionTitle>
-        {mine.length === 0 && <p className="text-sm text-muted">You own no open actions.</p>}
+        {mine.length === 0 && <p className="text-sm text-muted">{t("You own no open actions.")}</p>}
         {mine.map(({ action: a, insightTitle, insightId, band, waitingOn }) => (
           <Link
             key={a.id}
@@ -152,7 +186,7 @@ export default async function ApprovalsPage({
               <span className="text-[15px] font-semibold">{a.title}</span>
               <span className="text-[13px] text-muted">
                 {insightTitle}
-                {waitingOn.length > 0 && ` · approver: ${waitingOn.join(" or ")}`}
+                {waitingOn.length > 0 && ` · ${t("approver: {names}", { names: waitingOn.join(` ${t("or")} `) })}`}
               </span>
             </span>
             <Pill tone={a.status === "pending_approval" ? "warn" : a.status === "failed" ? "bad" : "neutral"}>
@@ -160,6 +194,39 @@ export default async function ApprovalsPage({
             </Pill>
           </Link>
         ))}
+      </section>
+      <section className="flex flex-col gap-3">
+        <SectionTitle aside={<span className="text-xs text-muted">{t("recorded in the audit trail")}</span>}>
+          {t("Your recent answers · {n}", { n: history.length })}
+        </SectionTitle>
+        {history.length === 0 ? (
+          <p className="text-sm text-muted">{t("You have not answered an approval request yet.")}</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-line/60 text-sm">
+            {history.map((h) => (
+              <li key={h.id} className="flex flex-wrap items-center gap-3 py-2">
+                <Band band={h.band} />
+                <Pill tone={h.status === "granted" ? "good" : h.status === "denied" ? "bad" : "neutral"}>
+                  {h.status === "granted" ? t("Approved") : h.status === "denied" ? t("Denied") : h.status}
+                </Pill>
+                <Link href={`/insights/${h.insightId}`} className="min-w-0 no-underline hover:underline">
+                  {h.actionTitle}
+                </Link>
+                <span className="text-xs text-muted">
+                  {t("rev")} <span className="num">{h.revision}</span>
+                  {h.decidedAt && (
+                    <>
+                      {" "}
+                      · <span className="num">{h.decidedAt.toISOString().slice(5, 16).replace("T", " ")}</span>
+                    </>
+                  )}
+                  {h.rationale ? ` · “${h.rationale}”` : ""} ·{" "}
+                  {t("now {status}", { status: h.actionStatus.replace("_", " ") })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </>
   );
