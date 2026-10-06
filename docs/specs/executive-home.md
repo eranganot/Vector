@@ -1,6 +1,6 @@
 # C-suite home (E2) and IA v2
 
-Status: **Proposed (E0, 2026-10-06), for Eran's design gate.** Implements FB-1 to FB-6 and FB-12. Wireframes:
+Status: **Approved (G-E0, 2026-10-06); E2a read model built 2026-10-07 (§4.5).** Implements FB-1 to FB-6 and FB-12. Wireframes:
 [wireframes/v2/](wireframes/v2/). This page replaces the "KPIs never the headline" principle of the Phase 1 IA with
 FB-3: **health and money lead, and every number carries its cause.**
 
@@ -161,6 +161,35 @@ deterministic one, labelled, and never replaces it silently.
 The same score per region uses the branch KPIs averaged over the region's branches, and the money lines that exist
 per branch (sales, labor, shrinkage). Department-only lines (marketing spend, IT opex) are not split by region; they
 show "group only".
+
+### 4.5 As built (E2a, 2026-10-07)
+
+The read model is `src/application/queries/executive.ts` (`executiveHome`); the models are `src/domain/health.ts` and
+`src/domain/projection.ts`. Choices made while building it, within the approved design:
+
+- **The 7-day change is measured from results only.** KPIs and money lines are re-scored as of 7 days earlier; the
+  risk load enters the level but not the change. The scenario catalog stamps every story insight on the story day,
+  so "open risks a week ago" would not be a real history. Once insights carry their own history, risk load joins the
+  change.
+- **Budgets per day.** Monthly budgets are spread over the month with the trading calendar (`tradingWeight`: the
+  weekday shape, holiday eves ×1.45, holy days ×0.05), the same weights the synthetic generator uses. Rent,
+  department opex and IT capex are spread evenly. Balance lines (inventory days, penalty exposure) compare the
+  latest level with the budgeted level.
+- **Penalty exposure** has a zero budget, so it scores 100 − ₪ exposure ÷ 5,000 (₪250k → 50).
+- **Operating profit** is derived as in financials.md §1: gross margin − store labor − logistics − occupancy −
+  marketing − IT opex − department opex. It is a group line (Finance's tile reads the whole group).
+- **Risk drag and action lift reach the P&L lines only.** A risk's ₪ at stake and an action's expected impact are
+  sales figures: they move net sales one for one, and gross margin and operating profit at the budgeted margin rate
+  (≈26%). Cost lines project from their run-rate alone. Drag uses open P1–P2 risks in the viewer's scope.
+- **Run-rate** is the mean ratio of actual to daily budget over the last 28 complete days; the range is ±1σ of those
+  ratios × the remaining budget per day × √days.
+- **Where to focus** ranks a projected miss (> 2% at end of month) by the ₪ per week it is running behind budget
+  now, so a month's shortfall competes fairly with a risk's ₪ per week.
+- **Regions** use the measures that exist per region (branch KPIs and region money lines) and the owned risks that
+  touch the region; department-only measures are listed as "group only".
+- **Money keeps pace with the clock.** Advancing the demo clock now also generates that day's money lines.
+- **Performance.** Indexes on (organization, day) for KPI observations and money lines (migration 0010) bring the
+  read model from ~650 ms to ~100 ms locally.
 
 ## 5. "Why it changed": cause cards
 

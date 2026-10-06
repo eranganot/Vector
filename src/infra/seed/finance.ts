@@ -6,7 +6,14 @@
  * marketing 0.8%, other opex 0.7%. Store labor comes from the KPI generator (≈15.3%), so operating profit ≈ 3.5%.
  */
 import { addDays } from "@/domain/calendar";
-import { type DayValues, expectedSales, GENERATOR_SEED, generateDay, generateDepartmentDay } from "./generator";
+import {
+  type DayValues,
+  type Interventions,
+  expectedSales,
+  GENERATOR_SEED,
+  generateDay,
+  generateDepartmentDay,
+} from "./generator";
 import { type UnitSeed, UNITS } from "./org";
 import { createRng } from "./prng";
 
@@ -305,10 +312,10 @@ function daysFrom(a: string, b: string) {
 }
 
 /** All money lines for the days in [first, last]. Generates each branch-day once. */
-export function financeHistory(first: string, last: string): FinRow[] {
+export function financeHistory(first: string, last: string, iv: Interventions = {}): FinRow[] {
   const out: FinRow[] = [];
   for (let day = first; day <= last; day = addDays(day, 1)) {
-    const branchDays = new Map(BRANCHES.map((b) => [b.code, generateDay(b, day)]));
+    const branchDays = new Map(BRANCHES.map((b) => [b.code, generateDay(b, day, iv)]));
     out.push(...regionDay(day, branchDays));
     let sales = 0;
     let labor = 0;

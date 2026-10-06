@@ -1,6 +1,6 @@
 # Stage E1: foundation (plan v2)
 
-Status: **Built and verified on Dev 2026-10-06; awaiting Eran's E1 gate.** Prod stays on Phase 4 until he signs off.
+Status: **Signed off by Eran 2026-10-06 (G-E1).** Built and verified on Dev. Prod promotion is a separate step.
 
 ## What shipped
 

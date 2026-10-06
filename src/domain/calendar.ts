@@ -43,6 +43,18 @@ export function dayKind(isoDay: string): DayKind {
   return DAYS[isoDay] ?? "normal";
 }
 
+/** A day's share of a normal week's trade: Sun 0.95 · Mon–Tue 0.9 · Wed 1.0 · Thu 1.25 · Fri 1.1 · Sat 0.35. */
+export const WEEKDAY_SHAPE = [0.95, 0.9, 0.9, 1.0, 1.25, 1.1, 0.35] as const;
+
+/**
+ * How much a day trades relative to an average weekday: holiday eves spike (×1.45), holy days trade at 5% (most
+ * branches closed). The synthetic generator and the budget pro-rating (plan v2, E2) use the same weights.
+ */
+export function tradingWeight(isoDay: string): number {
+  const kind = dayKind(isoDay);
+  return kind === "holiday" ? 0.05 : kind === "holiday_eve" ? 1.45 : WEEKDAY_SHAPE[weekday(isoDay)];
+}
+
 /** Weekday of an ISO date, 0 = Sunday … 6 = Saturday (timezone-independent). */
 export function weekday(isoDay: string): number {
   return new Date(`${isoDay}T12:00:00Z`).getUTCDay();
