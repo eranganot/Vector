@@ -277,6 +277,20 @@ Overdue becomes an insight (Q2) only with dependents, ≥ ₪10k/week at stake, 
 Opposing effects (`conflict-rules-v1`): promote × delist, spend × freeze_spend, cutover × peak_trading. The conflict's
 insight is decided by the manager of the unit whose commitment came second; undecided, it escalates to the two units' common manager (Q1, Eran 2026-10-05).
 
+## 4b. Entities added by plan v2 (proposed, E0)
+
+| Entity                                                                                                        | Spec                                                                                        | Stage  |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------ |
+| `FinAccount`, `FinActual`, `FinBudget`, `FinTarget`, `ProjectionSnapshot`                                     | [financials.md](financials.md)                                                              | E1, E2 |
+| Action economics fields (`expected_impact_ils`, `impact_basis`, `cost_ils`, `execution_risk`, `risk_factors`) | [cross-department.md §2](cross-department.md#2-action-economics-economics-v1-deterministic) | E1, E3 |
+| `Initiative`, `Milestone`, `Barrier`                                                                          | [cross-department.md §3](cross-department.md#3-initiatives-the-cross-department-tab)        | E1, E3 |
+| `OutboundMessage` and the channel seam                                                                        | [action-center.md §4](action-center.md#4-messages-and-channels)                             | E4     |
+| `Report` (immutable snapshot)                                                                                 | [reports.md §3](reports.md#3-generation-and-storage)                                        | E5     |
+| `MarketSeries`, `MarketPoint`, `Competitor`, `CompetitorFigure`                                               | [market-intelligence.md §2](market-intelligence.md#2-data-model)                            | E6     |
+| `InboxThread`, `InboxMessage` (synthetic in the demo)                                                         | [mail-agent.md](mail-agent.md)                                                              | E7     |
+
+Every state change on these entities goes through a named, authorized and audited command, as in §3.
+
 ## 5. Mapping to the charter's ten questions
 
 | Charter question                      | Answered by                                                          |
