@@ -283,7 +283,10 @@ describe("commitments read model (scope, both directions, bottlenecks)", () => {
   });
 
   it("Finance waits on HR and Trade; Marketing's own promises are not shown to Finance as 'owed'", async () => {
-    const v = (await commitmentsView(appDb, orgId, await as("michal")))!;
+    // ADR-008: the CFO's default scope is the whole group; Finance's own view is one click away (?unit).
+    const michal = await as("michal");
+    expect((await commitmentsView(appDb, orgId, michal))!.scope.name).toBe("VECTOR Retail Group");
+    const v = (await commitmentsView(appDb, orgId, michal, (await unit("D-FIN")).id))!;
     expect(v.waitingOn.map((d) => d.ownerUnitName).sort()).toEqual(["HR", "Trade & Commercial"]);
     expect(v.owed.map((c) => c.title)).not.toContain("Holiday promo signage and shelf talkers for 60 branches");
     const dairy = v.waitingOn.find((d) => d.ownerUnitName === "Trade & Commercial")!;

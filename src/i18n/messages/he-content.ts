@@ -98,6 +98,8 @@ export const HE_CONTENT: Record<string, string> = {
   "Lior Ben-Ami": "ליאור בן-עמי",
   "Maya Azulay": "מאיה אזולאי",
   "Michal Golan": "מיכל גולן",
+  "Oren Halevi": "אורן הלוי",
+  COO: "סמנכ״ל תפעול",
   "Noa Friedman": "נועה פרידמן",
   "Omer Biton": "עומר ביטון",
   "Rina Avraham": "רינה אברהם",

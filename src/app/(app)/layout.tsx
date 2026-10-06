@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const approvals = approvalList.length + decisionList.length;
   const roles = actor.kind === "user" ? [...new Set(actor.assignments.map((a) => a.role))] : [];
   return (
-    <Shell me={{ name: me.name, title: me.title }} approvals={approvals} roles={roles} via={via}>
+    <Shell me={{ name: me.name, title: me.title, isCSuite: me.isCSuite }} approvals={approvals} roles={roles} via={via}>
       {children}
     </Shell>
   );

@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "is_c_suite" boolean DEFAULT false NOT NULL;

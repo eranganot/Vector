@@ -31,7 +31,7 @@ const ICONS = {
 function groupOf(title: string | null) {
   const t = title ?? "";
   if (/Regional|Branch/.test(t)) return "Regions & branches";
-  if (/CEO|Board|administrator/.test(t)) return "Leadership & admin";
+  if (/^(CEO|CFO|COO)$|Board|administrator/.test(t)) return "Leadership & admin";
   return "Departments";
 }
 
@@ -43,7 +43,7 @@ export async function Shell({
   via,
   children,
 }: {
-  me: { name: string; title: string | null };
+  me: { name: string; title: string | null; isCSuite?: boolean };
   approvals: number;
   roles: string[];
   via: boolean;
@@ -61,11 +61,24 @@ export async function Shell({
   const shownGroups = await localized(groups);
   // audit.read (authorization.md §2): Executive, Admin and managers; the explorer scopes what each one sees.
   const seeAudit = ["executive", "admin", "department_manager", "regional_manager"].some((r) => roles.includes(r));
+  const waiting = (
+    <NavLink href="/approvals">
+      <Icon d={ICONS.approvals} /> {t("Waiting on you")}
+      {approvals > 0 && (
+        <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
+          {approvals}
+        </span>
+      )}
+    </NavLink>
+  );
+  // C-suite navigation (IA v2, executive-home.md §2): what waits on you comes right after Home.
+  const cSuite = !!me.isCSuite;
   const nav = (
     <>
       <NavLink href="/">
         <Icon d={ICONS.today} /> {t("Home")}
       </NavLink>
+      {cSuite && waiting}
       <NavLink href="/risks">
         <Icon d={ICONS.risks} /> {t("Risks")}
       </NavLink>
@@ -81,14 +94,7 @@ export async function Shell({
       <NavLink href="/org">
         <Icon d={ICONS.org} /> {t("Organization")}
       </NavLink>
-      <NavLink href="/approvals">
-        <Icon d={ICONS.approvals} /> {t("Waiting on you")}
-        {approvals > 0 && (
-          <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
-            {approvals}
-          </span>
-        )}
-      </NavLink>
+      {!cSuite && waiting}
       {seeAudit && (
         <NavLink href="/audit">
           <Icon d={ICONS.audit} /> {t("Audit")}

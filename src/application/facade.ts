@@ -77,7 +77,7 @@ export async function seededPeople() {
 
 export async function profile(userId: string) {
   const [u] = await db()
-    .select({ id: user.id, name: user.name, title: user.title, email: user.email })
+    .select({ id: user.id, name: user.name, title: user.title, email: user.email, isCSuite: user.isCSuite })
     .from(user)
     .where(eq(user.id, userId));
   return u;
