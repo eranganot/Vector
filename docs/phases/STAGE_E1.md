@@ -16,7 +16,7 @@ Status: **Built and verified on Dev 2026-10-06; awaiting Eran's E1 gate.** Prod 
 2. **Michal Golan (CFO) and Oren Halevi (COO):** both land on the group Command Center. "Waiting on you" is second in
    the navigation. Approve and Decide buttons still appear only in their own departments.
 3. **Hila Dahan (VP HR):** lands on HR. She sees only what touches HR.
-4. **Eitan Rosen (VP Trade & Commercial):** gross margin now reads 26.0% against a 26.0% target (it was 31.8% vs 31.5%).
+4. **Eitan Rosen (VP Trade & Commercial):** gross margin now reads 26.0% against a 26.0% target.
 5. **Not visible yet, by design:** the money lines, budgets, action economics and initiatives are in the database and
    covered by tests. E2 (C-suite home) and E3 (opportunities, cross-department) put them on screen.
 
