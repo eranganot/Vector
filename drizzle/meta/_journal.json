@@ -71,6 +71,13 @@
       "when": 1791314005930,
       "tag": "0009_plan_v2_finance_initiatives",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791320955908,
+      "tag": "0010_read_model_day_indexes",
+      "breakpoints": true
     }
   ]
 }

@@ -3,13 +3,12 @@
  * (seed, branch, KPI, day, interventions), never on generation order, so history and future days
  * produced by the scenario engine are reproducible.
  */
-import { dayKind, weekday } from "@/domain/calendar";
+import { dayKind, tradingWeight } from "@/domain/calendar";
 import { createRng } from "./prng";
 import type { UnitSeed } from "./org";
 
 export const GENERATOR_SEED = "vector-v1";
 
-const WEEKDAY_SHAPE = [0.95, 0.9, 0.9, 1.0, 1.25, 1.1, 0.35]; // Sun..Sat
 const BASE_SALES = { L: 190_000, M: 110_000 } as const;
 const REGION_FACTOR: Record<string, number> = { NORTH: 0.97, COAST: 1.0, CENTER: 1.05, JERUSALEM: 0.98, SOUTH: 0.92 };
 
@@ -78,9 +77,7 @@ export function expectedSales(branch: UnitSeed, day: string): number {
   const size = branch.sizeClass ?? "M";
   const branchFactor = 0.92 + 0.16 * createRng(`${GENERATOR_SEED}|${branch.code}`).next();
   const base = BASE_SALES[size] * (REGION_FACTOR[branch.parent ?? ""] ?? 1) * branchFactor;
-  const kind = dayKind(day);
-  const dayFactor = kind === "holiday" ? 0.05 : kind === "holiday_eve" ? 1.45 : WEEKDAY_SHAPE[weekday(day)];
-  return base * dayFactor * (1 + 0.0002 * daysBetween("2026-07-01", day));
+  return base * tradingWeight(day) * (1 + 0.0002 * daysBetween("2026-07-01", day));
 }
 
 export function generateDay(branch: UnitSeed, day: string, iv: Interventions = {}): DayValues {
@@ -92,7 +89,7 @@ export function generateDay(branch: UnitSeed, day: string, iv: Interventions = {
 
   const rng = createRng(`${GENERATOR_SEED}|${branch.code}|${day}`);
   const kind = dayKind(day);
-  const dayFactor = kind === "holiday" ? 0.05 : kind === "holiday_eve" ? 1.45 : WEEKDAY_SHAPE[weekday(day)];
+  const dayFactor = tradingWeight(day);
   const trend = 1 + 0.0002 * daysBetween("2026-07-01", day);
   const expected = base * dayFactor * trend;
 

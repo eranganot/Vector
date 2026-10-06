@@ -40,6 +40,7 @@ import {
   listMyApprovals,
   listMyDecisions,
 } from "./queries/insights";
+import { executiveHome } from "./queries/executive";
 import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
@@ -95,6 +96,7 @@ export const api = {
   performance: async (a: Actor) => performanceView(db(), await activeOrgId(db()), a),
   unit: async (a: Actor, unitId: string) => performanceView(db(), await activeOrgId(db()), a, unitId),
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
+  executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
   orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {
@@ -154,6 +156,7 @@ export const api = {
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
 export type { KpiStat, PerformanceView } from "./queries/performance";
+export type { ExecutiveHome, MoneyLine } from "./queries/executive";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

@@ -204,6 +204,15 @@ const checks: Check[] = [
       return `seed ${body.demo.seedVersion} · migrations ${body.migrations.applied}`;
     },
   },
+  {
+    phase: 6,
+    name: "E2a: the C-suite home read model's day indexes are migrated (0010)",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 11) throw new Error(`expected migration 0010, got ${body.migrations.applied}`);
+      return `migrations ${body.migrations.applied}`;
+    },
+  },
 ];
 
 async function main() {

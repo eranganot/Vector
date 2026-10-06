@@ -12,7 +12,8 @@ import { addDays } from "@/domain/calendar";
 import { DomainError } from "@/domain/errors";
 import { assertAuthorized, authorizeUser } from "@/domain/policy/authorize";
 import type { Actor } from "@/domain/types";
-import { action, demoClock, kpi, kpiObservation, orgUnit } from "@/infra/db/schema";
+import { action, demoClock, finActual, kpi, kpiObservation, orgUnit } from "@/infra/db/schema";
+import { financeHistory } from "@/infra/seed/finance";
 import { generateDay, generateDepartmentDay, P2S1, type Interventions } from "@/infra/seed/generator";
 import { SEED_VERSION, UNITS } from "@/infra/seed/org";
 import { seed } from "@/infra/seed/seed";
@@ -80,6 +81,22 @@ async function generateDays(ctx: AppContext, fromDay: string, toDay: string) {
     }
   }
   if (rows.length) await ctx.db.insert(kpiObservation).values(rows).onConflictDoNothing();
+  // Money lines for the same days (plan v2, E2): the finance feed keeps pace with the store feed.
+  if (fromDay < toDay) {
+    const all = await ctx.db.select().from(orgUnit).where(eq(orgUnit.orgId, ctx.orgId));
+    const idOf = new Map(all.map((u) => [u.code, u.id]));
+    const fin = financeHistory(fromDay, addDays(toDay, -1), iv)
+      .filter((r) => idOf.has(r.unit))
+      .map((r) => ({
+        orgId: ctx.orgId,
+        accountCode: r.account,
+        orgUnitId: idOf.get(r.unit)!,
+        day: r.day,
+        amount: r.amount,
+        source: "synthetic:finance-feed",
+      }));
+    if (fin.length) await ctx.db.insert(finActual).values(fin).onConflictDoNothing();
+  }
   return rows.length;
 }
 

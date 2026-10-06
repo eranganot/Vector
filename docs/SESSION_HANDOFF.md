@@ -1,17 +1,18 @@
 # Session handoff
 
-_Last updated: 2026-10-06 (E0)_
+_Last updated: 2026-10-07 (E2a)_
 
 ## Current phase
 
-**Plan v2, stage E1 (foundation): built and verified on Dev 2026-10-06; awaiting Eran's E1 gate** (docs/phases/STAGE_E1.md).
-E0 was signed off (G-E0) with the gross margin recalibrated to 26% (G-E0g). Prod (`demo` e8ff6ab) stays on Phase 4
-until Eran signs off a stage.
+**Plan v2, stage E2 (C-suite home v2), in progress.** E1 was signed off by Eran 2026-10-06 (G-E1). Prod (`demo`
+e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
-- E1a #34 (product name), E1b #35 (C-suite scope, COO, navigation), E1c #36 (synthetic data v5). Dev 0ad0ea1:
-  migrations 10/10, seed p5-v1, smoke 14/14, e2e 29/29 against Dev, then the Dev demo was reset.
-- Next: E2, the C-suite home v2 (executive-home.md, wireframes v3 screen 1): health-v2, projection-v1, "Why it
-  changed", financials vs budget, "Where to focus", ₪ headers.
+- E2a #38: health-v2, projection-v1 and the read model `executiveHome` (no UI yet); money lines follow the demo
+  clock; migration 0010 (org/day indexes).
+- Next: E2b, the C-suite home UI (wireframes v3 screen 1: KPI tiles, organization pulse, health bridge, month revenue
+  vs budget with projection, priorities, risks & opportunities, outside / inside, VECTOR insight), VP home, region
+  drill-down, EN/HE, Time-to-Understanding e2e; then E2c (₪ headers on Risks, Opportunities, Commitments, Actions)
+  and the E2 gate brief.
 
 ## Objective (E0, done)
 
@@ -20,7 +21,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Open decisions (for Eran)
 
-- E0 gate items above. AI provider still open for the AI-integration stage (D-AI).
+- AI provider still open for the AI-integration stage (D-AI).
 
 ## Known limitations / deliberate deferrals
 
@@ -32,7 +33,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews the E0 specs and wireframes v2; on approval, start E1 (name, C-suite scope, COO, data v5).
+1. Build E2b (home UI) on `executiveHome`, then E2c, verify on Dev, write docs/phases/STAGE_E2.md for Eran's gate.
 
 ## Reproducible commands
 

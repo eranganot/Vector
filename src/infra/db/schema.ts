@@ -200,7 +200,11 @@ export const kpiObservation = pgTable(
     value: doublePrecision("value").notNull(),
     source: text("source").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.kpiId, t.orgUnitId, t.day] })],
+  // Read models load "the last N days" for the whole organization (E2 executive home): index by org and day.
+  (t) => [
+    primaryKey({ columns: [t.kpiId, t.orgUnitId, t.day] }),
+    index("kpi_observation_org_day_idx").on(t.orgId, t.day),
+  ],
 );
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
@@ -579,7 +583,10 @@ export const finActual = pgTable(
     amount: doublePrecision("amount").notNull(),
     source: text("source").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.orgId, t.accountCode, t.orgUnitId, t.day] })],
+  (t) => [
+    primaryKey({ columns: [t.orgId, t.accountCode, t.orgUnitId, t.day] }),
+    index("fin_actual_org_day_idx").on(t.orgId, t.day),
+  ],
 );
 
 export const finBudget = pgTable(

@@ -117,7 +117,7 @@ export type KpiStat = {
   series: { day: string; actual: number; expected: number }[];
 };
 
-function kpiStat(k: Kpi, obs: Obs[], unitIds: Set<string>, asOf: string, seriesDays = 28): KpiStat {
+export function kpiStat(k: Kpi, obs: Obs[], unitIds: Set<string>, asOf: string, seriesDays = 28): KpiStat {
   const mine = obs.filter((o) => o.kpiId === k.id && unitIds.has(o.orgUnitId));
   const byDay = new Map<string, number[]>();
   for (const o of mine) byDay.set(o.day, [...(byDay.get(o.day) ?? []), o.value]);

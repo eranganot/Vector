@@ -1,0 +1,2 @@
+CREATE INDEX "fin_actual_org_day_idx" ON "fin_actual" USING btree ("org_id","day");--> statement-breakpoint
+CREATE INDEX "kpi_observation_org_day_idx" ON "kpi_observation" USING btree ("org_id","day");
