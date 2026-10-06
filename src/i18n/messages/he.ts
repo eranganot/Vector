@@ -16,7 +16,6 @@ export const HE: Record<string, string> = {
   "Waiting on you": "ממתין לך",
   Audit: "ביקורת",
   "Demo controls": "בקרת הדגמה",
-  "Organizational intelligence": "מודיעין ארגוני",
   "Synthetic organization. Executions are simulated.": "ארגון סינתטי. הביצועים מדומים.",
   "demo clock": "שעון הדגמה",
   "Demo clock": "שעון הדגמה",

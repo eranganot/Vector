@@ -8,6 +8,7 @@ import { getLocale } from "../_lib/locale";
 import { LanguageSwitch } from "./language-switch";
 import { NavLink } from "./nav-link";
 import { Logo } from "./ui";
+import { PRODUCT, TAGLINE } from "@/i18n/brand";
 
 const Icon = ({ d }: { d: string }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -106,8 +107,8 @@ export async function Shell({
         <Link href="/" className="flex items-center gap-2.5 px-2 no-underline">
           <Logo />
           <span className="flex flex-col leading-tight">
-            <span className="text-[15px] font-semibold tracking-[0.14em]">VECTOR</span>
-            <span className="text-[11px] text-muted">{t("Organizational intelligence")}</span>
+            <span className="text-[15px] font-semibold tracking-[0.14em]">{PRODUCT}</span>
+            <span className="text-[11px] text-muted">| {TAGLINE[locale]}</span>
           </span>
         </Link>
         <nav className="flex flex-col gap-1" aria-label={t("Main")}>
@@ -121,7 +122,8 @@ export async function Shell({
         <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-panel/40 px-4 py-3 sm:px-8">
           <Link href="/" className="flex items-center gap-2 no-underline lg:hidden">
             <Logo size={22} />
-            <span className="text-sm font-semibold tracking-[0.14em]">VECTOR</span>
+            <span className="text-sm font-semibold tracking-[0.14em]">{PRODUCT}</span>
+            <span className="text-[11px] text-muted">| {TAGLINE[locale]}</span>
           </Link>
           <nav className="flex w-full gap-1 overflow-x-auto lg:hidden" aria-label={t("Main (mobile)")}>
             {nav}

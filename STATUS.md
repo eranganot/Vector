@@ -30,6 +30,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | Phase 5 (AI intelligence) parked by Eran; no Phase 5 work until he resumes it                                                                                                                                                       | —        |
 | 2026-10-06 | Plan v2 adopted (FB-0–FB-12). E0 specs and design: C-suite home and IA v2, health-v2, projection-v1, financials and data v5, ADR-008, cross-department, Action Center, reports, market (sources checked), mail agent; wireframes v2 | #32      |
 | 2026-10-06 | E0 design review (G-E0a–f): wireframes v3 (visual-first, reference style), specs updated for cross-department action items, action-driven Action Center, editable report charts, competitor charts                                  | #33      |
+| 2026-10-06 | E0 signed off (G-E0); gross margin to 26% (G-E0g). E1a: product name "VECTOR \| Organizational Intelligence" / "VECTOR \| אינטליגנציה ארגונית" on every screen, tab title and sign-in (one source, `src/i18n/brand.ts`)             | #34      |
 
 ## Root-cause records
 

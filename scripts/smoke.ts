@@ -1,6 +1,7 @@
 /**
  * Phase smoke test against a running environment. Each phase appends its checks;
  * a later phase's smoke always re-runs the earlier phases' checks.
+ * Plan v2 stages continue the numbering: E1 = phase 5, E2 = 6, … E7 = 11 (so `--phase 4` still means "Prod on Phase 4").
  *   pnpm smoke --url https://<env>.up.railway.app [--expect-sha <git sha>]
  */
 import { SEED_VERSION } from "../src/infra/seed/org";
@@ -164,6 +165,22 @@ const checks: Check[] = [
       if (!/<html[^>]*lang="he"[^>]*dir="rtl"|<html[^>]*dir="rtl"[^>]*lang="he"/.test(he)) throw new Error("no rtl");
       if (!he.includes("כניסה")) throw new Error("sign-in page not in Hebrew");
       return "en → ltr · he → rtl";
+    },
+  },
+  {
+    phase: 5,
+    name: 'E1: the product is named "VECTOR | Organizational Intelligence" in English and in Hebrew (FB-2)',
+    run: async (base) => {
+      const en = (await get(base, "/login")).text;
+      if (!en.includes("<title>VECTOR | Organizational Intelligence</title>")) throw new Error("English title missing");
+      const he = await (
+        await fetch(new URL("/login", base), {
+          headers: { cookie: "vector_lang=he" },
+          signal: AbortSignal.timeout(15_000),
+        })
+      ).text();
+      if (!he.includes("<title>VECTOR | אינטליגנציה ארגונית</title>")) throw new Error("Hebrew title missing");
+      return "en and he titles";
     },
   },
 ];

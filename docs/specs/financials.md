@@ -10,16 +10,20 @@ Shufersal reported NIS 7.1B for H1 2026 ([Globes, 2026-08-27](https://en.globes.
 VECTOR Retail Group reads as a mid-sized chain, about a fifth of the market leader. The P&L below is calibrated to
 Israeli grocery margins.
 
-| Group line (annual, calibrated) | Share of sales | ≈ ₪M / year |
-| ------------------------------- | -------------: | ----------: |
-| Net sales                       |           100% |       2,660 |
-| Gross margin (target 31.5%)     |          31.5% |         838 |
-| Labor (target 15.8%)            |          15.8% |         420 |
-| Logistics                       |           4.2% |         112 |
-| Rent and occupancy              |           4.8% |         128 |
-| Marketing                       |           1.3% |          35 |
-| Other opex (HQ, IT, legal, HR)  |           1.4% |          37 |
-| **Operating profit (EBITDA)**   |       **4.0%** |     **106** |
+| Group line (annual, calibrated)      | Share of sales | ≈ ₪M / year |
+| ------------------------------------ | -------------: | ----------: |
+| Net sales                            |           100% |       2,660 |
+| Gross margin (target 26.0%, G-E0g)   |          26.0% |         692 |
+| Store labor (target 15.8%, as today) |          15.8% |         420 |
+| Logistics                            |           2.5% |          67 |
+| Rent and occupancy                   |           3.2% |          85 |
+| Marketing                            |           0.8% |          21 |
+| Other opex (HQ, IT, legal, HR)       |           0.7% |          19 |
+| **Operating profit (EBITDA)**        |       **3.0%** |      **80** |
+
+The margin was recalibrated at the E0 sign-off (G-E0g): 31.5% sat far above Rami Levy's reported 23.6%. Store labor
+stays at 15.8% so the approved labor stories (G1-c) keep their numbers, and the other cost lines carry the change.
+Operating margin lands at 3.0%, between the market's discount and service chains.
 
 ## 2. Data model (migration in E1)
 
@@ -64,7 +68,7 @@ Accounts (codes are stable; names are translated per ADR-007):
   credible run-rate, and the Q3 2026 close. The holiday calendar is extended to cover Passover 2026 and the summer.
 - **Determinism and stability.** New lines draw from their own random streams (same rule as today), so existing KPIs
   and planted stories keep their values. A seed test asserts that every p4 story fixture still holds.
-- **Budgets** are generated from the prior year's actuals: budget growth +3.5%, a margin target of 31.5% and a labor
+- **Budgets** are generated from the prior year's actuals: budget growth +3.5%, a margin target of 26.0% and a labor
   target of 15.8%, all with monthly seasonality. Planted variances make the stories readable:
   - October tracks −2.1% to sales budget (North DC delays plus the North stock-outs);
   - labor runs over in Center (the G1-c story);

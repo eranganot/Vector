@@ -1,6 +1,6 @@
 # Stage E0: specs and design (plan v2)
 
-Status: **Built 2026-10-06; awaiting Eran's design gate.** No product code changes. The gate approves the design
+Status: **Signed off by Eran 2026-10-06 21:29 (G-E0)**, with the gross margin recalibrated to 26% (G-E0g). No product code changes. The gate approves the design
 before E1 code starts.
 
 ## Inputs
