@@ -233,6 +233,17 @@ A **₪ header** of 3–5 figures sits at the top of every list page, for the vi
 | Actions & outcomes | committed cost · expected impact · realised impact (verdicts) · hit rate               |
 | Cross-department   | budget · spent · value at risk on blocked initiatives                                  |
 
+As built (E2c, 2026-10-07; `src/domain/money-headers.ts`), each figure sums what the page shows (scope and filter):
+
+- **Risks:** ₪ a week at stake · of which P1 · mitigated (an action executing or done) · no action yet (no live
+  action proposed).
+- **Opportunities:** upside a week · one-off cost to capture · net value by quarter end (upside × weeks to quarter
+  end × confidence − cost) · captured so far (upside of opportunities whose action worked; half when partly).
+- **Commitments:** ₪ a week riding on open commitments · of which overdue · delivered this month · on-time rate.
+- **Actions & outcomes:** committed cost · expected impact by quarter end (action economics) · confirmed by outcomes
+  (expected impact of actions that worked; half when partly) · hit rate (worked ÷ judged).
+- Cross-department gets its header with the initiatives tab (E3).
+
 Financial lines per department (FB-5; data in financials.md):
 
 | Department         | Money lines on its tile and in Financials                                    |

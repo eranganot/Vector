@@ -4,6 +4,7 @@
  * this" for an insight (lessons from reviewed outcomes of the same action type). Read-only.
  */
 import { and, desc, eq, inArray } from "drizzle-orm";
+import { actionHeader } from "@/domain/money-headers";
 import type { Actor } from "@/domain/types";
 import { action, approval, demoClock, insight, kpi, orgUnit, outcome, roleAssignment, user } from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
@@ -86,6 +87,8 @@ export async function actionsView(
         dueAt: a.dueAt,
         overdue,
         cost: Number(a.estimatedCost),
+        /** Expected ₪ by end of quarter (action economics). */
+        impact: Number(a.expectedImpactIls ?? 0),
         revision: a.revision,
         approvalRequestedAt: req?.requestedAt ?? null,
         insightId: a.insightId,
@@ -117,7 +120,27 @@ export async function actionsView(
               ? a.status === "executed"
               : true,
   );
-  return { now, counts, actions: shown };
+  // ₪ header (plan v2, E2c): for the actions shown, with the outcome verdicts their outcomes reached.
+  const verdicts = shown.length
+    ? await db
+        .select({ actionId: outcome.actionId, verdict: outcome.verdict })
+        .from(outcome)
+        .where(
+          inArray(
+            outcome.actionId,
+            shown.map((a) => a.id),
+          ),
+        )
+    : [];
+  const money = actionHeader(
+    shown.map((a) => ({
+      status: a.status,
+      cost: a.cost,
+      impact: a.impact,
+      verdict: verdicts.find((v) => v.actionId === a.id)?.verdict ?? null,
+    })),
+  );
+  return { now, counts, actions: shown, money };
 }
 
 /** Outcomes the viewer may read, by stage, and the lessons library. */

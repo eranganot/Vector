@@ -10,7 +10,8 @@ e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 - E2a #38: health-v2, projection-v1 and the read model `executiveHome` (no UI yet); money lines follow the demo
   clock; migration 0010 (org/day indexes).
 - E2b #39: the C-suite home on screen, department drill-down, VP home, EN/HE, TtU e2e (Dana, Michal, Noa).
-- Next: E2c (₪ headers on Risks, Opportunities, Commitments, Actions), then the E2 gate brief.
+- E2c #40: ₪ headers on Risks, Opportunities, Commitments, Actions & outcomes.
+- Next: the E2 gate (verify on Dev, docs/phases/STAGE_E2.md).
 
 ## Objective (E0, done)
 
@@ -31,7 +32,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Build E2c (₪ headers), verify on Dev, write docs/phases/STAGE_E2.md for Eran's gate.
+1. Verify E2 on Dev and write docs/phases/STAGE_E2.md for Eran's gate; on sign-off, E3.
 
 ## Reproducible commands
 
