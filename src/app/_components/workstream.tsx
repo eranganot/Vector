@@ -5,6 +5,7 @@ import { api } from "@/app/_lib/api";
 import type { Actor } from "@/domain/types";
 import { laneHref } from "./dashboard";
 import { Breadcrumb, InsightCard } from "./unit";
+import { ils, MoneyHeader } from "./money-header";
 import { Band, Pill, SectionTitle } from "./ui";
 import { getT } from "../_lib/locale";
 
@@ -31,6 +32,72 @@ export async function WorkstreamPage({
   const resolved = v.resolved.filter((r) => r.workstream === ws);
   const label = ws === "risk" ? t("Risks") : t("Opportunities");
   const local = v.position === "region" || v.position === "branch";
+  const money = await api.workstreamMoney(
+    actor,
+    shown.map((i) => i.id),
+  );
+  const figures =
+    ws === "risk"
+      ? money?.risk && [
+          {
+            icon: "₪",
+            label: t("at stake a week"),
+            value: ils(money.risk.atStake),
+            hint: t("₪ a week at stake, summed over the risks shown"),
+            tone: "bad" as const,
+          },
+          {
+            icon: "!",
+            label: t("of which P1"),
+            value: ils(money.risk.p1),
+            hint: t("₪ a week at stake on P1 risks"),
+            tone: "bad" as const,
+          },
+          {
+            icon: "✓",
+            label: t("mitigated"),
+            value: ils(money.risk.mitigated),
+            hint: t("₪ a week covered by an action that is executing or done"),
+            tone: "good" as const,
+          },
+          {
+            icon: "?",
+            label: t("no action yet"),
+            value: ils(money.risk.unanswered),
+            hint: t("₪ a week on risks nobody is acting on yet"),
+            tone: "warn" as const,
+          },
+        ]
+      : money?.opportunity && [
+          {
+            icon: "↗",
+            label: t("upside a week"),
+            value: ils(money.opportunity.upside),
+            hint: t("₪ a week of upside, summed over the opportunities shown"),
+            tone: "good" as const,
+          },
+          {
+            icon: "₪",
+            label: t("cost to capture"),
+            value: ils(money.opportunity.cost),
+            hint: t("One-off cost to capture them"),
+            tone: "muted" as const,
+          },
+          {
+            icon: "Σ",
+            label: t("net value by quarter end"),
+            value: ils(money.opportunity.netEoq),
+            hint: t("Upside × {w} weeks to quarter end × confidence − cost", { w: money.weeksToEoq }),
+            tone: "accent" as const,
+          },
+          {
+            icon: "✓",
+            label: t("captured so far"),
+            value: ils(money.opportunity.captured),
+            hint: t("₪ a week of opportunities whose action worked (half when it partly worked)"),
+            tone: "good" as const,
+          },
+        ];
   return (
     <>
       <div className="flex flex-col gap-2">
@@ -57,6 +124,7 @@ export async function WorkstreamPage({
           )}
         </p>
       </div>
+      {figures && <MoneyHeader label={t("Money")} figures={figures} />}
       <nav aria-label={t("Filter by band")} className="flex flex-wrap items-center gap-2">
         <Link
           href={laneHref(ws, unit)}

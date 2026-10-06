@@ -2,6 +2,7 @@ import Link from "next/link";
 import { type ActionFilter } from "@/application/facade";
 import { api } from "@/app/_lib/api";
 import { reviewOutcomeAction } from "../../actions";
+import { ils, MoneyHeader } from "../../_components/money-header";
 import { Band, Card, Pill, SectionTitle, Simulated } from "../../_components/ui";
 import { getLocale } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";
@@ -55,6 +56,39 @@ export default async function ActionsPage({ searchParams }: { searchParams: Prom
           )}
         </p>
       </div>
+      <MoneyHeader
+        label={t("Money")}
+        figures={[
+          {
+            icon: "₪",
+            label: t("committed cost"),
+            value: ils(v.money.committedCost),
+            hint: t("Estimated cost of the actions shown (cancelled and rejected left out)"),
+            tone: "muted",
+          },
+          {
+            icon: "↗",
+            label: t("expected impact by quarter end"),
+            value: ils(v.money.expectedImpact),
+            hint: t("Expected ₪ by end of quarter from action economics"),
+            tone: "accent",
+          },
+          {
+            icon: "✓",
+            label: t("confirmed by outcomes"),
+            value: ils(v.money.confirmedImpact),
+            hint: t("Expected impact of actions whose outcome worked (half when it partly worked)"),
+            tone: "good",
+          },
+          {
+            icon: "%",
+            label: t("hit rate"),
+            value: v.money.hitRate === null ? "—" : `${Math.round(v.money.hitRate * 100)}%`,
+            hint: t("Worked ÷ judged outcomes (worked, partly worked, did not work)"),
+            tone: "muted",
+          },
+        ]}
+      />
       <nav aria-label={t("Actions or outcomes")} className="flex gap-2">
         {[
           { key: "actions", label: t("Actions · {n} in flight", { n: v.counts.open }) },

@@ -41,6 +41,7 @@ import {
   listMyDecisions,
 } from "./queries/insights";
 import { executiveHome } from "./queries/executive";
+import { workstreamMoney } from "./queries/money";
 import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
@@ -97,6 +98,8 @@ export const api = {
   unit: async (a: Actor, unitId: string) => performanceView(db(), await activeOrgId(db()), a, unitId),
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
   executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
+  workstreamMoney: async (a: Actor, insightIds: string[]) =>
+    workstreamMoney(db(), await activeOrgId(db()), a, insightIds),
   orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {

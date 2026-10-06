@@ -8,7 +8,11 @@ import { and, eq, gte, lt, sql } from "drizzle-orm";
 import type { Pool } from "pg";
 import { loadUserActor } from "@/application/context";
 import type { Db } from "@/application/db";
+import { actionsView } from "@/application/queries/actions";
+import { commitmentsView } from "@/application/queries/commitments";
 import { executiveHome, type ExecutiveHome } from "@/application/queries/executive";
+import { listInsights } from "@/application/queries/insights";
+import { workstreamMoney } from "@/application/queries/money";
 import { advanceClock, resetDemo } from "@/application/scenario";
 import * as s from "@/infra/db/schema";
 import { seed } from "@/infra/seed/seed";
@@ -156,6 +160,31 @@ describe("C-suite home read model (E2a)", () => {
     expect(dana.links.some((l) => l.state === "blocked")).toBe(true);
     const ids = new Set(dana.departments.map((d) => d.unitId));
     for (const l of dana.links) expect(ids.has(l.from) && ids.has(l.to)).toBe(true);
+  });
+
+  it("₪ headers (E2c): the Risks header's P1 money matches the home tile; every list page has its figures", async () => {
+    const a = await as("dana");
+    const items = await listInsights(appDb, orgId, a);
+    const open = items.filter((i) => i.status === "open" || i.status === "acknowledged");
+    const m = (await workstreamMoney(
+      appDb,
+      orgId,
+      a,
+      open.map((i) => i.id),
+    ))!;
+    expect(m.risk!.p1).toBe(dana.tiles.p1.ils);
+    expect(m.risk!.atStake).toBeGreaterThanOrEqual(m.risk!.p1);
+    expect(m.opportunity!.upside).toBeGreaterThan(0);
+    expect(m.opportunity!.netEoq).toBeGreaterThan(0);
+    const acts = await actionsView(appDb, orgId, a, "all");
+    expect(acts.money.expectedImpact).toBeGreaterThan(0);
+    const cs = (await commitmentsView(appDb, orgId, a))!;
+    expect(cs.money.open).toBeGreaterThan(0);
+    // Ids the viewer may not read are ignored.
+    const hila = await as("hila");
+    const hilaIds = new Set((await listInsights(appDb, orgId, hila)).map((i) => i.id));
+    const hidden = open.filter((i) => !hilaIds.has(i.id)).map((i) => i.id);
+    expect(await workstreamMoney(appDb, orgId, hila, hidden)).toBeNull();
   });
 
   it("is deterministic: the same seed and clock give the same scores", async () => {

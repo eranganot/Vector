@@ -11,6 +11,7 @@ import {
   type DependencyStatus,
   onTimeRate,
 } from "@/domain/commitments";
+import { commitmentHeader } from "@/domain/money-headers";
 import { authorizeUser, canRead } from "@/domain/policy/authorize";
 import type { Actor } from "@/domain/types";
 import { commitment, conflict, demoClock, dependency, insight, orgUnit, roleAssignment, user } from "@/infra/db/schema";
@@ -217,6 +218,11 @@ export async function commitmentsView(db: DbOrTx, orgId: string, actor: Actor, u
   return {
     scope: { id: scope.id, name: scope.name, type: scope.type },
     now,
+    /** ₪ header (plan v2, E2c): commitments the scope owes or is owed. */
+    money: commitmentHeader(
+      list.filter((c) => ours(c.ownerUnitId) || owed.some((o) => o.id === c.id)),
+      new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
+    ),
     summary: {
       open: scopeFacts.filter((c) => c.status === "open").length,
       overdue: scopeFacts.filter((c) => c.status === "overdue").length,
