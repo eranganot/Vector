@@ -29,6 +29,7 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-05 | Prod verified at e8ff6ab: health ok, migrations 8/8, seed p4-v1; smoke 11/11; CEO persona sign-in and home                                                                                                                          | —        |
 | 2026-10-05 | Phase 5 (AI intelligence) parked by Eran; no Phase 5 work until he resumes it                                                                                                                                                       | —        |
 | 2026-10-06 | Plan v2 adopted (FB-0–FB-12). E0 specs and design: C-suite home and IA v2, health-v2, projection-v1, financials and data v5, ADR-008, cross-department, Action Center, reports, market (sources checked), mail agent; wireframes v2 | #32      |
+| 2026-10-06 | E0 design review (G-E0a–f): wireframes v3 (visual-first, reference style), specs updated for cross-department action items, action-driven Action Center, editable report charts, competitor charts                                  | #33      |
 
 ## Root-cause records
 

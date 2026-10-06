@@ -11,6 +11,18 @@ only units you may read (ADR-008); the read model checks it again on the server.
 
 ## 2. Templates
 
+**Editable charts (G-E0e, Eran 2026-10-06).** A template gives a starting set of sections and chart blocks. Before
+generating, the user can:
+
+- **add** a chart from a library;
+- **remove** a chart;
+- **reorder** charts;
+- **edit** a chart: its type (line, bars, ring, waterfall, table), period and scope.
+
+Each block is `{metric, chart type, period, scope}`, resolved by the same read models as the screens. Whether the user
+can save their layout as a personal variant of the template is to be decided at the E5 gate. The generated snapshot
+stores the exact layout used. In the PowerPoint export, each chart is a native, editable chart.
+
 | Template                      | Sections (in order)                                                                                                                                                                                                                                                                                                                                                                                |
 | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Weekly management** (first) | 1. Headline and health (strip, change, causes). 2. Sales vs budget and last year. 3. Finance: P&L lines vs budget, EOM/EOQ projection. 4. HR: headcount cost, vacancies, training, overtime. 5. Projects: initiatives, milestones, flags. 6. KPIs vs targets. 7. Blockers (barriers, blocked dependencies, overdue commitments). 8. **Decisions needed** (who, by when, ₪). 9. Focus for next week |

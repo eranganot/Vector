@@ -4,6 +4,17 @@ Status: **Proposed (E0, 2026-10-06), for Eran's design gate.** Implements FB-1 t
 [wireframes/v2/](wireframes/v2/). This page replaces the "KPIs never the headline" principle of the Phase 1 IA with
 FB-3: **health and money lead, and every number carries its cause.**
 
+## 0. Visual first (G-E0a, Eran 2026-10-06)
+
+Every page leads with pictures, not paragraphs. Wireframes: [wireframes/v3/](wireframes/v3/). The reference is Eran's
+screens of 2026-10-06: a dark dashboard with icon tiles, rings, a connected "organization pulse" and action buttons.
+
+- **Top row:** 4 KPI tiles. Each has an icon, value, change (▲▼, coloured by good or bad), and a progress bar to target.
+- **One main picture per page** (a diagram or chart), then supporting charts.
+- **Lists:** one line per item, plus chips (₪, status, owner, due) and one primary button.
+- **Sentences:** at most one per card. Explanations live behind "How this is calculated" and on the trace pages.
+- **Hover:** every chart mark shows its value. Every status is a colour plus a word.
+
 ## 1. The five-second promise
 
 A C-level who opens VECTOR must be able to say within five seconds:
@@ -44,6 +55,20 @@ navigation. They also gain the tabs that are not C-suite-specific (Cross-departm
 content.
 
 ## 3. Home layout (top to bottom)
+
+Revised layout (v3, G-E0b). This supersedes the list below wherever the two differ:
+
+1. Greeting and a one-line headline; demo clock, language switch, persona.
+2. **KPI tiles:** company health (/100), revenue vs plan (month), operating profit vs budget, critical risks (P1).
+3. **Organization pulse:** VECTOR at the centre, the 8 departments as health rings around it, and their dependencies as
+   links (cyan on track, red blocked, amber conflict). Clicking a ring opens the department drill-down.
+4. **Why health moved:** a bridge (waterfall) from last week's group health to today's, one bar per department.
+5. **Revenue this month:** cumulative actual vs budget, with the end-of-month projection and its range.
+6. **Today's priorities** (where to focus, ranked by ₪ × urgency, each with its button), **Risks & opportunities**
+   (probability, status chip), **Outside** (market events) and **Inside** (decisions, commitments, blockers, last 7 days).
+7. **VECTOR insight:** one rule-based sentence and one button (no AI in the demo, FB-11).
+
+Original list (E0 v2):
 
 1. **Headline line**: one sentence for the scope, e.g. "Supply Chain and Store Operations are slipping; October
    tracks −2.1% to sales budget." Below it, a subline: P1 count, ₪ at stake, and how many items wait on you.
