@@ -21,7 +21,7 @@ Eran's feedback on Phases 0–4 (2026-10-06, items #1–#11) and his answers, re
 | Reports                                                                              | [specs/reports.md](../specs/reports.md)                                            |
 | Market & competitors, with sources checked on 2026-10-06                             | [specs/market-intelligence.md](../specs/market-intelligence.md)                    |
 | Mail agent                                                                           | [specs/mail-agent.md](../specs/mail-agent.md)                                      |
-| Wireframes for the C-suite home and the new tabs                                     | [specs/wireframes/v2/](../specs/wireframes/v2/)                                    |
+| Wireframes for the C-suite home and the new tabs                                     | [specs/wireframes/v3/](../specs/wireframes/v3/) (v2 kept for history)              |
 
 ## For Eran to confirm at the gate
 
@@ -32,7 +32,9 @@ Eran's feedback on Phases 0–4 (2026-10-06, items #1–#11) and his answers, re
 3. **projection-v1** terms: run-rate + risk drag + action lift, with a ±1σ range.
 4. **Department money lines** (executive-home.md §6) and the calibrated group P&L (financials.md §1).
 5. **"Management needed" rules M1–M5** and their thresholds.
-6. **The wireframes.**
+6. **Wireframes v3** (after Eran's first review, G-E0a–f).
+7. **Gross margin calibration.** Our seeded target is 31.5%. Rami Levy reports 23.6% (Q2 2026). Next to real
+   competitors, ~26% would be more credible; the change would land in data v5 (E1).
 
 ## Verification
 

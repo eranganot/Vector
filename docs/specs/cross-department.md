@@ -41,6 +41,18 @@ execution_risk = 0.30 × dependency risk      (open dependencies the action need
 
 ## 3. Initiatives: the Cross-department tab
 
+**Layout v3 (G-E0c, Eran 2026-10-06: "where are the action items for the user?").** The tab is built around what
+the viewer must do:
+
+1. **Portfolio:** one progress ring per initiative (colour = status). The selected initiative is highlighted.
+2. **Progress map** of the selected initiative: one ring per participating department (% of its part done), linked in
+   order of dependency. Under each ring: its current milestone and status. A broken link means waiting.
+3. **Your action items:** everything in this initiative that waits on the viewer (approve, decide, settle a conflict,
+   send a reminder), each with one button. This panel sits at the top right.
+4. **Open deviations:** the M1–M5 flags.
+5. **Milestones:** a Gantt across departments, with a "today" line; late milestones in red.
+6. **On-time delivery** for the initiative vs the group average.
+
 An **Initiative** is a cross-department project (with an end) or process (recurring, with a cycle). It must have at
 least two participating units, at least one of them a department.
 

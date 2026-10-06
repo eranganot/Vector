@@ -1,5 +1,8 @@
 # Wireframes
 
+**v3 (2026-10-06, after Eran's review):** [v3/index.html](v3/index.html). It is visual-first, follows Eran's
+reference screens, and supersedes v2.
+
 **v2 (plan v2, E0, 2026-10-06):** [v2/index.html](v2/index.html) has eight C-suite screens: home, department
 drill-down, opportunities, cross-department, Action Center, reports, market & competitors, and inbox.
 

@@ -18,6 +18,22 @@ approved where policy says so, and audited. It does not open a second path aroun
 
 ## 2. Layout
 
+**Layout v3 (G-E0d, "more action-driven").** It supersedes the list below.
+
+- **Action queue:** cards sorted by ₪ × urgency. Each card has a colour stripe (risk, opportunity, conflict), one line,
+  ₪, owner and due date, and **one primary button** (Approve & send, Decide, Resolve, Assign).
+- **Selected action**, shown in this order:
+  1. title and status chip;
+  2. a facts strip (owner, department, due, impact);
+  3. **who is involved**: a chain of departments, each with its part and a status chip;
+  4. steps with their status;
+  5. **"When you approve, VECTOR will…"**: a preview of the automatic messages, reminders and escalation;
+  6. the editable message;
+  7. **Approve and send**, Edit action, Decline;
+  8. a history timeline.
+- **From event to action plan:** a flow from an event (for example a management meeting summary) through read →
+  analyse → assign → track, to the tasks it created per department, each with its status.
+
 1. ₪ header: ₪ at stake waiting for an action · ₪ in actions awaiting approval · ₪ sent this week.
 2. **Needs an action**: insights, risks and opportunities in your scope with no decided action yet, ranked by the
    "Where to focus" score (executive-home.md §7).

@@ -1,0 +1,700 @@
+<title>VECTOR Plan v2 Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: VECTOR's product shell (sidebar + dashboard grid), one screen per tab. Visual-first: charts, rings and diagrams carry the message; text is one line per item. Single dark look (approved theme G2). */
+:root {
+  --ground: #08111f; --panel: #0f1b2e; --panel-2: #142540; --line: #1f3150; --glow: rgba(34,195,230,.18);
+  --fg: #e8eef8; --muted: #8b9dba; --faint: #5d7090; --accent: #22c3e6; --neutral: #6f86a8;
+  --bad: #f05d5e; --warn: #f2b53a; --good: #2fcf8f;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+body { background: var(--ground); color: var(--fg); font: 14px/1.45 var(--sans); margin: 0; padding: 16px; }
+a { color: var(--accent) }
+.num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.intro { max-width: 1320px; margin: 0 auto 12px; display: grid; gap: 4px }
+.intro h1 { font-size: 19px; margin: 0 }
+.intro p { margin: 0; color: var(--muted); max-width: 95ch; font-size: 13px }
+.tabs { max-width: 1320px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 6px }
+.tabs a { text-decoration: none; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13px }
+.tabs a[aria-current="page"] { color: var(--ground); background: var(--accent); border-color: var(--accent); font-weight: 600 }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.app { max-width: 1320px; margin: 0 auto; display: grid; grid-template-columns: 210px minmax(0,1fr); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
+.side { background: #0b1628; border-inline-end: 1px solid var(--line); padding: 18px 12px; display: grid; align-content: start; gap: 2px }
+.logo { display: flex; gap: 10px; align-items: center; padding: 0 6px 18px }
+.logo svg { flex: none }
+.logo b { display: block; letter-spacing: .14em; font-size: 15px }
+.logo small { display: block; color: var(--muted); font-size: 10.5px; letter-spacing: .02em }
+.nav { padding: 7px 10px; border-radius: 8px; color: var(--muted); font-size: 13px; display: flex; gap: 9px; align-items: center }
+.nav i { width: 16px; height: 16px; border: 1.6px solid currentColor; border-radius: 4px; opacity: .7; flex: none }
+.nav.on { background: var(--panel-2); color: var(--fg); box-shadow: inset 3px 0 0 var(--accent), 0 0 18px var(--glow) }
+.nav .new { margin-inline-start: auto; font-size: 9.5px; color: var(--warn); border: 1px solid var(--warn); border-radius: 4px; padding: 0 4px }
+.main { padding: 18px 20px 24px; display: grid; gap: 14px; min-width: 0; background: var(--ground) }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 10px }
+.head h2 { margin: 0; font-size: 24px; text-wrap: balance }
+.head .sub { color: var(--accent); font-size: 14px; margin-top: 2px }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; color: var(--muted); font-size: 12px; align-items: center }
+.pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; white-space: nowrap }
+.g { display: grid; gap: 14px }
+.c4 { grid-template-columns: repeat(4, minmax(0,1fr)) }
+.c3 { grid-template-columns: repeat(3, minmax(0,1fr)) }
+.c2 { grid-template-columns: repeat(2, minmax(0,1fr)) }
+.c-7-5 { grid-template-columns: minmax(0,7fr) minmax(0,5fr) }
+.c-5-7 { grid-template-columns: minmax(0,5fr) minmax(0,7fr) }
+.c-8-4 { grid-template-columns: minmax(0,8fr) minmax(0,4fr) }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0 }
+.card h3 { margin: 0 0 10px; font-size: 15px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px }
+.card h3 small { font-weight: 400; color: var(--muted); font-size: 12px }
+.card h3 a { font-size: 12px; font-weight: 400; text-decoration: none }
+.kpi { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 4px 12px; align-items: center }
+.kpi .ico { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid currentColor; grid-row: span 2 }
+.kpi .lab { color: var(--muted); font-size: 12.5px }
+.kpi .val { font-family: var(--mono); font-size: 28px; font-weight: 500; line-height: 1.1; display: flex; gap: 8px; align-items: baseline }
+.kpi .val small { font-size: 12px }
+.kpi .bar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 6px }
+.kpi .bar span { display: block; height: 100% }
+.up { color: var(--good) } .down { color: var(--bad) } .wn { color: var(--warn) }
+.chip { font-size: 11px; border-radius: 6px; padding: 1px 8px; white-space: nowrap; display: inline-block; border: 1px solid currentColor }
+.chip.solid { border-color: transparent }
+.c-bad { color: var(--bad) } .c-warn { color: var(--warn) } .c-good { color: var(--good) } .c-acc { color: var(--accent) } .c-mut { color: var(--muted) }
+.bg-bad { background: rgba(240,93,94,.16) } .bg-warn { background: rgba(242,181,58,.14) } .bg-good { background: rgba(47,207,143,.14) } .bg-acc { background: rgba(34,195,230,.14) }
+.rows { display: grid }
+.rows > div { display: grid; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line) }
+.rows > div:last-child { border-bottom: 0 }
+.r-pri { grid-template-columns: 26px minmax(0,1fr) auto auto }
+.r-ro { grid-template-columns: 10px minmax(0,1fr) 54px 70px }
+.r-ext { grid-template-columns: 24px minmax(0,1fr) auto }
+.r-int { grid-template-columns: 24px minmax(0,1fr) 44px 40px }
+.n { width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); display: grid; place-items: center; font-family: var(--mono); font-size: 12px }
+.t1 { font-size: 13.5px } .t2 { font-size: 11.5px; color: var(--muted) }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block }
+button { font: inherit; font-size: 12.5px; border-radius: 8px; padding: 6px 14px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; white-space: nowrap }
+button.pri { background: var(--accent); color: #031019; font-weight: 600; box-shadow: 0 0 16px var(--glow) }
+button.big { padding: 10px 18px; font-size: 14px }
+button.gh { border-color: var(--line); color: var(--muted) }
+.insight { border-color: rgba(34,195,230,.55); box-shadow: 0 0 24px var(--glow) inset }
+.insight p { margin: 0 0 10px; font-size: 13.5px }
+.tag { font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase }
+svg text { font-family: var(--mono); font-size: 11px; fill: var(--muted) }
+svg .lbl { fill: var(--fg); font-family: var(--sans); font-size: 12px }
+svg .big { fill: var(--fg); font-size: 18px; font-weight: 500 }
+.chart { width: 100%; height: auto; display: block }
+.scroll { overflow-x: auto }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11.5px; color: var(--muted); margin-top: 6px }
+.legend i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; vertical-align: middle; margin-inline-end: 5px }
+.note { border: 1px dashed var(--warn); color: var(--warn); border-radius: 8px; padding: 6px 10px; font-size: 11.5px }
+.src { font-size: 11px; color: var(--faint) }
+.strip { display: flex; gap: 10px; flex-wrap: wrap }
+.tip { position: fixed; pointer-events: none; background: #020814; border: 1px solid var(--line); color: var(--fg); font: 12px var(--sans); padding: 6px 9px; border-radius: 6px; z-index: 9; max-width: 260px }
+/* action cards */
+.acard { display: grid; grid-template-columns: 4px minmax(0,1fr) auto; gap: 12px; align-items: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 10px 0; overflow: hidden }
+.acard > span:first-child { align-self: stretch; border-radius: 0 3px 3px 0 }
+.acard.sel { border-color: var(--accent); box-shadow: 0 0 18px var(--glow) }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.facts div { padding: 10px; text-align: center; border-inline-end: 1px solid var(--line) }
+.facts div:last-child { border-inline-end: 0 }
+.facts b { display: block; font-size: 15px }
+.facts small { color: var(--muted); font-size: 11.5px }
+.chain { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap }
+.chain .node { flex: 1 1 120px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px; text-align: center; display: grid; gap: 4px; justify-items: center }
+.chain .link { flex: 0 0 22px; align-self: center; height: 2px; background: var(--accent); position: relative }
+.tl { display: grid; gap: 0 }
+.tl > div { display: grid; grid-template-columns: 16px minmax(0,1fr); gap: 10px; padding-bottom: 10px; position: relative }
+.tl > div::before { content: ""; position: absolute; inset-inline-start: 7px; top: 14px; bottom: 0; width: 2px; background: var(--line) }
+.tl > div:last-child::before { display: none }
+.tl i { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); margin: 3px 2px; box-shadow: 0 0 10px var(--glow) }
+.check { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line) }
+.check:last-child { border-bottom: 0 }
+textarea { font: 13px/1.5 var(--sans); background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-height: 96px; resize: vertical }
+select { font: 12.5px var(--sans); background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px }
+/* reports builder */
+.blocks { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px }
+.block { background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0 }
+.block.sel { border-color: var(--accent) }
+.block header { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px }
+.block header b { font-size: 13px }
+.block header span { display: flex; gap: 4px }
+.block header button { padding: 2px 8px; font-size: 11px }
+.palette { display: grid; grid-template-columns: 1fr; gap: 6px }
+.palette button { border-color: var(--line); color: var(--fg); text-align: start; display: grid; gap: 2px; padding: 8px 10px; white-space: normal }
+.palette button small { color: var(--muted); font-size: 11px }
+.outline { display: grid; gap: 4px; font-size: 13px }
+.outline div { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; background: var(--panel-2) }
+.outline div::before { content: "⋮⋮"; color: var(--faint); font-size: 11px }
+section[hidden] { display: none }
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr } .side { display: none }
+  .c4 { grid-template-columns: repeat(2, minmax(0,1fr)) }
+  .c3, .c2, .c-7-5, .c-5-7, .c-8-4 { grid-template-columns: 1fr }
+  .blocks { grid-template-columns: 1fr }
+  .facts { grid-template-columns: repeat(2, minmax(0,1fr)) }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+</style>
+
+<div class="intro">
+  <h1>VECTOR C-suite: wireframes v3 (E0 design gate)</h1>
+  <p>Redesigned after Eran's review on 6 Oct. Pages lead with charts, rings and diagrams, and text is kept to one line per item. The style follows the reference screens. Company figures are synthetic; competitor figures marked "real" come from published reports. Hover a chart mark for its value. Dashed amber notes are for the gate only, not the product.</p>
+</div>
+<nav class="tabs" aria-label="Screens">
+  <a href="#home">1 · C-suite home</a><a href="#drill">2 · Department drill-down</a><a href="#opps">3 · Opportunities</a><a href="#cross">4 · Cross-department</a><a href="#action">5 · Action Center</a><a href="#reports">6 · Reports builder</a><a href="#market">7 · Market &amp; competitors</a><a href="#inbox">8 · Inbox</a>
+</nav>
+
+<div class="app">
+  <aside class="side" aria-label="Product navigation">
+    <div class="logo">
+      <svg width="34" height="30" viewBox="0 0 34 30" aria-hidden="true"><path d="M2 3 L13 27 L19 14" fill="none" stroke="#e8eef8" stroke-width="4.5" stroke-linejoin="round"/><path d="M16 3 L31 3 L20 24" fill="none" stroke="#22c3e6" stroke-width="4.5" stroke-linejoin="round"/></svg>
+      <span><b>VECTOR</b><small>| Organizational Intelligence</small></span>
+    </div>
+    <div class="nav" data-for="home drill"><i></i>Home</div>
+    <div class="nav" data-for="action"><i></i>Action Center<span class="new">new</span></div>
+    <div class="nav"><i></i>Waiting on you</div>
+    <div class="nav"><i></i>Risks</div>
+    <div class="nav" data-for="opps"><i></i>Opportunities</div>
+    <div class="nav" data-for="cross"><i></i>Cross-department<span class="new">new</span></div>
+    <div class="nav"><i></i>Commitments</div>
+    <div class="nav"><i></i>Actions &amp; outcomes</div>
+    <div class="nav" data-for="market"><i></i>Market<span class="new">new</span></div>
+    <div class="nav" data-for="reports"><i></i>Reports<span class="new">new</span></div>
+    <div class="nav" data-for="inbox"><i></i>Inbox<span class="new">new</span></div>
+    <div class="nav"><i></i>Organization</div>
+  </aside>
+
+  <main class="main">
+
+  <!-- ============ 1 HOME ============ -->
+  <section id="s-home" class="g">
+    <div class="head">
+      <div><h2>Good morning, Dana</h2><div class="sub">Supply Chain and Store Operations are slipping; October tracks −2.1% to budget</div></div>
+      <div class="meta"><span class="pill num">22 Oct 2026 · 05:00</span><span class="pill">EN | עברית</span><span class="pill">Dana Levi · CEO</span></div>
+    </div>
+
+    <div class="g c4">
+      <div class="card kpi c-warn"><span class="ico">♥</span><span class="lab">Company health</span><span class="val" style="color:var(--fg)">70<small class="c-mut">/100</small><small class="down">▼ 2</small></span><div class="bar"><span style="width:70%;background:var(--warn)"></span></div></div>
+      <div class="card kpi c-acc"><span class="ico">₪</span><span class="lab">Revenue vs plan · October</span><span class="val" style="color:var(--fg)">97.9%<small class="down">▼ 2.1</small></span><div class="bar"><span style="width:97.9%;background:var(--accent)"></span></div></div>
+      <div class="card kpi c-acc"><span class="ico">◎</span><span class="lab">Operating profit vs budget</span><span class="val" style="color:var(--fg)">87.5%<small class="down">▼ 12.5</small></span><div class="bar"><span style="width:87.5%;background:var(--accent)"></span></div></div>
+      <div class="card kpi c-bad"><span class="ico">!</span><span class="lab">Critical risks (P1)</span><span class="val" style="color:var(--fg)">4<small class="down">▲ 1</small></span><div class="bar"><span style="width:40%;background:var(--bad)"></span></div></div>
+    </div>
+
+    <div class="g c-7-5">
+      <div class="card"><h3>Organization pulse <small>health by department · links = dependencies</small></h3>
+        <div id="pulse"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>dependency on track</span><span><i style="background:var(--bad)"></i>blocked</span><span><i style="background:var(--warn)"></i>conflict</span><span>ring = health score · ▲▼ = change vs last week</span></div>
+      </div>
+      <div class="g">
+        <div class="card"><h3>Why health moved <small>71.6 → 69.9, by department</small></h3><div id="bridge"></div></div>
+        <div class="card"><h3>October revenue <small>cumulative vs budget, ₪M</small></h3><div id="proj"></div>
+          <div class="legend"><span><i style="background:var(--accent)"></i>actual</span><span><i style="background:var(--neutral)"></i>budget</span><span><i style="background:rgba(34,195,230,.35)"></i>projection and range</span></div></div>
+      </div>
+    </div>
+
+    <div class="g c3">
+      <div class="card"><h3>Today's priorities <a href="#action">Action Center →</a></h3>
+        <div class="rows">
+          <div class="r-pri"><span class="n">1</span><span><div class="t1">North DC recovery: decide overtime</div><div class="t2">COO · today</div></span><span class="chip c-bad">₪1.1M/wk</span><button class="pri">Decide</button></div>
+          <div class="r-pri"><span class="n">2</span><span><div class="t1">Weekend staffing uplift</div><div class="t2">Store Ops · 2 days</div></span><span class="chip c-warn">₪420k/wk</span><button class="pri">Approve</button></div>
+          <div class="r-pri"><span class="n">3</span><span><div class="t1">Heatwave pre-stock, South</div><div class="t2">Supply Chain · 3 days</div></span><span class="chip c-good">+₪150k/wk</span><button>Act</button></div>
+          <div class="r-pri"><span class="n">4</span><span><div class="t1">Spend freeze vs campaign</div><div class="t2">CFO ↔ Marketing · 2 days</div></span><span class="chip c-warn">₪350k</span><button>Resolve</button></div>
+          <div class="r-pri"><span class="n">5</span><span><div class="t1">POS upgrade over budget</div><div class="t2">CIO · 3 Nov</div></span><span class="chip c-warn">+14%</span><button>Open</button></div>
+        </div>
+      </div>
+      <div class="card"><h3>Risks &amp; opportunities <a href="#opps">All →</a></h3>
+        <div class="rows">
+          <div class="r-ro"><span class="dot" style="background:var(--bad)"></span><span class="t1">North DC delays</span><span class="num t2">80%</span><span class="chip c-bad">escalated</span></div>
+          <div class="r-ro"><span class="dot" style="background:var(--bad)"></span><span class="t1">Stock-outs, 9 North branches</span><span class="num t2">70%</span><span class="chip c-warn">approval</span></div>
+          <div class="r-ro"><span class="dot" style="background:var(--warn)"></span><span class="t1">Labor over plan, Center</span><span class="num t2">60%</span><span class="chip c-mut">monitoring</span></div>
+          <div class="r-ro"><span class="dot" style="background:var(--good)"></span><span class="t1">Heatwave demand, South</span><span class="num t2">75%</span><span class="chip c-good">ready</span></div>
+          <div class="r-ro"><span class="dot" style="background:var(--good)"></span><span class="t1">Competitor closes, Ramat Gan</span><span class="num t2">60%</span><span class="chip c-acc">explore</span></div>
+        </div>
+      </div>
+      <div class="g">
+        <div class="card"><h3>Outside <a href="#market">Market →</a></h3>
+          <div class="rows">
+            <div class="r-ext"><span class="c-bad">↘</span><span><div class="t1">Food prices −0.4% (Aug)</div><div class="t2">CBS · ours still rising</div></span><span class="chip c-bad">watch</span></div>
+            <div class="r-ext"><span class="c-good">↗</span><span><div class="t1">Shufersal same-store −8.6%</div><div class="t2">Q2 2026 report</div></span><span class="chip c-good">positive</span></div>
+          </div>
+        </div>
+        <div class="card"><h3>Inside <small>last 7 days</small></h3>
+          <div class="rows">
+            <div class="r-int"><span>✉</span><span class="t1">Decisions made</span><span class="num">8</span><span class="num up">▲3</span></div>
+            <div class="r-int"><span>⇄</span><span class="t1">Commitments</span><span class="num">14</span><span class="num up">▲5</span></div>
+            <div class="r-int"><span>⚠</span><span class="t1">Blockers</span><span class="num">4</span><span class="num up">▼1</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card insight g c-8-4" style="align-items:center">
+      <div><div class="tag">VECTOR insight · rule-based</div><p style="margin-top:6px"><b>North DC is the root of 3 of your 4 P1 risks.</b> Approving overtime (₪180k) protects about ₪4.4M of October sales and unblocks holiday readiness.</p></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="pri big">Open the decision →</button></div>
+    </div>
+  </section>
+
+  <!-- ============ 2 DRILL ============ -->
+  <section id="s-drill" class="g" hidden>
+    <div class="head"><div><h2>Supply Chain</h2><div class="sub">Health 54 · at risk · ▼ 9 · Group › Supply Chain</div></div><div class="meta"><span class="pill">by region</span><span class="pill">last 12 weeks</span></div></div>
+    <div class="g c4">
+      <div class="card kpi c-bad"><span class="ico">%</span><span class="lab">On-shelf availability</span><span class="val" style="color:var(--fg)">96.1%<small class="down">▼ 0.6</small></span><div class="bar"><span style="width:96%;background:var(--bad)"></span></div></div>
+      <div class="card kpi c-bad"><span class="ico">⏱</span><span class="lab">DC deliveries on time</span><span class="val" style="color:var(--fg)">88%<small class="down">▼ 7</small></span><div class="bar"><span style="width:88%;background:var(--bad)"></span></div></div>
+      <div class="card kpi c-warn"><span class="ico">₪</span><span class="lab">Logistics cost vs budget</span><span class="val" style="color:var(--fg)">105%<small class="down">▲ 4.9</small></span><div class="bar"><span style="width:95%;background:var(--warn)"></span></div></div>
+      <div class="card kpi c-warn"><span class="ico">▦</span><span class="lab">Inventory days · target 22</span><span class="val" style="color:var(--fg)">23.8<small class="down">▲ 1.1</small></span><div class="bar"><span style="width:80%;background:var(--warn)"></span></div></div>
+    </div>
+    <div class="g c-7-5">
+      <div class="card"><h3>On-shelf availability by region <small>weekly, %</small></h3><div id="osa"></div>
+        <div class="legend"><span><i style="background:var(--bad)"></i>North</span><span><i style="background:var(--neutral)"></i>other regions</span><span><i style="background:var(--warn)"></i>target 96%</span></div></div>
+      <div class="card"><h3>Region × measure <small>gap to target</small></h3><div id="heat"></div></div>
+    </div>
+    <div class="card"><h3>Health trend <small>Supply Chain, 12 weeks · end-of-quarter projection</small></h3><div id="htrend"></div></div>
+  </section>
+
+  <!-- ============ 3 OPPS ============ -->
+  <section id="s-opps" class="g" hidden>
+    <div class="head"><div><h2>Opportunities</h2><div class="sub">5 open · ₪675k net value by end of quarter</div></div></div>
+    <div class="g c4">
+      <div class="card kpi c-good"><span class="ico">↗</span><span class="lab">Upside per week</span><span class="val" style="color:var(--fg)">₪376k</span><div class="bar"><span style="width:60%;background:var(--good)"></span></div></div>
+      <div class="card kpi c-acc"><span class="ico">₪</span><span class="lab">Cost to capture</span><span class="val" style="color:var(--fg)">₪1.18M</span><div class="bar"><span style="width:45%;background:var(--accent)"></span></div></div>
+      <div class="card kpi c-good"><span class="ico">Σ</span><span class="lab">Net value, end of quarter</span><span class="val" style="color:var(--fg)">₪675k</span><div class="bar"><span style="width:36%;background:var(--good)"></span></div></div>
+      <div class="card kpi c-warn"><span class="ico">⏳</span><span class="lab">Windows closing this week</span><span class="val" style="color:var(--fg)">2</span><div class="bar"><span style="width:40%;background:var(--warn)"></span></div></div>
+    </div>
+    <div class="g c-7-5">
+      <div class="card"><h3>Value map <small>impact vs cost · size = execution risk</small></h3><div id="bubble"></div>
+        <div class="legend"><span><i style="background:var(--good)"></i>worth it (above the dashed line)</span><span><i style="background:var(--bad)"></i>costs more than it returns this quarter</span></div></div>
+      <div class="card"><h3>Impact vs cost per action item <small>₪k, by end of quarter</small></h3><div id="pairs"></div>
+        <div class="legend"><span><i style="background:var(--good)"></i>impact</span><span><i style="background:var(--neutral)"></i>cost</span></div></div>
+    </div>
+    <div class="g c3" id="oppcards"></div>
+  </section>
+
+  <!-- ============ 4 CROSS ============ -->
+  <section id="s-cross" class="g" hidden>
+    <div class="head"><div><h2>Cross-department</h2><div class="sub">8 initiatives · 3 need you</div></div><div class="meta"><span class="pill">Initiative: North DC recovery ▾</span><span class="pill">Target: second shift live 24 Oct</span></div></div>
+    <div class="card"><h3>Portfolio <small>progress ring · colour = status</small></h3><div id="portfolio" class="strip"></div></div>
+    <div class="g c-8-4">
+      <div class="g">
+        <div class="card"><h3>North DC recovery <small>progress map: who does what, and who waits on whom</small></h3><div id="progmap"></div>
+          <div class="g c4" style="margin-top:10px">
+            <div class="facts" style="grid-column:1/-1">
+              <div><b class="c-bad">1</b><small>at risk</small></div><div><b class="c-acc">3</b><small>in progress</small></div><div><b class="c-good">8</b><small>done</small></div><div><b>12</b><small>actions</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="card"><h3>Milestones <small>Oct–Nov · ◆ = milestone · red = late</small></h3><div id="gantt"></div></div>
+      </div>
+      <div class="g" style="align-content:start">
+        <div class="card insight"><h3>Your action items <small>Dana</small></h3>
+          <div class="rows">
+            <div style="grid-template-columns:minmax(0,1fr) auto"><span><div class="t1">Approve overtime exception</div><div class="t2">Finance freeze · ₪180k · by 16:00</div></span><button class="pri">Approve</button></div>
+            <div style="grid-template-columns:minmax(0,1fr) auto"><span><div class="t1">Settle Finance ↔ Marketing conflict</div><div class="t2">escalated to you · 2 days</div></span><button>Decide</button></div>
+            <div style="grid-template-columns:minmax(0,1fr) auto"><span><div class="t1">Nudge HR on temp staff</div><div class="t2">milestone late 4 days</div></span><button>Send reminder</button></div>
+          </div>
+        </div>
+        <div class="card"><h3>Open deviations</h3>
+          <div class="rows">
+            <div class="r-ext"><span class="dot" style="background:var(--bad)"></span><span class="t1">Overtime budget · waiting on approval</span><span class="chip c-bad">M4</span></div>
+            <div class="r-ext"><span class="dot" style="background:var(--warn)"></span><span class="t1">Temp staff · 4 days late</span><span class="chip c-warn">M2</span></div>
+            <div class="r-ext"><span class="dot" style="background:var(--warn)"></span><span class="t1">Spend freeze conflict</span><span class="chip c-warn">M3</span></div>
+          </div>
+        </div>
+        <div class="card"><h3>On-time delivery <small>this initiative</small></h3><div id="ontime"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 ACTION CENTER ============ -->
+  <section id="s-action" class="g" hidden>
+    <div class="head"><div><h2>Action Center</h2><div class="sub">6 to act on · ₪1.52M a week at stake</div></div><div class="meta"><span class="pill">Sending: inside VECTOR (demo)</span></div></div>
+    <div class="g c-5-7">
+      <div class="g" style="align-content:start">
+        <div class="card"><h3>Action queue <small>sorted by ₪ × urgency</small></h3>
+          <div class="g" style="gap:8px">
+            <div class="acard sel"><span style="background:var(--bad)"></span><span><div class="t1">Fix stock-outs, 9 North branches</div><div class="t2">₪420k/wk · Noa · today 16:00</div></span><button class="pri">Approve &amp; send</button></div>
+            <div class="acard"><span style="background:var(--bad)"></span><span><div class="t1">Overtime for North DC 2nd shift</div><div class="t2">₪1.1M/wk · COO · today</div></span><button class="pri">Decide</button></div>
+            <div class="acard"><span style="background:var(--good)"></span><span><div class="t1">Pre-stock 8 South branches</div><div class="t2">+₪150k/wk · Noa · 3 days</div></span><button class="pri">Approve &amp; send</button></div>
+            <div class="acard"><span style="background:var(--warn)"></span><span><div class="t1">Cap campaign at ₪220k</div><div class="t2">₪350k · Ronit ↔ Michal · 2 days</div></span><button>Resolve</button></div>
+            <div class="acard"><span style="background:var(--warn)"></span><span><div class="t1">Rebalance labor, Center</div><div class="t2">₪90k/wk · Maya · 5 days</div></span><button>Assign</button></div>
+          </div>
+        </div>
+        <div class="card"><h3>From event to action plan <small>management meeting, 21 Oct</small></h3><div id="flow"></div></div>
+      </div>
+      <div class="card g" style="align-content:start">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0;font-size:18px">Fix stock-outs in 9 North branches</h3><span class="chip solid bg-bad c-bad">at risk · P1·72</span></div>
+        <div class="facts"><div><small>owner</small><b>Noa Friedman</b></div><div><small>department</small><b>Supply Chain</b></div><div><small>due</small><b class="c-bad">today 16:00</b></div><div><small>impact</small><b>₪380k</b></div></div>
+        <div><div class="tag" style="margin-bottom:6px">Who is involved</div>
+          <div class="chain">
+            <div class="node"><span class="t1">Supply Chain</span><span class="t2">transfer stock</span><span class="chip c-good">started</span></div><span class="link"></span>
+            <div class="node"><span class="t1">Finance</span><span class="t2">₪54k approval</span><span class="chip c-warn">waiting</span></div><span class="link"></span>
+            <div class="node"><span class="t1">Store Ops</span><span class="t2">9 branches</span><span class="chip c-good">started</span></div>
+          </div>
+        </div>
+        <div class="g c2">
+          <div><div class="tag" style="margin-bottom:6px">Steps</div>
+            <div class="check"><span class="c-good">✔</span><span class="t1">Transfer from Haifa Downtown</span><span class="t2">done</span></div>
+            <div class="check"><span class="c-acc">◔</span><span class="t1">Daily DC slot, 9 branches</span><span class="t2">in progress</span></div>
+            <div class="check"><span class="c-mut">○</span><span class="t1">Review on 27 Oct</span><span class="t2">planned</span></div>
+            <div class="check"><span class="c-warn">⧗</span><span class="t1">Shira approves ₪54k</span><span class="t2">waiting</span></div>
+          </div>
+          <div><div class="tag" style="margin-bottom:6px">When you approve, VECTOR will</div>
+            <div class="tl">
+              <div><i></i><span class="t1">Send the message to Noa, copy Yossi and Shira</span></div>
+              <div><i></i><span class="t1">Ask Shira to approve ₪54k (AP-3)</span></div>
+              <div><i></i><span class="t1">Remind at 14:00 if not started</span></div>
+              <div><i></i><span class="t1">Escalate to the COO at 16:00</span></div>
+            </div>
+          </div>
+        </div>
+        <div><div class="tag" style="margin-bottom:6px">Message to Noa · editable · English</div><textarea id="msg" aria-label="Message to Noa">Noa, 9 North branches are short on top-50 SKUs (OSA 94.9%, about ₪420k a week). Please run the transfer from Haifa Downtown and a daily DC slot until the second shift is live on 24 Oct. Budget up to ₪54k (Shira approves). Review on 27 Oct. Dana</textarea></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="pri big" id="approve" type="button">Approve and send ›</button><button class="big" type="button">Edit action</button><button class="gh big" id="decline" type="button">Decline</button><span id="status" class="t2" aria-live="polite"></span></div>
+        <div><div class="tag" style="margin-bottom:6px">History</div><div id="hist"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 REPORTS ============ -->
+  <section id="s-reports" class="g" hidden>
+    <div class="head"><div><h2>Reports builder</h2><div class="sub">Weekly management report · Group · 15–21 Oct</div></div>
+      <div class="meta"><select aria-label="Template"><option>Weekly management</option><option>Board pack</option></select><select aria-label="Scope"><option>VECTOR Retail Group</option><option>North</option><option>Supply Chain</option></select><button>PowerPoint</button><button>PDF</button><button class="pri">Generate</button></div></div>
+    <div class="g" style="grid-template-columns:minmax(0,3fr) minmax(0,9fr)">
+      <div class="g" style="align-content:start">
+        <div class="card"><h3>Sections <small>drag to reorder</small></h3><div class="outline" id="outline"></div></div>
+        <div class="card"><h3>Add a chart</h3><div class="palette" id="palette"></div></div>
+      </div>
+      <div class="card"><h3>Report canvas <small>click a chart to edit it · × removes it</small></h3>
+        <div id="editor" class="g" style="grid-template-columns:repeat(4,auto);gap:8px;align-items:center;justify-content:start;margin-bottom:10px;font-size:12.5px;color:var(--muted)"></div>
+        <div class="blocks" id="blocks"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 MARKET ============ -->
+  <section id="s-market" class="g" hidden>
+    <div class="head"><div><h2>Market &amp; competitors</h2><div class="sub">Food prices are falling; ours are not</div></div><div class="meta"><span class="pill">sources: CBS · company reports · price files</span></div></div>
+    <div class="g c4">
+      <div class="card kpi c-good"><span class="ico">↘</span><span class="lab">Food prices y/y (CBS, Aug)</span><span class="val" style="color:var(--fg)">+1.0%<small class="up">▼ 1.8 since Apr</small></span><div class="bar"><span style="width:20%;background:var(--good)"></span></div></div>
+      <div class="card kpi c-bad"><span class="ico">₪</span><span class="lab">Our average price y/y</span><span class="val" style="color:var(--fg)">+2.7%<small class="down">gap +1.7</small></span><div class="bar"><span style="width:54%;background:var(--bad)"></span></div></div>
+      <div class="card kpi c-warn"><span class="ico">⚖</span><span class="lab">Our basket index · market = 100</span><span class="val" style="color:var(--fg)">102.4</span><div class="bar"><span style="width:62%;background:var(--warn)"></span></div></div>
+      <div class="card kpi c-good"><span class="ico">↗</span><span class="lab">Our growth vs market leader</span><span class="val" style="color:var(--fg)">+9.3 pts</span><div class="bar"><span style="width:70%;background:var(--good)"></span></div></div>
+    </div>
+    <div class="g c2">
+      <div class="card"><h3>Food prices vs ours <small>year-on-year, %</small></h3><div id="cpi"></div>
+        <div class="legend"><span><i style="background:var(--neutral)"></i>CBS food index 110050 (real)</span><span><i style="background:var(--accent)"></i>VECTOR Retail Group (synthetic)</span></div>
+        <div class="src">CBS price index API, fetched 6 Oct 2026.</div></div>
+      <div class="card"><h3>Basket price vs competitors <small>12 weeks · market median = 100</small></h3><div id="btrend"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>VECTOR</span><span><i style="background:var(--neutral)"></i>competitors, labelled at the end</span></div>
+        <div class="note" style="margin-top:8px">Illustrative. E6 computes this daily from the chains' price files.</div></div>
+    </div>
+    <div class="g c-5-7">
+      <div class="card"><h3>Competitors, Q2 2026 <small>reported</small></h3>
+        <div class="tag">Revenue, ₪B</div><div id="rev"></div>
+        <div class="tag" style="margin-top:8px">Growth vs Q2 2025</div><div id="growth"></div>
+        <div class="src">Shufersal: Globes, 27 Aug 2026 (real). Rami Levy: investor presentation, Aug 2026 (real; gross margin 23.6%, operating margin 4.7%). VECTOR: synthetic. More chains in E6.</div></div>
+      <div class="card"><h3>Basket price index by category <small>market median = 100 · higher is more expensive</small></h3><div id="basket"></div>
+        <div class="note" style="margin-top:8px">Illustrative values. E6 computes these from the chains' daily price files (Shufersal checked: 6,611 items in one store's file).</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 8 INBOX ============ -->
+  <section id="s-inbox" class="g" hidden>
+    <div class="head"><div><h2>Inbox</h2><div class="sub">3 wait for your reply · 2 need a decision</div></div><div class="meta"><span class="pill">Email + Slack · synthetic in the demo</span></div></div>
+    <div class="g c-5-7">
+      <div class="g" style="align-content:start">
+        <div class="card"><h3>What's waiting <small>23 threads, last 7 days</small></h3><div id="donut"></div></div>
+        <div class="card"><h3>₪ at stake per thread</h3><div id="threadbars"></div></div>
+      </div>
+      <div class="g" style="align-content:start">
+        <div class="card insight">
+          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span class="chip solid bg-bad c-bad">needs decision · 26 h</span><span class="t2">Email · Michal Golan, CFO</span></div>
+          <h3 style="margin:8px 0;font-size:16px">Overtime for the North DC second shift: exception to the freeze?</h3>
+          <div class="facts"><div><small>at stake</small><b class="c-bad">₪1.1M/wk</b></div><div><small>cost</small><b>₪180k</b></div><div><small>deadline</small><b>today</b></div><div><small>recommend</small><b class="c-good">approve, capped</b></div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0"><button class="gh">What if we wait a week?</button><button class="gh">Who else is affected?</button><button class="gh">What did we do last time?</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri">Approve and reply</button><button>Edit reply</button><button class="gh">Open North DC recovery</button></div>
+        </div>
+        <div class="card"><div class="rows">
+          <div style="grid-template-columns:auto minmax(0,1fr) auto"><span class="chip c-warn">reply · 9 h</span><span><div class="t1">Ronit: run the campaign at ₪220k?</div><div class="t2">Slack #exec · recommend: ask Michal to decide by tomorrow</div></span><button>Reply</button></div>
+          <div style="grid-template-columns:auto minmax(0,1fr) auto"><span class="chip c-good">decision · 2 d</span><span><div class="t1">Supplier: 25% off two categories</div><div class="t2">via Eitan · recommend: counter at half volume</div></span><button>Decide</button></div>
+          <div style="grid-template-columns:auto minmax(0,1fr) auto"><span class="chip c-warn">reply · 30 h</span><span><div class="t1">Amir: POS wave 3 needs ₪400k more</div><div class="t2">Email · recommend: ask for a phased plan</div></span><button>Reply</button></div>
+        </div></div>
+      </div>
+    </div>
+  </section>
+  </main>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var C = { acc: "#22c3e6", bad: "#f05d5e", warn: "#f2b53a", good: "#2fcf8f", neu: "#6f86a8", line: "#1f3150", fg: "#e8eef8", mut: "#8b9dba", panel: "#0f1b2e", panel2: "#142540" };
+  function el(tag, attrs, parent, text) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
+  function svg(id, w, h) { var host = document.getElementById(id); var s = el("svg", { viewBox: "0 0 " + w + " " + h, class: "chart", role: "img" }); host.appendChild(s); return s; }
+  var tip = document.getElementById("tip");
+  function hover(node, text) { node.style.cursor = "default"; node.addEventListener("pointermove", function (e) { tip.hidden = false; tip.textContent = text; tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY + 12) + "px"; }); node.addEventListener("pointerleave", function () { tip.hidden = true; }); }
+  function ring(p, cx, cy, r, pct, color, w) { el("circle", { cx: cx, cy: cy, r: r, fill: "none", stroke: C.line, "stroke-width": w }, p); var len = 2 * Math.PI * r; el("circle", { cx: cx, cy: cy, r: r, fill: "none", stroke: color, "stroke-width": w, "stroke-linecap": "round", "stroke-dasharray": (len * pct / 100) + " " + len, transform: "rotate(-90 " + cx + " " + cy + ")" }, p); }
+  function sc(v, d0, d1, r0, r1) { return r0 + (v - d0) / (d1 - d0) * (r1 - r0); }
+  function stateColor(s) { return s >= 80 ? C.good : s >= 60 ? C.warn : C.bad; }
+
+  // ---------- generic line chart ----------
+  function lines(id, o) {
+    var W = o.w || 560, H = o.h || 220, m = { l: 44, r: o.mr || 16, t: 12, b: 26 };
+    var s = svg(id, W, H), x = function (i) { return sc(i, 0, o.labels.length - 1, m.l, W - m.r); }, y = function (v) { return sc(v, o.min, o.max, H - m.b, m.t); };
+    o.ticks.forEach(function (t) { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: C.line, "stroke-dasharray": "2 4" }, s); el("text", { x: m.l - 6, y: y(t) + 4, "text-anchor": "end" }, s, (o.fmt || String)(t)); });
+    o.labels.forEach(function (l, i) { if (o.every && i % o.every) return; el("text", { x: x(i), y: H - 8, "text-anchor": "middle" }, s, l); });
+    if (o.band) { var pts = o.band.map(function (b) { return x(b[0]) + "," + y(b[2]); }).concat(o.band.slice().reverse().map(function (b) { return x(b[0]) + "," + y(b[1]); })); el("polygon", { points: pts.join(" "), fill: "rgba(34,195,230,.16)" }, s); }
+    o.series.forEach(function (sr) {
+      var start = sr.start || 0, pts = sr.values.map(function (v, i) { return x(i + start) + "," + y(v); }).join(" ");
+      if (sr.area) el("polygon", { points: x(start) + "," + y(o.min) + " " + pts + " " + x(start + sr.values.length - 1) + "," + y(o.min), fill: sr.color, opacity: .12 }, s);
+      el("polyline", { points: pts, fill: "none", stroke: sr.color, "stroke-width": sr.w || 2, "stroke-dasharray": sr.dash || "", "stroke-linejoin": "round", "stroke-linecap": "round", opacity: sr.op || 1 }, s);
+      sr.values.forEach(function (v, i) { var c = el("circle", { cx: x(i + start), cy: y(v), r: (sr.dots || i === sr.values.length - 1) ? 3.5 : 7, fill: (sr.dots || i === sr.values.length - 1) ? sr.color : "transparent" }, s); hover(c, sr.name + " · " + o.labels[i + start] + ": " + (o.fmt || String)(v)); });
+      if (sr.end) el("text", { x: x(start + sr.values.length - 1) + 6, y: y(sr.values[sr.values.length - 1]) + 4, class: "lbl", style: "fill:" + sr.color }, s, sr.end);
+    });
+    (o.marks || []).forEach(function (mk) { el("line", { x1: m.l, x2: W - m.r, y1: y(mk.v), y2: y(mk.v), stroke: mk.color, "stroke-dasharray": "5 4" }, s); });
+    return s;
+  }
+
+  // ---------- horizontal bars ----------
+  function hbars(id, rows, o) {
+    var W = o.w || 460, rh = o.rh || 30, H = rows.length * rh + 24, l = o.left || 140, r = 56;
+    var s = svg(id, W, H), x = function (v) { return sc(v, o.min, o.max, l, W - r); };
+    el("line", { x1: x(0), x2: x(0), y1: 4, y2: H - 18, stroke: C.mut }, s);
+    rows.forEach(function (d, i) {
+      var y0 = i * rh + 8, x0 = x(Math.min(0, d.v)), x1 = x(Math.max(0, d.v));
+      el("text", { x: l - 8, y: y0 + rh / 2, "text-anchor": "end", class: "lbl" }, s, d.k);
+      var b = el("rect", { x: x0, y: y0 + 4, width: Math.max(2, x1 - x0), height: rh - 12, rx: 4, fill: d.c || C.neu }, s); hover(b, d.k + ": " + (o.fmt || String)(d.v) + (d.note ? " · " + d.note : ""));
+      el("text", { x: d.v >= 0 ? x1 + 6 : x(0) + 6, y: y0 + rh / 2 + 4, "text-anchor": "start", style: "fill:" + C.fg }, s, (o.fmt || String)(d.v));
+    });
+    return s;
+  }
+
+  // ================= HOME =================
+  (function pulse() {
+    var W = 640, H = 450, cx = 320, cy = 222, R = 150, s = svg("pulse", W, H);
+    var D = [["Supply Chain", 54, -9], ["Store Ops", 66, -6], ["IT", 69, -2], ["Finance", 78, -1], ["Marketing", 63, -3], ["HR", 84, 1], ["Legal", 71, 4], ["Trade", 74, 2]];
+    var P = D.map(function (d, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / D.length; return { x: cx + R * Math.cos(a) * 1.6, y: cy + R * Math.sin(a), d: d }; });
+    var E = [[0, 1, C.bad, "Supply Chain → Store Ops: North DC delays, blocked"], [3, 4, C.warn, "Finance ↔ Marketing: spend freeze vs campaign"], [2, 1, C.acc, "IT → Store Ops: POS upgrade"], [7, 0, C.acc, "Trade → Supply Chain: supplier fill"], [5, 6, C.acc, "HR ↔ Legal: wage rule"], [3, 2, C.warn, "Finance → IT: POS over budget"], [0, 3, C.bad, "Supply Chain → Finance: overtime exception waiting"]];
+    P.forEach(function (p) { el("line", { x1: cx, y1: cy, x2: p.x, y2: p.y, stroke: C.line, "stroke-dasharray": "3 5" }, s); });
+    E.forEach(function (e) { var a = P[e[0]], b = P[e[1]], mx = (a.x + b.x) / 2 + (cy - (a.y + b.y) / 2) * .25, my = (a.y + b.y) / 2 + ((a.x + b.x) / 2 - cx) * .25; var pth = el("path", { d: "M" + a.x + " " + a.y + " Q" + mx + " " + my + " " + b.x + " " + b.y, fill: "none", stroke: e[2], "stroke-width": e[2] === C.acc ? 1.5 : 2.5, opacity: e[2] === C.acc ? .55 : .95 }, s); hover(pth, e[3]); el("path", { d: pth.getAttribute("d"), fill: "none", stroke: "transparent", "stroke-width": 12 }, s); });
+    el("circle", { cx: cx, cy: cy, r: 46, fill: "#061226", stroke: C.acc, "stroke-width": 2, style: "filter:drop-shadow(0 0 12px rgba(34,195,230,.5))" }, s);
+    el("text", { x: cx, y: cy - 2, "text-anchor": "middle", class: "big" }, s, "70");
+    el("text", { x: cx, y: cy + 16, "text-anchor": "middle" }, s, "group ▼2");
+    P.forEach(function (p) {
+      var g = el("g", {}, s), col = stateColor(p.d[1]);
+      el("circle", { cx: p.x, cy: p.y, r: 30, fill: "#0a1730" }, g); ring(g, p.x, p.y, 30, p.d[1], col, 5);
+      el("text", { x: p.x, y: p.y + 6, "text-anchor": "middle", class: "big" }, g, p.d[1]);
+      var below = p.y > cy;
+      el("text", { x: p.x, y: below ? p.y + 50 : p.y - 40, "text-anchor": "middle", class: "lbl" }, g, p.d[0]);
+      el("text", { x: p.x, y: below ? p.y + 64 : p.y - 54 + 0, "text-anchor": "middle", style: "fill:" + (p.d[2] >= 0 ? C.good : C.bad) }, g, (p.d[2] >= 0 ? "▲ " : "▼ ") + Math.abs(p.d[2]));
+      el("circle", { cx: p.x, cy: p.y, r: 34, fill: "transparent" }, g); hover(g, p.d[0] + ": health " + p.d[1] + ", " + (p.d[2] >= 0 ? "+" : "") + p.d[2] + " vs last week. Click to drill down.");
+      g.style.cursor = "pointer"; g.addEventListener("click", function () { location.hash = "drill"; });
+    });
+  })();
+
+  (function bridge() {
+    var steps = [["Supply Chain", -1.13], ["Store Ops", -0.75], ["Marketing", -0.38], ["IT", -0.25], ["Finance", -0.13], ["HR", 0.13], ["Trade", 0.25], ["Legal", 0.5]];
+    var W = 470, H = 200, m = { l: 34, r: 8, t: 14, b: 40 }, n = steps.length + 2, bw = (W - m.l - m.r) / n;
+    var s = svg("bridge", W, H), y = function (v) { return sc(v, 68.8, 71.8, H - m.b, m.t); };
+    [69, 70, 71].forEach(function (t) { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: C.line, "stroke-dasharray": "2 4" }, s); el("text", { x: m.l - 6, y: y(t) + 4, "text-anchor": "end" }, s, t); });
+    var lvl = 71.6;
+    function bar(i, a, b, col, label, tipText) { var r = el("rect", { x: m.l + i * bw + 4, y: y(Math.max(a, b)), width: bw - 8, height: Math.max(2, Math.abs(y(a) - y(b))), rx: 3, fill: col }, s); hover(r, tipText); el("text", { x: m.l + i * bw + bw / 2, y: H - 24, "text-anchor": "middle", style: "font-size:9.5px" }, s, label); }
+    bar(0, 68.8, lvl, C.neu, "last wk", "Last week: 71.6");
+    steps.forEach(function (st, i) { var nx = lvl + st[1]; bar(i + 1, lvl, nx, st[1] < 0 ? C.bad : C.good, st[0].split(" ")[0], st[0] + ": " + (st[1] > 0 ? "+" : "") + st[1].toFixed(2) + " pts"); lvl = nx; });
+    bar(n - 1, 68.8, lvl, C.acc, "now", "Now: " + lvl.toFixed(1));
+    
+  })();
+
+  (function proj() {
+    var days = []; for (var d = 1; d <= 31; d++) days.push(String(d));
+    var budget = days.map(function (_, i) { var d = i + 1; return d <= 21 ? 149.3 * d / 21 : 149.3 + (218.4 - 149.3) * (d - 21) / 10; });
+    var actual = []; for (var i = 0; i < 21; i++) { var d2 = i + 1; actual.push(146.2 * d2 / 21 + Math.sin(d2 * 1.3) * 0.9 * (d2 < 21 ? 1 : 0)); }
+    var projv = []; for (var k = 20; k < 31; k++) projv.push(146.2 + (213.9 - 146.2) * (k - 20) / 10);
+    var band = []; for (var j = 20; j < 31; j++) { var f = (j - 20) / 10; band.push([j, 146.2 + (211.4 - 146.2) * f, 146.2 + (216.4 - 146.2) * f]); }
+    lines("proj", { w: 470, h: 190, mr: 58, labels: days.map(function (d) { return d + " Oct"; }), every: 5, min: 0, max: 230, ticks: [0, 100, 200], fmt: function (v) { return "₪" + Math.round(v) + "M"; }, band: band,
+      series: [{ name: "Budget", values: budget, color: C.neu, dash: "5 4", end: "₪218M" }, { name: "Projection", values: projv, start: 20, color: C.acc, dash: "3 4", op: .8 }, { name: "Actual", values: actual, color: C.acc, w: 2.5, area: true }] });
+    var host = document.querySelector("#proj svg"); el("text", { x: 250, y: 150, style: "fill:" + C.bad, class: "lbl" }, host, "projected ₪213.9M · −₪4.5M vs budget");
+  })();
+
+  // ================= DRILL =================
+  (function () {
+    var wk = ["W31","W32","W33","W34","W35","W36","W37","W38","W39","W40","W41","W42"];
+    var others = [[96.9,97.0,96.8,97.1,96.9,96.7,96.8,97.0,96.6,96.8,96.9,96.8],[96.7,96.8,96.9,96.6,96.8,97.0,96.7,96.9,96.8,96.9,96.8,96.9],[96.8,96.6,96.7,96.9,96.8,96.7,96.6,96.8,96.9,96.5,96.4,96.7],[96.6,96.7,96.6,96.8,96.7,96.9,96.8,96.6,96.7,96.8,96.6,96.7]];
+    var north = [96.8,96.9,96.7,96.8,96.6,96.7,96.5,96.4,96.2,95.9,95.4,94.9];
+    var ser = others.map(function (v, i) { return { name: ["Coast","Jerusalem","Center","South"][i], values: v, color: C.neu, w: 1.5, op: .7 }; });
+    ser.push({ name: "North", values: north, color: C.bad, w: 2.5, end: "North 94.9" });
+    lines("osa", { w: 600, h: 220, mr: 84, labels: wk, min: 94.5, max: 97.5, ticks: [95, 96, 97], fmt: function (v) { return v.toFixed(1) + "%"; }, series: ser, marks: [{ v: 96, color: C.warn }] });
+
+    var regs = ["North","Center","Coast","Jerusalem","South"], cols = ["OSA","DC on time","Waste ₪","Inventory d"];
+    var gaps = [[-1.1,-14.7,4.0,9.1],[0.7,-5.3,1.2,6.4],[0.8,0,-0.5,4.1],[0.9,1.1,-1.0,3.2],[0.7,1.1,-0.8,2.7]];
+    var W = 420, H = 210, l = 80, t = 26, cw = (W - l - 6) / cols.length, ch = (H - t - 6) / regs.length, s = svg("heat", W, H);
+    cols.forEach(function (c, j) { el("text", { x: l + j * cw + cw / 2, y: 16, "text-anchor": "middle" }, s, c); });
+    regs.forEach(function (r, i) { el("text", { x: l - 8, y: t + i * ch + ch / 2 + 4, "text-anchor": "end", class: "lbl" }, s, r);
+      gaps[i].forEach(function (g, j) { var bad = (j === 0 || j === 1) ? g < 0 : g > 0, mag = Math.min(1, Math.abs(g) / 10), col = Math.abs(g) < 1 ? "#1a2c49" : bad ? "rgba(240,93,94," + (0.25 + 0.6 * mag) + ")" : "rgba(47,207,143," + (0.2 + 0.4 * mag) + ")";
+        var rc = el("rect", { x: l + j * cw + 2, y: t + i * ch + 2, width: cw - 4, height: ch - 4, rx: 4, fill: col }, s); hover(rc, r + " · " + cols[j] + ": " + (g > 0 ? "+" : "") + g + "% vs target");
+        el("text", { x: l + j * cw + cw / 2, y: t + i * ch + ch / 2 + 4, "text-anchor": "middle", style: "fill:" + C.fg }, s, (g > 0 ? "+" : "") + g + "%"); }); });
+
+    var h = [68,69,67,66,67,65,64,63,62,63,61,54];
+    var band = [[11,54,54],[12,49,57],[13,47,59]];
+    lines("htrend", { w: 1000, h: 170, mr: 70, labels: wk.concat(["W43","Nov","EOQ"]), min: 40, max: 80, ticks: [40, 60, 80], series: [{ name: "Health", values: h, color: C.bad, area: true, w: 2.5 }, { name: "Projection", values: [54, 52, 51], start: 11, color: C.bad, dash: "3 4", end: "EOQ 51" }], band: band, marks: [{ v: 60, color: C.warn }] });
+  })();
+
+  // ================= OPPS =================
+  var OPP = [["Click-and-collect, Center", 180, 620, .45, "O2"], ["Heatwave pre-stock, South", 20, 450, .15, "O1"], ["Ramat Gan closure campaign", 60, 380, .2, "O2"], ["Petah Tikva pop-up", 15, 90, .15, "O3"], ["Supplier overstock buy", 900, 310, .7, "O2"]];
+  (function () {
+    var W = 600, H = 300, m = { l: 52, r: 34, t: 14, b: 34 }, s = svg("bubble", W, H);
+    var x = function (v) { return sc(v, 0, 1000, m.l, W - m.r); }, y = function (v) { return sc(v, 0, 750, H - m.b, m.t); };
+    [0, 250, 500, 750].forEach(function (t) { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: C.line, "stroke-dasharray": "2 4" }, s); el("text", { x: m.l - 6, y: y(t) + 4, "text-anchor": "end" }, s, "₪" + t + "k"); });
+    [0, 250, 500, 750, 1000].forEach(function (t) { el("text", { x: x(t), y: H - 16, "text-anchor": "middle" }, s, "₪" + t + "k"); });
+    el("text", { x: W / 2, y: H - 2, "text-anchor": "middle" }, s, "cost to capture →");
+    el("line", { x1: x(0), y1: y(0), x2: x(750), y2: y(750), stroke: C.mut, "stroke-dasharray": "6 5" }, s);
+    el("text", { x: x(700) - 6, y: y(750) + 14, "text-anchor": "end" }, s, "break-even");
+    OPP.forEach(function (o) { var good = o[2] > o[1], r = 8 + o[3] * 30, col = good ? C.good : C.bad;
+      var c = el("circle", { cx: x(o[1]), cy: y(o[2]), r: r, fill: col, "fill-opacity": .22, stroke: col, "stroke-width": 2 }, s); hover(c, o[0] + " · cost ₪" + o[1] + "k → impact ₪" + o[2] + "k · risk " + (o[3] > .6 ? "high" : o[3] > .3 ? "medium" : "low"));
+      el("text", { x: x(o[1]) + r + 6, y: y(o[2]) + 4, class: "lbl", "text-anchor": o[1] > 700 ? "end" : "start", dx: o[1] > 700 ? -2 * r - 12 : 0 }, s, o[0]); });
+  })();
+  (function () {
+    var W = 460, rh = 44, H = OPP.length * rh + 10, l = 150, s = svg("pairs", W, H), x = function (v) { return sc(v, 0, 950, l, W - 50); };
+    OPP.slice().sort(function (a, b) { return (b[2] - b[1]) - (a[2] - a[1]); }).forEach(function (o, i) { var y0 = i * rh + 6;
+      el("text", { x: l - 8, y: y0 + 18, "text-anchor": "end", class: "lbl" }, s, o[0].replace(", Center", "").replace(", South", "").replace(" closure campaign", " campaign"));
+      var a = el("rect", { x: l, y: y0 + 4, width: x(o[2]) - l, height: 13, rx: 4, fill: C.good }, s); hover(a, "Impact ₪" + o[2] + "k");
+      var b = el("rect", { x: l, y: y0 + 19, width: Math.max(2, x(o[1]) - l), height: 13, rx: 4, fill: C.neu }, s); hover(b, "Cost ₪" + o[1] + "k");
+      var net = o[2] - o[1]; el("text", { x: Math.max(x(o[2]), x(o[1])) + 6, y: y0 + 22, style: "fill:" + (net >= 0 ? C.good : C.bad) }, s, (net >= 0 ? "+" : "−") + "₪" + Math.abs(net) + "k"); });
+  })();
+  (function () {
+    var host = document.getElementById("oppcards");
+    [["Pre-stock 8 South branches", "O1·64", 450, 20, 15, "closes 25 Oct", "Approve & send"], ["Click-and-collect capacity, Center", "O2·56", 620, 180, 45, "before 1 Nov", "Make it an action"], ["Supplier overstock buy", "O2·48", 310, 900, 70, "expires in 5 days", "Counter-offer"]].forEach(function (o) {
+      var d = document.createElement("div"); d.className = "card"; d.innerHTML = '<div style="display:flex;justify-content:space-between;gap:6px"><b>' + o[0] + '</b><span class="chip c-good">' + o[1] + '</span></div><div class="ringhost"></div><div style="display:flex;justify-content:space-between;align-items:center;gap:6px"><span class="t2">' + o[5] + '</span><button class="pri">' + o[6] + '</button></div>';
+      host.appendChild(d); var s = el("svg", { viewBox: "0 0 300 96", class: "chart" }); d.querySelector(".ringhost").appendChild(s);
+      ring(s, 48, 42, 32, o[4], o[4] > 60 ? C.bad : o[4] > 30 ? C.warn : C.good, 7); el("text", { x: 48, y: 46, "text-anchor": "middle", style: "fill:" + C.fg }, s, o[4] + "%"); el("text", { x: 48, y: 93, "text-anchor": "middle" }, s, "execution risk");
+      var mx = Math.max(o[2], o[3]); var ia = el("rect", { x: 110, y: 22, width: 170 * o[2] / mx, height: 14, rx: 4, fill: C.good }, s); hover(ia, "impact ₪" + o[2] + "k"); el("text", { x: 110, y: 16 }, s, "impact ₪" + o[2] + "k");
+      var ca = el("rect", { x: 110, y: 62, width: 170 * o[3] / mx, height: 14, rx: 4, fill: C.neu }, s); hover(ca, "cost ₪" + o[3] + "k"); el("text", { x: 110, y: 56 }, s, "cost ₪" + o[3] + "k");
+    });
+  })();
+
+  // ================= CROSS =================
+  (function () {
+    var host = document.getElementById("portfolio");
+    [["North DC recovery", 42, C.bad, "blocked"], ["POS upgrade", 61, C.warn, "over budget"], ["Holiday readiness", 55, C.warn, "late"], ["Click-and-collect", 70, C.good, "on track"], ["Recall readiness", 90, C.good, "on track"], ["Wage rule", 75, C.good, "on track"], ["Private label", 48, C.good, "on track"], ["Budget review", 66, C.good, "on track"]].forEach(function (p, i) {
+      var d = document.createElement("div"); d.style.cssText = "flex:1 1 120px;text-align:center;padding:6px;border-radius:10px;" + (i === 0 ? "background:var(--panel-2);border:1px solid var(--accent)" : "");
+      var s = el("svg", { viewBox: "0 0 120 118", class: "chart", style: "max-width:120px;margin:auto" }); d.appendChild(s);
+      ring(s, 60, 46, 36, p[1], p[2], 7); el("text", { x: 60, y: 51, "text-anchor": "middle", style: "fill:" + C.fg + ";font-size:15px" }, s, p[1] + "%");
+      el("text", { x: 60, y: 102, "text-anchor": "middle", class: "lbl", style: "font-size:11px" }, s, p[0]); el("text", { x: 60, y: 116, "text-anchor": "middle", style: "fill:" + p[2] + ";font-size:10px" }, s, p[3]);
+      host.appendChild(d);
+    });
+  })();
+  (function () {
+    var D = [["Supply Chain", 60, C.warn, "second shift", "in progress"], ["Finance", 30, C.bad, "overtime budget", "waiting"], ["Store Ops", 85, C.good, "transfers", "done"], ["HR", 45, C.warn, "temp staff", "4 d late"], ["Marketing", 100, C.good, "comms", "done"]];
+    var W = 760, H = 210, s = svg("progmap", W, H), gap = W / D.length;
+    for (var i = 0; i < D.length - 1; i++) { var a = gap * i + gap / 2 + 46, b = gap * (i + 1) + gap / 2 - 46; el("line", { x1: a, y1: 70, x2: b, y2: 70, stroke: D[i + 1][2] === C.bad ? C.bad : C.acc, "stroke-width": 2, "stroke-dasharray": D[i + 1][2] === C.bad ? "4 4" : "" }, s); el("circle", { cx: (a + b) / 2, cy: 70, r: 4, fill: C.acc }, s); }
+    D.forEach(function (d, i) { var cx = gap * i + gap / 2, g = el("g", {}, s);
+      el("circle", { cx: cx, cy: 70, r: 44, fill: "#0a1730" }, g); ring(g, cx, 70, 44, d[1], d[2], 7);
+      el("text", { x: cx, y: 76, "text-anchor": "middle", class: "big" }, g, d[1] + "%");
+      el("text", { x: cx, y: 136, "text-anchor": "middle", class: "lbl", style: "font-weight:600" }, g, d[0]);
+      el("rect", { x: cx - 62, y: 148, width: 124, height: 48, rx: 8, fill: "none", stroke: d[2] }, g);
+      el("text", { x: cx, y: 168, "text-anchor": "middle", class: "lbl" }, g, d[3]); el("text", { x: cx, y: 186, "text-anchor": "middle", style: "fill:" + d[2] }, g, d[4]);
+      hover(g, d[0] + ": " + d[1] + "% of its part done · " + d[3] + " · " + d[4]); });
+  })();
+  (function () {
+    var T = [["Supply Chain", "Second shift live", 0, 18, 18, C.warn], ["Finance", "Overtime exception", 6, 16, 16, C.bad], ["Store Ops", "Branch transfers", 0, 10, 10, C.good], ["HR", "Temp staff hired", 4, 20, 16, C.bad], ["Marketing", "Customer comms", 8, 14, 14, C.good]];
+    var W = 760, rh = 30, l = 120, H = T.length * rh + 34, s = svg("gantt", W, H), x = function (d) { return sc(d, 0, 40, l, W - 10); };
+    var days = ["6 Oct", "16 Oct", "26 Oct", "5 Nov", "15 Nov"]; days.forEach(function (d, i) { el("line", { x1: x(i * 10), x2: x(i * 10), y1: 4, y2: H - 22, stroke: C.line, "stroke-dasharray": "2 4" }, s); el("text", { x: x(i * 10), y: H - 6, "text-anchor": "middle" }, s, d); });
+    el("line", { x1: x(16), x2: x(16), y1: 0, y2: H - 22, stroke: C.acc, "stroke-width": 2 }, s); el("text", { x: x(16) + 4, y: 10, style: "fill:" + C.acc }, s, "today");
+    T.forEach(function (t, i) { var y0 = i * rh + 8; el("text", { x: l - 8, y: y0 + 15, "text-anchor": "end", class: "lbl" }, s, t[0]);
+      var b = el("rect", { x: x(t[2]), y: y0 + 4, width: x(t[3]) - x(t[2]), height: 14, rx: 7, fill: t[5], "fill-opacity": .3, stroke: t[5] }, s); hover(b, t[0] + " · " + t[1]);
+      var mx = x(t[4] + (t[5] === C.bad && t[0] === "HR" ? 4 : 2)), my = y0 + 11; el("path", { d: "M" + mx + " " + (my - 7) + " l7 7 l-7 7 l-7 -7z", fill: t[5] }, s); el("text", { x: mx + 12, y: my + 4, class: "lbl", style: "font-size:11px" }, s, t[1]); });
+  })();
+  (function () { var s = svg("ontime", 300, 130); ring(s, 65, 65, 48, 67, C.warn, 10); el("text", { x: 65, y: 71, "text-anchor": "middle", class: "big" }, s, "67%"); el("text", { x: 130, y: 52, class: "lbl" }, s, "8 of 12 actions on time"); el("text", { x: 130, y: 72 }, s, "group average 81%"); el("text", { x: 130, y: 92, style: "fill:" + C.bad }, s, "▼ 9 pts this week"); })();
+
+  // ================= ACTION =================
+  (function () {
+    var W = 560, H = 230, s = svg("flow", W, H);
+    var box = function (x, y, w, h, t1, t2, col) { el("rect", { x: x, y: y, width: w, height: h, rx: 10, fill: C.panel2, stroke: col || C.line }, s); el("text", { x: x + 12, y: y + 22, class: "lbl", style: "font-weight:600" }, s, t1); if (t2) el("text", { x: x + 12, y: y + 40 }, s, t2); };
+    box(10, 80, 140, 64, "Meeting summary", "8 decisions", C.bad);
+    ["1 Read", "2 Analyse", "3 Assign", "4 Track"].forEach(function (t, i) { box(190, 10 + i * 54, 130, 44, t, null, C.acc); if (i < 3) el("path", { d: "M255 " + (54 + i * 54) + " v10", stroke: C.acc, "stroke-width": 2 }, s); });
+    el("path", { d: "M150 112 C170 112 170 32 190 32", fill: "none", stroke: C.acc, "stroke-width": 1.5 }, s);
+    var deps = [["Finance", C.warn, "tomorrow"], ["HR", C.warn, "24 Oct"], ["Marketing", C.bad, "today"], ["Operations", C.warn, "23 Oct"], ["Trade", C.good, "done"]];
+    deps.forEach(function (d, i) { var y = 8 + i * 44; el("rect", { x: 380, y: y, width: 170, height: 36, rx: 8, fill: C.panel2, stroke: C.line }, s); el("circle", { cx: 394, cy: y + 18, r: 5, fill: d[1] }, s); el("text", { x: 406, y: y + 22, class: "lbl" }, s, d[0]); el("text", { x: 542, y: y + 22, "text-anchor": "end", style: "fill:" + d[1] }, s, d[2]); el("path", { d: "M320 " + (122) + " C350 122 350 " + (y + 18) + " 380 " + (y + 18), fill: "none", stroke: C.acc, "stroke-width": 1.2, opacity: .7 }, s); });
+  })();
+  (function () {
+    var host = document.getElementById("hist"), W = 600, s = el("svg", { viewBox: "0 0 600 56", class: "chart" }); host.appendChild(s);
+    var H = [["09:42", "action created"], ["09:43", "owners notified"], ["10:18", "transfer started"], ["11:05", "waiting for Finance"]];
+    el("line", { x1: 70, x2: 530, y1: 16, y2: 16, stroke: C.acc, "stroke-width": 2 }, s);
+    H.forEach(function (h, i) { var x = 70 + i * (460 / 3); el("circle", { cx: x, cy: 16, r: 6, fill: C.acc }, s); el("text", { x: x, y: 38, "text-anchor": "middle", style: "fill:" + C.fg }, s, h[0]); el("text", { x: x, y: 52, "text-anchor": "middle" }, s, h[1]); });
+  })();
+  var st = document.getElementById("status");
+  document.getElementById("approve").addEventListener("click", function () { st.style.color = "var(--good)"; st.textContent = "Sent to Noa inside VECTOR · Shira asked to approve ₪54k · audited"; });
+  document.getElementById("decline").addEventListener("click", function () { st.style.color = "var(--muted)"; st.textContent = "Declined · the product asks for a reason and records it"; });
+
+  // ================= REPORTS (editable) =================
+  var DATA = {
+    "Sales vs budget": { kind: "line", labels: ["W35","W36","W37","W38","W39","W40","W41","W42"], a: [49.2, 50.1, 49.8, 51.0, 50.4, 51.4, 51.36, 51.16], b: [49.5, 50.2, 50.6, 51.3, 51.0, 51.9, 52.1, 52.4], unit: "₪M" },
+    "Health by department": { kind: "bar", rows: [["Supply Chain", 54], ["Marketing", 63], ["Store Ops", 66], ["IT", 69], ["Legal", 71], ["Trade", 74], ["Finance", 78], ["HR", 84]] },
+    "Opex vs budget": { kind: "bar", rows: [["Logistics", 104.9], ["Labor", 101.9], ["Marketing", 92.0], ["IT", 114.0], ["HQ", 99.1]] },
+    "KPIs on target": { kind: "ring", v: 69, label: "11 of 16 KPIs" },
+    "Initiatives status": { kind: "ring", v: 63, label: "5 of 8 on track" },
+    "Headcount cost": { kind: "line", labels: ["W35","W36","W37","W38","W39","W40","W41","W42"], a: [7.3, 7.4, 7.3, 7.5, 7.4, 7.6, 7.6, 7.5], b: [7.3, 7.3, 7.4, 7.4, 7.4, 7.5, 7.5, 7.5], unit: "₪M" }
+  };
+  var blocks = [{ t: "Sales vs budget", k: "line" }, { t: "Health by department", k: "bar" }, { t: "Opex vs budget", k: "bar" }, { t: "KPIs on target", k: "ring" }];
+  var sel = 0, bseq = 0;
+  function drawBlock(host, b) {
+    var d = DATA[b.t], s = el("svg", { viewBox: "0 0 420 170", class: "chart" }); host.appendChild(s);
+    if (b.k === "line" && d.labels) { var x = function (i) { return sc(i, 0, d.labels.length - 1, 40, 410); }, all = d.a.concat(d.b), mn = Math.min.apply(0, all) * .98, mx = Math.max.apply(0, all) * 1.01, y = function (v) { return sc(v, mn, mx, 150, 10); };
+      [d.b, d.a].forEach(function (ser, si) { el("polyline", { points: ser.map(function (v, i) { return x(i) + "," + y(v); }).join(" "), fill: "none", stroke: si ? C.acc : C.neu, "stroke-width": 2, "stroke-dasharray": si ? "" : "5 4" }, s); });
+      d.a.forEach(function (v, i) { var c = el("circle", { cx: x(i), cy: y(v), r: 6, fill: "transparent" }, s); hover(c, d.labels[i] + ": " + d.unit + v + " (budget " + d.unit + d.b[i] + ")"); });
+      el("text", { x: 300, y: 18, style: "fill:" + C.acc }, s, "— actual"); el("text", { x: 360, y: 18 }, s, "- - budget"); el("text", { x: 40, y: 166 }, s, d.labels[0]); el("text", { x: 410, y: 166, "text-anchor": "end" }, s, d.labels[d.labels.length - 1]); el("text", { x: 36, y: y(mx) + 4, "text-anchor": "end" }, s, d.unit + mx.toFixed(1)); el("text", { x: 36, y: y(mn) + 4, "text-anchor": "end" }, s, d.unit + mn.toFixed(1)); return; }
+    if (b.k === "bar" && b.t === "Opex vs budget") { var rh2 = 150 / d.rows.length, xx = function (v) { return sc(v, -20, 20, 110, 400); }; el("line", { x1: xx(0), x2: xx(0), y1: 2, y2: 154, stroke: C.mut }, s); el("text", { x: xx(0), y: 166, "text-anchor": "middle" }, s, "budget"); d.rows.forEach(function (r, i) { var dv = +(r[1] - 100).toFixed(1); el("text", { x: 104, y: i * rh2 + rh2 / 2 + 6, "text-anchor": "end", class: "lbl", style: "font-size:11px" }, s, r[0]); var rc = el("rect", { x: Math.min(xx(0), xx(dv)), y: i * rh2 + 6, width: Math.max(2, Math.abs(xx(dv) - xx(0))), height: rh2 - 8, rx: 3, fill: dv > 0 ? C.bad : C.good }, s); hover(rc, r[0] + ": " + r[1] + "% of budget"); el("text", { x: xx(dv) + (dv >= 0 ? 6 : -6), y: i * rh2 + rh2 / 2 + 6, "text-anchor": dv >= 0 ? "start" : "end", style: "fill:" + C.fg }, s, (dv > 0 ? "+" : "") + dv + "%"); }); return; }
+    if ((b.k === "bar") && d.rows) { var rh = 150 / d.rows.length, m2 = Math.max.apply(0, d.rows.map(function (r) { return r[1]; })); d.rows.forEach(function (r, i) { el("text", { x: 96, y: i * rh + rh / 2 + 8, "text-anchor": "end", class: "lbl", style: "font-size:11px" }, s, r[0]); var w = 260 * r[1] / m2, col = (b.t === "Health by department") ? stateColor(r[1]) : (r[1] > 100 ? C.bad : C.good); var rc = el("rect", { x: 102, y: i * rh + 6, width: w, height: Math.max(6, rh - 6), rx: 3, fill: col }, s); hover(rc, r[0] + ": " + r[1]); el("text", { x: 106 + w, y: i * rh + rh / 2 + 8, style: "fill:" + C.fg }, s, r[1]); }); return; }
+    var v = d.v != null ? d.v : (d.rows ? Math.round(d.rows.filter(function (r) { return r[1] >= 70 || (r[1] <= 100 && r[1] > 90); }).length / d.rows.length * 100) : 70);
+    ring(s, 210, 80, 58, v, v >= 70 ? C.good : C.warn, 12); el("text", { x: 210, y: 87, "text-anchor": "middle", class: "big" }, s, v + "%"); el("text", { x: 210, y: 162, "text-anchor": "middle" }, s, d.label || b.t);
+  }
+  function render() {
+    var host = document.getElementById("blocks"); host.innerHTML = "";
+    blocks.forEach(function (b, i) { var d = document.createElement("div"); d.className = "block" + (i === sel ? " sel" : ""); d.innerHTML = '<header><b>' + b.t + '</b><span><button type="button" class="gh" data-up="' + i + '" aria-label="Move up">↑</button><button type="button" class="gh" data-rm="' + i + '" aria-label="Remove chart">×</button></span></header>';
+      d.addEventListener("click", function (e) { if (e.target.dataset.rm != null) { blocks.splice(+e.target.dataset.rm, 1); sel = Math.max(0, Math.min(sel, blocks.length - 1)); render(); return; } if (e.target.dataset.up != null) { var j = +e.target.dataset.up; if (j > 0) { var t = blocks[j - 1]; blocks[j - 1] = blocks[j]; blocks[j] = t; } render(); return; } sel = i; render(); });
+      host.appendChild(d); drawBlock(d, b); });
+    var ed = document.getElementById("editor"), b = blocks[sel];
+    if (!b) { ed.innerHTML = "<span>Add a chart from the left.</span>"; } else {
+      ed.innerHTML = '<span>Editing: <b style="color:var(--fg)">' + b.t + '</b></span><label>chart <select id="ek"><option value="line">line</option><option value="bar">bars</option><option value="ring">ring</option></select></label><label>period <select><option>last 8 weeks</option><option>quarter to date</option><option>year to date</option></select></label><label>scope <select><option>Group</option><option>by region</option><option>by department</option></select></label>';
+      var ek = document.getElementById("ek"); ek.value = b.k; ek.addEventListener("change", function () { b.k = ek.value; render(); }); }
+    var out = document.getElementById("outline"); out.innerHTML = ""; ["Headline & health", "Sales", "Finance", "HR", "Projects", "KPIs vs targets", "Blockers", "Decisions needed"].forEach(function (t) { var d = document.createElement("div"); d.textContent = t; out.appendChild(d); });
+  }
+  (function () { var p = document.getElementById("palette"); Object.keys(DATA).forEach(function (k) { var b = document.createElement("button"); b.type = "button"; b.innerHTML = "+ " + k + "<small>" + DATA[k].kind + "</small>"; b.addEventListener("click", function () { blocks.push({ t: k, k: DATA[k].kind }); sel = blocks.length - 1; render(); }); p.appendChild(b); }); })();
+  render();
+
+  // ================= MARKET =================
+  lines("cpi", { w: 560, h: 220, mr: 80, labels: ["Mar", "Apr", "May", "Jun", "Jul", "Aug"], min: 0, max: 3.2, ticks: [0, 1, 2, 3], fmt: function (v) { return v.toFixed(1) + "%"; },
+    series: [{ name: "CBS food index", values: [2.5, 2.8, 2.6, 1.6, 1.4, 1.0], color: C.neu, w: 2.5, dots: true, end: "CBS +1.0%" }, { name: "VECTOR average price", values: [2.0, 2.3, 2.5, 2.4, 2.6, 2.7], color: C.acc, w: 2.5, dots: true, end: "ours +2.7%" }] });
+  (function () { var wk = ["W31","W32","W33","W34","W35","W36","W37","W38","W39","W40","W41","W42"];
+    lines("btrend", { w: 560, h: 220, mr: 84, labels: wk, min: 92, max: 106, ticks: [94, 98, 102, 106], series: [
+      { name: "Rami Levy", values: [94.8,94.9,95.0,94.7,94.6,94.8,94.5,94.6,94.4,94.6,94.3,94.4], color: C.neu, w: 1.5, op: .8, end: "Rami Levy" },
+      { name: "Victory", values: [98.6,98.7,98.5,98.8,98.6,98.4,98.6,98.7,98.5,98.6,98.4,98.5], color: C.neu, w: 1.5, op: .8, end: "Victory" },
+      { name: "Shufersal", values: [102.6,102.8,102.5,102.7,102.9,102.6,102.4,101.9,101.2,100.6,100.1,99.8], color: C.neu, w: 1.5, op: .8, end: "Shufersal" },
+      { name: "VECTOR", values: [101.4,101.5,101.7,101.6,101.9,102.0,102.1,102.0,102.2,102.3,102.4,102.4], color: C.acc, w: 2.5, end: "VECTOR" }],
+      marks: [{ v: 100, color: C.mut }] }); })();
+  hbars("growth", [{ k: "VECTOR", v: 1.8, c: C.acc, note: "synthetic" }, { k: "Rami Levy", v: 3.0, c: C.neu, note: "real" }, { k: "Shufersal", v: -7.5, c: C.neu, note: "real" }], { w: 460, min: -9, max: 5, left: 130, rh: 34, fmt: function (v) { return (v > 0 ? "+" : "") + v.toFixed(1) + "%"; } });
+  hbars("rev", [{ k: "Shufersal", v: 3.4, c: C.neu, note: "real" }, { k: "Rami Levy", v: 2.07, c: C.neu, note: "real" }, { k: "VECTOR", v: 0.66, c: C.acc, note: "synthetic" }], { w: 460, min: 0, max: 4, left: 130, rh: 34, fmt: function (v) { return "₪" + v.toFixed(2) + "B"; } });
+  (function () { var cats = ["Dairy", "Bakery", "Produce", "Meat", "Dry goods", "Drinks"], chains = ["VECTOR", "Shufersal", "Rami Levy", "Victory", "Yochananof"];
+    var v = [[104, 101, 99, 102, 103, 106], [103, 102, 104, 101, 102, 101], [95, 96, 93, 97, 96, 95], [98, 99, 100, 99, 98, 99], [99, 101, 102, 100, 99, 100]];
+    var W = 600, H = 220, l = 96, t = 24, cw = (W - l - 6) / cats.length, ch = (H - t - 6) / chains.length, s = svg("basket", W, H);
+    cats.forEach(function (c, j) { el("text", { x: l + j * cw + cw / 2, y: 16, "text-anchor": "middle" }, s, c); });
+    chains.forEach(function (r, i) { el("text", { x: l - 8, y: t + i * ch + ch / 2 + 4, "text-anchor": "end", class: "lbl", style: i === 0 ? "fill:" + C.acc + ";font-weight:600" : "" }, s, r);
+      v[i].forEach(function (x, j) { var dlt = x - 100, col = Math.abs(dlt) < 1.5 ? "#1a2c49" : dlt > 0 ? "rgba(240,93,94," + Math.min(.85, .2 + dlt * .12) + ")" : "rgba(47,207,143," + Math.min(.7, .2 - dlt * .08) + ")";
+        var rc = el("rect", { x: l + j * cw + 2, y: t + i * ch + 2, width: cw - 4, height: ch - 4, rx: 4, fill: col, stroke: i === 0 ? C.acc : "none" }, s); hover(rc, r + " · " + cats[j] + ": " + x + " (illustrative)");
+        el("text", { x: l + j * cw + cw / 2, y: t + i * ch + ch / 2 + 4, "text-anchor": "middle", style: "fill:" + C.fg }, s, x); }); }); })();
+
+  // ================= INBOX =================
+  (function () { var s = svg("donut", 380, 170), parts = [["Needs a decision", 5, C.bad], ["Waiting for your reply", 3, C.warn], ["For your information", 15, C.neu]], tot = 23, a0 = -Math.PI / 2, cx = 80, cy = 85, r = 62;
+    parts.forEach(function (p, i) { var a1 = a0 + 2 * Math.PI * p[1] / tot, gap = .03; var x0 = cx + r * Math.cos(a0 + gap), y0 = cy + r * Math.sin(a0 + gap), x1 = cx + r * Math.cos(a1 - gap), y1 = cy + r * Math.sin(a1 - gap); var path = el("path", { d: "M" + x0 + " " + y0 + " A" + r + " " + r + " 0 " + ((a1 - a0) > Math.PI ? 1 : 0) + " 1 " + x1 + " " + y1, fill: "none", stroke: p[2], "stroke-width": 18 }, s); hover(path, p[0] + ": " + p[1]); a0 = a1;
+      el("rect", { x: 175, y: 40 + i * 34, width: 12, height: 12, rx: 3, fill: p[2] }, s); el("text", { x: 195, y: 51 + i * 34, class: "lbl" }, s, p[0]); el("text", { x: 370, y: 51 + i * 34, "text-anchor": "end", style: "fill:" + C.fg }, s, p[1]); });
+    el("text", { x: cx, y: cy + 6, "text-anchor": "middle", class: "big" }, s, "23"); })();
+  hbars("threadbars", [{ k: "North DC overtime", v: 1100, c: C.bad }, { k: "Campaign ₪220k", v: 350, c: C.warn }, { k: "POS wave 3", v: 400, c: C.warn }, { k: "Supplier offer", v: 310, c: C.neu }], { w: 420, min: 0, max: 1300, left: 130, fmt: function (v) { return "₪" + v + "k"; } });
+
+  // ================= tabs =================
+  var ids = ["home", "drill", "opps", "cross", "action", "reports", "market", "inbox"];
+  function show() { var h = (location.hash || "#home").slice(1); if (ids.indexOf(h) < 0) h = "home";
+    ids.forEach(function (id) { document.getElementById("s-" + id).hidden = id !== h; });
+    document.querySelectorAll(".tabs a").forEach(function (a) { if (a.getAttribute("href") === "#" + h) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    document.querySelectorAll(".nav").forEach(function (n) { n.classList.toggle("on", (n.getAttribute("data-for") || "").split(" ").indexOf(h) >= 0); }); }
+  window.addEventListener("hashchange", show); show();
+})();
+</script>

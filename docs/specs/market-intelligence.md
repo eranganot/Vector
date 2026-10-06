@@ -54,6 +54,17 @@ Each chain's basket price index is computed as follows:
 
 ## 5. The tab
 
+**Layout v3 (G-E0f, Eran 2026-10-06: competitors in charts, not only a table):**
+
+- KPI tiles: food prices y/y (CBS), our price y/y, our basket index, our growth vs the market leader.
+- **Food prices vs ours:** two lines (CBS real, ours).
+- **Basket price vs competitors:** 12-week lines per chain, with VECTOR highlighted.
+- **Competitors:** revenue bars and growth bars, Q2 2026. The real figures are Shufersal (Globes, 2026-08-27) and Rami Levy
+  (investor presentation, Aug 2026: revenue NIS 2.07B, +3%; gross margin 23.6%; operating margin 4.7%).
+- **Basket price index by category:** a heatmap of chains × categories.
+
+The list that follows is the E0 v2 version:
+
 1. ₪ header: market growth (food CPI y/y) vs our real growth · our basket index vs market · ₪ at stake from market
    risks.
 2. **What changed outside** (last 30 days): cards tied to the rules above, each with "how it hits us" (₪, KPIs,
