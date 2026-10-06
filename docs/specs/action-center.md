@@ -1,0 +1,64 @@
+# Action Center (E4)
+
+Status: **Proposed (E0, 2026-10-06).** Implements FB item #9, FB-8 (internal sending in the demo; real channels in
+production) and FB-12 (Waiting on you stays its own tab, and the same items also appear here).
+
+## 1. Purpose
+
+The Action Center turns an insight, risk or opportunity into an action item with the right person. For each item it
+gives:
+
+- **a suggestion of how to proceed**;
+- **with whom**;
+- **the relevant message**, which the user can edit;
+- **Approve / Decline**. Approving sends the message to the right person.
+
+It is built on the existing lifecycle (Decision → Action → Approval → execution), so every step is authorized,
+approved where policy says so, and audited. It does not open a second path around governance.
+
+## 2. Layout
+
+1. ₪ header: ₪ at stake waiting for an action · ₪ in actions awaiting approval · ₪ sent this week.
+2. **Needs an action**: insights, risks and opportunities in your scope with no decided action yet, ranked by the
+   "Where to focus" score (executive-home.md §7).
+3. **Waiting on you**: the same rows as the Waiting on you tab (decisions, approvals, your tasks), from the same
+   query (FB-12).
+4. **Sent and in flight**: messages you approved and the actions they started, with status and outcome.
+
+## 3. "Make it an action" (one panel)
+
+| Part               | Content (deterministic, `action-suggest-v1`)                                                                                                                                                                     |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Suggested approach | The playbook for the insight's type (`src/application/playbooks.ts`): steps, expected impact, cost, risk (economics-v1), and "Last time we did this" (the lesson)                                                |
+| With whom          | Owner: the head (`is_head`) of the owning unit. Informed: the heads of the affected units and the sponsor of a linked initiative. Each person comes with the reason they were picked; any of them can be changed |
+| Approval route     | The approval policy evaluated live (AP rules): who must approve, and whether you may approve it yourself                                                                                                         |
+| Message            | A template per playbook and audience (owner / informed), in the recipient's language (EN or HE), filled with the insight's facts, ₪, due date and a link. Editable                                               |
+| Approve / Decline  | Approve runs the commands: decide → propose action (with the economics fields) → request approval if policy requires → on approval, send. Decline records a reason                                               |
+
+Sending is a step of execution. When the policy requires a second approver, the message waits in `approved_pending`
+and is sent only after that approval. A user may never approve their own action (AZ-2).
+
+## 4. Messages and channels
+
+| Entity            | Fields                                                                                                                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OutboundMessage` | action_id, channel (`in_app`, `email`, `slack`, `sms`, `whatsapp`), to_user_ids[], to_address (production only), subject, body, language, template_id, edited (bool), status (`draft` → `approved` → `sent` / `failed` / `cancelled`), approved_by, sent_at, adapter, simulated |
+
+**Channel seam.** A `ChannelAdapter` interface (`send(message) → receipt`) sits in `src/infra/channels`.
+
+- **Demo (FB-8): internal only.** `InAppAdapter` creates a notification in the recipient's VECTOR inbox (Waiting on
+  you and Inbox). The message is also written to the existing visible outbox, labelled "internal: demo". No email,
+  Slack or SMS leaves the system.
+- **Production** (after the MVP): email, Slack and messaging adapters behind configuration, an allowlist of recipient
+  domains and workspaces, and a kill switch per environment (`CHANNELS_LIVE=off` by default). They are delivered with
+  their own security review (Phase 8).
+
+Every state change of a message is audited (`message.drafted`, `message.edited` with a diff hash, `message.approved`,
+`message.sent`, `message.declined`).
+
+## 5. Acceptance (E4)
+
+- e2e (both languages): Dana makes the North stock-out risk into an action. Noa is suggested as owner, Dana edits
+  the message and approves it, Noa sees it in Waiting on you and in her Inbox, and the audit trail shows every step.
+- A case where policy requires another approver (AP-3 ≥ ₪50k): the message is not sent until that approver approves.
+- No network call to any external channel in Dev or Prod (unit test on the adapter registry, plus smoke).

@@ -4,6 +4,8 @@ Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built.** Implem
 §2 and the rules in §4 are table-driven unit tests (`src/domain/policy/policy.test.ts`); §5 is covered by
 integration tests (`tests/integration/lifecycle.test.ts`).
 
+> **Plan v2 (E0, 2026-10-06):** the C-suite read scope is in [ADR-008](../adr/ADR-008-c-suite-scope.md) (proposed). The CFO and COO also hold Viewer @ Group; acting scope is unchanged.
+
 These are four separate checks, in this order, each with its own code path and audit trail:
 
 | Check             | Question                                                   | Where                                                             | Failure                                |

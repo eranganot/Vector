@@ -3,6 +3,8 @@
 Status: **Phase 3.** Charter §31 Phase 3 asks us to validate that people understand the organization rather than browse
 data. This test measures that two ways: an automated check on every build, and a short live test with real people.
 
+> **Plan v2 (E2):** for the C-suite, the check moves to four questions (how are we doing, why, where is it heading, where to focus): [executive-home.md §1](executive-home.md#1-the-five-second-promise).
+
 ## What "understood" means
 
 A person understands their part of the organization when they can say, unprompted:
