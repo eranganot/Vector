@@ -5,6 +5,7 @@ import { demoPersonasEnabled } from "../_lib/session";
 import { getLocale } from "../_lib/locale";
 import { makeT } from "@/i18n/t";
 import { LanguageSwitch } from "../_components/language-switch";
+import { PRODUCT, TAGLINE } from "@/i18n/brand";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
@@ -16,7 +17,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-3">
           <Logo size={40} />
-          <h1 className="text-3xl font-semibold tracking-[0.14em]">VECTOR</h1>
+          <h1 className="flex flex-wrap items-baseline gap-x-3">
+            <span className="text-3xl font-semibold tracking-[0.14em]">{PRODUCT}</span>
+            <span className="text-xl text-muted">| {TAGLINE[locale]}</span>
+          </h1>
           <div className="grow" />
           <LanguageSwitch locale={locale} />
         </div>

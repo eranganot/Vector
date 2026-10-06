@@ -1,6 +1,6 @@
 # ADR-008: C-suite read scope
 
-- Status: proposed (E0, 2026-10-06). The requirement is Eran's (FB-1); the mechanism is Claude's, to confirm at the E0 gate.
+- Status: accepted (E0 sign-off G-E0, 2026-10-06). The requirement is Eran's (FB-1); the mechanism is Claude's.
 - Context: plan v2 makes the C-suite the primary users. Eran (2026-10-06 17:52): "CEO, CFO, COO can see everything; the
   other C-suite should see only their department, but they should also see all the cross-projects that their department
   is included in." Today (ADR-003) a Department Manager reads only what touches their department's subtree, and only the
