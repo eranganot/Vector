@@ -191,6 +191,24 @@ The read model is `src/application/queries/executive.ts` (`executiveHome`); the 
 - **Performance.** Indexes on (organization, day) for KPI observations and money lines (migration 0010) bring the
   read model from ~650 ms to ~100 ms locally.
 
+### 4.6 As built (E2b, 2026-10-07): the screen
+
+`src/app/_components/executive.tsx`, shown to C-suite people (`user.is_c_suite`); everyone else keeps the Phase 3
+dashboard.
+
+- **Order on the screen:** KPI tiles · organization pulse (group) or by region / measures (department) · today's
+  priorities and the month chart beside it · why health moved, risks & opportunities, outside / inside · VECTOR
+  insight · departments and regions, money vs budget · Waiting on you and Dependencies · how it is calculated.
+  Priorities sit beside the main picture (not below it) so all four five-second questions stay above the fold at
+  1440×900 (§1); the e2e Time-to-Understanding check covers Dana, Michal and Noa in English and Hebrew.
+- **Pulse links** come from open dependencies (on track, or blocked when at risk or past need-by) and open conflicts
+  between departments. A dependency on a branch or region counts as Store Operations.
+- **VPs** (one department) land on their department's view: region rings and a region × measure heat map, or, for a
+  group-wide department (HR, Legal, IT, Finance, Marketing), its measures as the main picture.
+- **Waiting on you and Dependencies stay on the home** (Eran 2026-10-04: actions and dependencies on every home).
+- **Region links** under the departments card keep any branch two clicks from the CEO's home.
+- Signed numbers are isolated left-to-right, so "−2.3%" keeps its sign inside Hebrew sentences.
+
 ## 5. "Why it changed": cause cards
 
 A cause card is chosen from the contributors of §4.2 summed over all departments, largest |₪| first (points when no

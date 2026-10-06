@@ -1,6 +1,6 @@
 # Session handoff
 
-_Last updated: 2026-10-07 (E2a)_
+_Last updated: 2026-10-07 (E2b)_
 
 ## Current phase
 
@@ -9,10 +9,8 @@ e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E2a #38: health-v2, projection-v1 and the read model `executiveHome` (no UI yet); money lines follow the demo
   clock; migration 0010 (org/day indexes).
-- Next: E2b, the C-suite home UI (wireframes v3 screen 1: KPI tiles, organization pulse, health bridge, month revenue
-  vs budget with projection, priorities, risks & opportunities, outside / inside, VECTOR insight), VP home, region
-  drill-down, EN/HE, Time-to-Understanding e2e; then E2c (₪ headers on Risks, Opportunities, Commitments, Actions)
-  and the E2 gate brief.
+- E2b #39: the C-suite home on screen, department drill-down, VP home, EN/HE, TtU e2e (Dana, Michal, Noa).
+- Next: E2c (₪ headers on Risks, Opportunities, Commitments, Actions), then the E2 gate brief.
 
 ## Objective (E0, done)
 
@@ -33,7 +31,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Build E2b (home UI) on `executiveHome`, then E2c, verify on Dev, write docs/phases/STAGE_E2.md for Eran's gate.
+1. Build E2c (₪ headers), verify on Dev, write docs/phases/STAGE_E2.md for Eran's gate.
 
 ## Reproducible commands
 

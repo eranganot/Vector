@@ -143,6 +143,21 @@ describe("C-suite home read model (E2a)", () => {
     expect(await executiveHome(appDb, orgId, hila, { unitId: store.unitId })).toBeNull();
   });
 
+  it("a VP who reads one department lands on its own view, with its regions", async () => {
+    const v = (await executiveHome(appDb, orgId, await as("noa")))!;
+    expect(v.scope.kind).toBe("department");
+    expect(v.departments.map((d) => d.code)).toEqual(["D-SUPPLY"]);
+    expect(v.regions).toHaveLength(5);
+    expect(v.departments[0].measures.length).toBeGreaterThan(3);
+  });
+
+  it("draws the organization pulse from dependencies and conflicts between departments", () => {
+    expect(dana.links.length).toBeGreaterThan(0);
+    expect(dana.links.some((l) => l.state === "blocked")).toBe(true);
+    const ids = new Set(dana.departments.map((d) => d.unitId));
+    for (const l of dana.links) expect(ids.has(l.from) && ids.has(l.to)).toBe(true);
+  });
+
   it("is deterministic: the same seed and clock give the same scores", async () => {
     const again = (await executiveHome(appDb, orgId, await as("dana")))!;
     expect(again.departments.map((d) => [d.code, d.score, d.change, d.projectedEoq])).toEqual(

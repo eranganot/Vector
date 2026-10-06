@@ -47,7 +47,8 @@ test("Marketing records a weekend promotion; VECTOR flags the conflict with Trad
 
   // Trade's head is asked to confirm his plan (a task he owns).
   await as(page, "Eitan Rosen");
-  await expect(page.getByText(/Confirm your plan with Marketing: Delist 6 dairy items/)).toBeVisible();
+  await page.goto("/approvals"); // Waiting on you (the home lists the first five)
+  await expect(page.getByText(/Confirm your plan with Marketing: Delist 6 dairy items/).first()).toBeVisible();
 });
 
 test("cancelling one side resolves the conflict; the trace says why", async ({ page }) => {
@@ -82,7 +83,7 @@ test("dependencies on every home: the CEO's bottlenecks, Finance blocked on Trad
 
   // ADR-008: the CFO's home is the whole group; Finance's own view is its unit page.
   await as(page, "Michal Golan");
-  await expect(page.getByText(/· VECTOR Retail Group$/)).toBeVisible();
+  await expect(page.getByTestId("pulse")).toBeVisible();
   await page.goto("/org");
   await page
     .locator("main a", { hasText: /^Finance$/ })

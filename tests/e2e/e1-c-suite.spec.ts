@@ -23,14 +23,16 @@ test.use({ viewport: { width: 1440, height: 900 } });
 for (const who of ["Michal Golan", "Oren Halevi"]) {
   test(`${who} reads the whole group and has the C-suite navigation`, async ({ page }) => {
     await as(page, who);
-    await expect(page.getByText(/· VECTOR Retail Group$/)).toBeVisible();
+    await expect(page.getByTestId("pulse")).toBeVisible(); // the whole group: all eight departments
+    await expect(page.getByTestId("pulse-node")).toHaveCount(8);
     expect((await navLabels(page)).slice(0, 2)).toEqual(["Home", "Waiting on you"]);
   });
 }
 
 test("a VP (Hila, HR) stays on her department", async ({ page }) => {
   await as(page, "Hila Dahan");
-  await expect(page.getByText(/· HR$/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "HR" })).toBeVisible();
+  await expect(page.getByTestId("pulse")).toHaveCount(0);
   expect((await navLabels(page)).slice(0, 2)).toEqual(["Home", "Waiting on you"]);
 });
 

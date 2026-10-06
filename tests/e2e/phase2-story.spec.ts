@@ -17,10 +17,10 @@ async function as(page: Page, name: string) {
       .click();
   } else {
     await page.goto("/");
-    await page.locator("summary").click();
+    await page.locator("summary").first().click();
     await page.getByRole("button", { name: new RegExp(name) }).click();
   }
-  await expect(page.locator("summary")).toContainText(name);
+  await expect(page.locator("summary").first()).toContainText(name);
 }
 
 test("the recall is approved inside Legal; the CEO is informed (runs first: approvals expire after 72 h)", async ({
@@ -111,17 +111,14 @@ test("out-of-scope insights look missing (404), and viewers get no decision butt
 test("every home is a dashboard: KPIs, actions, risk and opportunity summary, dependencies (Eran, 2026-10-04)", async ({
   page,
 }) => {
+  // Plan v2, E2: the C-suite home (executive-home.md) carries the same summaries, more visually.
   await as(page, "Dana Levi");
-  await expect(page.getByText(/Executive Command Center/)).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(/need attention|to watch|on track/);
-  for (const t of ["Key results", "Health by region", "What changed", "Organization pulse"])
+  for (const t of ["Organization pulse", "Today's priorities", "Risks & opportunities", "Money vs budget"])
     await expect(page.getByText(t, { exact: true })).toBeVisible();
   await expect(page.getByText(/^Waiting on you · \d+$/)).toBeVisible();
-  await expect(page.getByText(/^Risks · \d+$/)).toBeVisible();
-  await expect(page.getByText(/^Opportunities · 5$/)).toBeVisible();
   await expect(page.getByText("Dependencies", { exact: true })).toBeVisible();
   // Summaries only: the full lists are the Risks and Opportunities tabs.
-  await page.getByRole("link", { name: /^All \d+ risks →$/ }).click();
+  await page.getByRole("link", { name: "All →" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Risks · VECTOR Retail Group" })).toBeVisible();
   await page.getByRole("link", { name: /^P1/ }).first().click();
   await expect(page).toHaveURL(/band=P1/);
@@ -139,9 +136,9 @@ test("every home is a dashboard: KPIs, actions, risk and opportunity summary, de
   await expect(page.getByText("Dependencies", { exact: true })).toBeVisible();
 
   await as(page, "Noa Friedman");
-  await expect(page.getByText(/Noa · Supply Chain$/)).toBeVisible();
-  await expect(page.getByText("Department results")).toBeVisible();
-  await expect(page.getByText(/Others depend on us/)).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Supply Chain" })).toBeVisible();
+  await expect(page.getByText("By region", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Waiting on us|Others depend on us/).first()).toBeVisible();
   await expect(page.getByText(/tasks? you own/)).toBeVisible(); // actions she must take, not only approvals
   await page.goto("/performance"); // the Phase 2 address now leads to your dashboard
   await expect(page).toHaveURL(/\/$/);
