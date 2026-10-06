@@ -8,6 +8,8 @@ export default defineConfig({
     include: ["tests/integration/**/*.test.ts"],
     environment: "node",
     fileParallelism: false,
-    testTimeout: 20_000,
+    // 52 weeks of synthetic history (plan v2, E1c): a seed plus a demo reset in a beforeAll takes ~10–15 s.
+    testTimeout: 60_000,
+    hookTimeout: 120_000,
   },
 });

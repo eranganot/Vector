@@ -61,6 +61,7 @@ unit), not in SQL; Phase 3 moves them to SQL filters.
 | `outcome.review`                        |       |     ✓     |         ✓          |             ✓             |        |
 | `commitment.record` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
 | `commitment.update` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
+| `initiative.record` (plan v2, E1c)      |       |     ✓     |         ✓          |                           |        |
 | `audit.read` (in scope)                 |   ✓   |     ✓     |         ✓          |             ✓             |        |
 | `config.priority_weights.propose`       |   ✓   |     ✓     |                    |                           |        |
 | `config.priority_weights.approve`       |       |     ✓     |                    |                           |        |

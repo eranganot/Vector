@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
+import { HISTORY_DAYS } from "@/infra/seed/org";
 import { seed } from "@/infra/seed/seed";
 import { reseedReason } from "@/infra/seed/reseed";
 import type { Db } from "@/application/db";
@@ -29,7 +30,8 @@ describe("seed", () => {
     expect(orgs.rows.find((r) => r.id === second.orgId)?.is_active).toBe(true);
     expect(second.userIds.dana).toBe(first.userIds.dana); // people persist across epochs
     const obs = await owner.query("select count(*)::int as n from kpi_observation where org_id = $1", [second.orgId]);
-    expect(obs.rows[0].n).toBe(60 * 6 * 84 + 10 * 84); // 60 branches × 6 branch KPIs + 10 department KPIs, 84 days
+    // 60 branches × 6 branch KPIs + 10 department KPIs, every day of the history (52 weeks since E1c)
+    expect(obs.rows[0].n).toBe((60 * 6 + 10) * HISTORY_DAYS);
   });
 });
 

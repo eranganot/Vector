@@ -6,6 +6,7 @@
 import { CATALOG } from "@/infra/seed/catalog";
 import { runCommitmentMonitor } from "./commands/commitments";
 import { seedCommitments } from "./commitments-seed";
+import { seedInitiatives } from "./initiatives-seed";
 import { and, eq, inArray } from "drizzle-orm";
 import { addDays } from "@/domain/calendar";
 import { DomainError } from "@/domain/errors";
@@ -130,7 +131,13 @@ export async function bootstrapEpoch(db: Db, password: string) {
   // Phase 4: the commitment register and dependency graph; catalog stories link to their commitments.
   const catalogIds = new Map(CATALOG.map((c, i) => [c.id, catalog[i].insightId]));
   const commitments = await seedCommitments(await createContext(db, { orgId: r.orgId }), catalogIds);
-  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor };
+  // Plan v2 (E1c): cross-department initiatives, linked to the catalog stories and commitments above.
+  const initiatives = await seedInitiatives(
+    await createContext(db, { orgId: r.orgId }),
+    catalogIds,
+    commitments.commitments,
+  );
+  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor, initiatives };
 }
 
 /** Starts a fresh demo epoch (new organization; history of the old one stays intact). */
