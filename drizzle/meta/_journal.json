@@ -64,6 +64,13 @@
       "when": 1791312371243,
       "tag": "0008_c_suite_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791314005930,
+      "tag": "0009_plan_v2_finance_initiatives",
+      "breakpoints": true
     }
   ]
 }

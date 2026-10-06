@@ -193,6 +193,17 @@ const checks: Check[] = [
       return "Oren Halevi (COO) listed";
     },
   },
+  {
+    phase: 5,
+    name: "E1: synthetic data v5 is live (52 weeks, money lines, budgets, initiatives; seed p5+)",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      const v = /^p(\d+)-/.exec(body.demo?.seedVersion ?? "");
+      if (!v || Number(v[1]) < 5) throw new Error(`seed ${body.demo?.seedVersion}, expected p5 or later`);
+      if (body.migrations.applied < 10) throw new Error(`expected migration 0009, got ${body.migrations.applied}`);
+      return `seed ${body.demo.seedVersion} · migrations ${body.migrations.applied}`;
+    },
+  },
 ];
 
 async function main() {

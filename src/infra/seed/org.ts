@@ -3,11 +3,12 @@
  * 18 personas, 6 branch KPIs and 10 department KPIs. All names of people and the company are invented;
  * cities and coordinates are real (live weather arrives in Phase 6).
  */
-export const SEED_VERSION = "p4-v2";
+export const SEED_VERSION = "p5-v1";
 export const ORG_NAME = "VECTOR Retail Group";
 /** The demo story's "today": data exists up to the day before. */
 export const STORY_DAY = "2026-10-22";
-export const HISTORY_DAYS = 84;
+/** 52 weeks of daily history (plan v2, E1c): year-on-year, run-rates and the Q3 close. */
+export const HISTORY_DAYS = 365;
 
 export type UnitSeed = {
   code: string;
@@ -311,7 +312,7 @@ export const KPIS: KpiSeed[] = [
     strategicWeight: 0.8,
     owner: "D-TRADE",
     level: "department",
-    target: 31.5,
+    target: 26, // G-E0g (was 31.5)
   },
   {
     code: "campaign_ready",

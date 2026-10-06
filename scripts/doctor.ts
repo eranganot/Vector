@@ -83,6 +83,27 @@ async function main() {
             branches === 60 && departments === 8 && insights >= 19,
             `seed ${active.seed_version}: ${branches} branches, ${departments} departments, ${insights} insights`,
           );
+          // Plan v2 (E1c, financials.md §4): every month with actuals has a budget for each account and unit.
+          const gaps = await pool.query(
+            `select a.account_code, a.org_unit_id, to_char(a.day, 'YYYY-MM') as month
+               from fin_actual a
+              where a.org_id = $1
+              group by 1, 2, 3
+             except
+             select b.account_code, b.org_unit_id, b.month from fin_budget b where b.org_id = $1`,
+            [active.id],
+          );
+          const months = await pool.query(
+            `select count(distinct to_char(day, 'YYYY-MM'))::int as n from fin_actual where org_id = $1`,
+            [active.id],
+          );
+          record(
+            "budgets cover actuals",
+            months.rows[0].n > 0 && gaps.rowCount === 0,
+            gaps.rowCount
+              ? `${gaps.rowCount} account·unit·month(s) without a budget, e.g. ${gaps.rows[0].account_code} ${gaps.rows[0].month}`
+              : `${months.rows[0].n} months of actuals, all budgeted`,
+          );
         } else record("active demo epoch", false, "none — run pnpm demo:reset");
       } catch (err) {
         record("database connection", false, err instanceof Error ? err.message : String(err));

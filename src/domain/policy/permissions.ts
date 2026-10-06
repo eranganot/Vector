@@ -14,6 +14,8 @@ export const CAPABILITIES = [
   "outcome.review",
   "commitment.record",
   "commitment.update",
+  /** Plan v2 (E1c): record and update a cross-department initiative (cross-department.md §3). */
+  "initiative.record",
   "audit.read",
   "config.priority_weights.propose",
   "config.priority_weights.approve",
@@ -48,8 +50,13 @@ export const PERMISSIONS: Record<Role, ReadonlySet<Capability>> = {
     "admin.policy",
     "demo.control",
   ]),
-  executive: new Set<Capability>([...MANAGER, "config.priority_weights.propose", "config.priority_weights.approve"]),
-  department_manager: new Set<Capability>(MANAGER),
+  executive: new Set<Capability>([
+    ...MANAGER,
+    "initiative.record",
+    "config.priority_weights.propose",
+    "config.priority_weights.approve",
+  ]),
+  department_manager: new Set<Capability>([...MANAGER, "initiative.record"]),
   regional_manager: new Set<Capability>(MANAGER),
   viewer: new Set<Capability>(["insight.read"]),
 };
