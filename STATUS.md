@@ -36,9 +36,16 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-06 | E1 verified on Dev (0ad0ea1): smoke 14/14, e2e 29/29 against Dev, demo reset after; gate brief docs/phases/STAGE_E1.md                                                                                                                                                                                                                                                                                                                                                                | #37      |
 | 2026-10-07 | E1 signed off (G-E1). E2a: health-v2 and projection-v1 (pure, hand-computed tests), the C-suite home read model (`executiveHome`: department health with 7-day change, causes and EOQ direction; region drill-down; money lines MTD vs budget with EOM/EOQ projections; bridge; month revenue chart; focus; risks, opportunities, outside, inside; rule-based VECTOR insight); money lines now follow the demo clock; org/day indexes (migration 0010, ~650 → ~100 ms)                | #38      |
 | 2026-10-07 | E2b: the C-suite home on screen (wireframes v3 screen 1): KPI tiles, organization pulse with dependency and conflict links, region toggle, health bridge, month revenue vs budget with projection and range, today's priorities, risks & opportunities, outside / inside, rule-based VECTOR insight, money vs budget, Waiting on you and Dependencies; department drill-down (`/?unit=`) and VP home with regions or measures; EN/HE; TtU e2e for Dana, Michal, Noa in both languages | #39      |
-| 2026-10-07 | E2c: ₪ header on Risks, Opportunities, Commitments and Actions & outcomes (`src/domain/money-headers.ts`, scoped and filtered like the list; the Risks P1 figure equals the home tile); EN/HE; e2e | #40      |
+| 2026-10-07 | E2c: ₪ header on Risks, Opportunities, Commitments and Actions & outcomes (`src/domain/money-headers.ts`, scoped and filtered like the list; the Risks P1 figure equals the home tile); EN/HE; e2e                                                                                                                                                                                                                                                                                    | #40      |
 
 ## Root-cause records
+
+### 2026-10-07 · CI `verify` failed on PR #40 at d6c8d44 (`format:check`, STATUS.md)
+
+- **Root cause (proven):** the STATUS.md row for E2c was added by a script after `pnpm format` had run, so the
+  table's column padding was not re-aligned. `pnpm format:check` locally reports exactly `STATUS.md`.
+- **Ruled out:** code changes (lint, typecheck and tests passed in the same run); other docs (only STATUS.md flagged).
+- **Fix:** run the formatter after the last doc edit; check `pnpm format:check` immediately before committing.
 
 ### 2026-10-06 · A read-only grant let someone own another department's commitment (caught by a test while building E1b)
 
