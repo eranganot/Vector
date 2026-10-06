@@ -4,14 +4,15 @@ _Last updated: 2026-10-07 (E2b)_
 
 ## Current phase
 
-**Plan v2, stage E2 (C-suite home v2), in progress.** E1 was signed off by Eran 2026-10-06 (G-E1). Prod (`demo`
+**Plan v2, stage E2 (C-suite home v2): built and verified on Dev 2026-10-07; awaiting Eran's E2 gate** (docs/phases/STAGE_E2.md). E1 was signed off by Eran 2026-10-06 (G-E1). Prod (`demo`
 e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E2a #38: health-v2, projection-v1 and the read model `executiveHome` (no UI yet); money lines follow the demo
   clock; migration 0010 (org/day indexes).
 - E2b #39: the C-suite home on screen, department drill-down, VP home, EN/HE, TtU e2e (Dana, Michal, Noa).
 - E2c #40: ₪ headers on Risks, Opportunities, Commitments, Actions & outcomes.
-- Next: the E2 gate (verify on Dev, docs/phases/STAGE_E2.md).
+- Dev 209bc25: migrations 11/11, smoke 16/16, e2e 34/34 against Dev, then the Dev demo was reset.
+- Open for Eran: store labor budget at run-rate 15.3% (recommended) or keep 15.8%; Prod promotion.
 
 ## Objective (E0, done)
 
@@ -32,7 +33,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Verify E2 on Dev and write docs/phases/STAGE_E2.md for Eran's gate; on sign-off, E3.
+1. Eran reviews E2 on Dev (STAGE_E2.md) and answers the labor-budget question; on sign-off, E3.
 
 ## Reproducible commands
 
