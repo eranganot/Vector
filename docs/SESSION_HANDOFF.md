@@ -4,17 +4,16 @@ _Last updated: 2026-10-06 (E0)_
 
 ## Current phase
 
-**Plan v2, stage E0 (specs and design): built 2026-10-06, awaiting Eran's design gate.** Phases 0–4 are signed off and
-on Prod (`demo` e8ff6ab). Eran's feedback on Phases 0–4 (2026-10-06) became Execution Plan v2: decisions FB-0 to FB-12
-in docs/DECISIONS.md, stages in docs/EXECUTION_PLAN.md, the full plan in the Claude doc "VECTOR — Execution Plan v2".
+**Plan v2, stage E1 (foundation): built and verified on Dev 2026-10-06; awaiting Eran's E1 gate** (docs/phases/STAGE_E1.md).
+E0 was signed off (G-E0) with the gross margin recalibrated to 26% (G-E0g). Prod (`demo` e8ff6ab) stays on Phase 4
+until Eran signs off a stage.
 
-- Order: E0 specs → E1 foundation → E2 C-suite home → E3 opportunities and cross-department → E4 Action Center → E5
-  reports → E6 market & competitors → E7 mail agent → MVP (v1 Phase 7) → AI integration (v1 Phase 5) → hardening.
-- Every stage: PR → CI → merge → Dev deploy → smoke (+ persona sign-in, e2e on Dev). **Prod only after Eran signs the
-  stage off.**
-- Demo constraints: templates only, no AI (FB-11); sending stays internal (FB-8); synthetic inbox (FB-10).
+- E1a #34 (product name), E1b #35 (C-suite scope, COO, navigation), E1c #36 (synthetic data v5). Dev 0ad0ea1:
+  migrations 10/10, seed p5-v1, smoke 14/14, e2e 29/29 against Dev, then the Dev demo was reset.
+- Next: E2, the C-suite home v2 (executive-home.md, wireframes v3 screen 1): health-v2, projection-v1, "Why it
+  changed", financials vs budget, "Where to focus", ₪ headers.
 
-## Objective (E0)
+## Objective (E0, done)
 
 Approve the design before E1 code: docs/phases/STAGE_E0.md lists what Eran confirms (ADR-008 mechanism, health-v2
 weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes v2).
