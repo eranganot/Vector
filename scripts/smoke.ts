@@ -213,6 +213,20 @@ const checks: Check[] = [
       return `migrations ${body.migrations.applied}`;
     },
   },
+  {
+    phase: 6,
+    name: "E2b: the C-suite home and its department drill-down require sign-in (no health or money leaks)",
+    run: async (base) => {
+      for (const path of ["/", "/?unit=00000000-0000-4000-8000-000000000000", "/?by=region"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Money vs budget|Organization pulse/.test(await res.text())) throw new Error(`${path} leaked the home`);
+      }
+      return "3 routes → /login";
+    },
+  },
 ];
 
 async function main() {

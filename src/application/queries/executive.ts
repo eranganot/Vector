@@ -12,10 +12,13 @@ import { addDays, tradingWeight } from "@/domain/calendar";
 import { decompose, health, round1, statusOf, type HealthResult, type Measure } from "@/domain/health";
 import { direction, project, PROJECTION_MODEL, type Projection } from "@/domain/projection";
 import type { Actor } from "@/domain/types";
+import { dependencyStatus } from "@/domain/commitments";
 import {
   action,
   barrier,
   commitment,
+  conflict,
+  dependency,
   decision,
   demoClock,
   finAccount,
@@ -207,7 +210,12 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
   const readsGroup = canReadUnit(actor, group);
   const departments = allDepartments.filter((d) => canReadUnit(actor, d));
   if (departments.length === 0) return null;
-  const drill = opts.unitId ? departments.find((d) => d.id === opts.unitId) : undefined;
+  // A VP who reads one department lands on that department's own view (with its regions).
+  const drill = opts.unitId
+    ? departments.find((d) => d.id === opts.unitId)
+    : !readsGroup && departments.length === 1
+      ? departments[0]
+      : undefined;
   if (opts.unitId && !drill) return null;
   const shown = drill ? [drill] : departments;
 
@@ -386,6 +394,8 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
 
   const lineName = (code: string) => (code === "op_profit" ? "Operating profit" : (accountOf.get(code)?.name ?? code));
   const lineHigher = (code: string) => (code === "op_profit" ? true : (accountOf.get(code)?.higherIsBetter ?? false));
+  const displayUnit = (code: string) =>
+    kpis.find((k) => k.code === code)?.unit ?? (lineUnit(code) === "days" ? "days" : "ILS");
   const lineUnit = (code: string): "ils" | "days" =>
     code === "op_profit" ? "ils" : ((accountOf.get(code)?.unit as "ils" | "days") ?? "ils");
 
@@ -531,6 +541,7 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
     const worstRisk = [...owned].sort((a, b) => a.band.localeCompare(b.band) || b.ils - a.ils)[0] ?? null;
     return {
       health: nowH,
+      measures,
       before: beforeH,
       change: d.change,
       contributions: d.contributions.filter((c) => c.points !== 0),
@@ -559,6 +570,21 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
       cause: h.cause,
       contributions: h.contributions,
       parts: h.health.parts.map((p) => ({ ...p, gap: round1(p.gap), attainment: round1(p.attainment) })),
+      /** Each measure with its value and reference, for the department's tiles (display units: ILS, pct, count, days). */
+      measures: h.measures.map((m) => {
+        const part = h.health.parts.find((p) => p.code === m.code)!;
+        return {
+          code: m.code,
+          name: m.name,
+          kind: m.kind,
+          value: m.value,
+          reference: m.reference,
+          higherIsBetter: m.higherIsBetter,
+          unit: displayUnit(m.code),
+          gap: round1(part.gap),
+          attainment: round1(part.attainment),
+        };
+      }),
       ownedRisks: h.ownedRisks,
       worstRisk: h.worstRisk,
       model: h.health.model,
@@ -649,6 +675,8 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
     kind: "risk" | "opportunity" | "projection";
     id: string;
     title: string;
+    /** The department, for a projected miss. */
+    unitName?: string;
     band: string | null;
     ils: number;
     hoursLeft: number | null;
@@ -696,7 +724,8 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
         return {
           kind: "projection" as const,
           id: `${f.unitId}:${l.code}`,
-          title: `${f.name}: ${l.name}`,
+          title: l.name,
+          unitName: f.name,
           band: null,
           ils: Math.round(l.eomShortfallIls),
           hoursLeft: daysLeft * 24,
@@ -831,6 +860,60 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
     },
   };
 
+  // ── Organization pulse links: dependencies and conflicts between departments ──
+  const deptOfUnit = (unitId: string) => {
+    const u = units.find((x) => x.id === unitId);
+    if (!u || u.type === "group") return null;
+    if (u.type === "department") return u.id;
+    // Branches and regions work through Store Operations.
+    return allDepartments.find((d) => d.code === "D-STORE")?.id ?? null;
+  };
+  const [allCommitments, deps, conflicts] = await Promise.all([
+    db
+      .select()
+      .from(commitment)
+      .where(and(eq(commitment.orgId, orgId), arrayOverlaps(commitment.visibleUnitIds, scope))),
+    db.select().from(dependency).where(eq(dependency.orgId, orgId)),
+    db
+      .select()
+      .from(conflict)
+      .where(and(eq(conflict.orgId, orgId), eq(conflict.status, "open"))),
+  ]);
+  const cById = new Map(allCommitments.map((c) => [c.id, c]));
+  const shownIds = new Set(shown.map((d) => d.id));
+  type LinkState = "on_track" | "blocked" | "conflict";
+  const linkMap = new Map<string, { from: string; to: string; state: LinkState; n: number; ils: number }>();
+  const RANK: Record<LinkState, number> = { on_track: 0, conflict: 1, blocked: 2 };
+  const addLink = (from: string | null, to: string | null, state: LinkState, ils: number) => {
+    if (!from || !to || from === to || !shownIds.has(from) || !shownIds.has(to)) return;
+    const key = state === "conflict" ? [from, to].sort().join("|") + "|c" : `${from}|${to}`;
+    const cur = linkMap.get(key);
+    if (!cur) linkMap.set(key, { from, to, state, n: 1, ils });
+    else {
+      cur.n += 1;
+      cur.ils += ils;
+      if (RANK[state] > RANK[cur.state]) cur.state = state;
+    }
+  };
+  for (const d of deps) {
+    const c = cById.get(d.commitmentId);
+    if (!c) continue;
+    const st = dependencyStatus(d, c, now);
+    if (st === "met" || st === "cancelled") continue;
+    addLink(
+      deptOfUnit(c.ownerUnitId),
+      deptOfUnit(d.downstreamUnitId),
+      st === "waiting" ? "on_track" : "blocked",
+      d.impactIls,
+    );
+  }
+  for (const k of conflicts) {
+    const a = cById.get(k.commitmentAId);
+    const b = cById.get(k.commitmentBId);
+    if (a && b) addLink(deptOfUnit(a.ownerUnitId), deptOfUnit(b.ownerUnitId), "conflict", 0);
+  }
+  const links = [...linkMap.values()];
+
   // ── VECTOR insight: one rule-based sentence (no AI in the demo, FB-11) ──
   const worst = [...deptRows].sort(
     (a, b) => (a.direction === "worsening" ? 0 : 1) - (b.direction === "worsening" ? 0 : 1) || a.score - b.score,
@@ -845,7 +928,9 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
           change: worst.change,
           projectedEoq: worst.projectedEoq,
           cause: worst.cause?.name ?? null,
-          href: `/?unit=${worst.unitId}`,
+          // On the department's own view the button opens its worst open risk instead of the view itself.
+          href: drill ? (worst.worstRisk ? `/insights/${worst.worstRisk.id}` : null) : `/?unit=${worst.unitId}`,
+          opens: drill ? ("risk" as const) : ("department" as const),
         }
       : { kind: "all_clear" as const };
 
@@ -885,6 +970,7 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
     financials,
     groupLines,
     focus,
+    links,
     risks: topRisks,
     opportunities: topOpps,
     outside,

@@ -25,10 +25,8 @@ async function aboveFold(l: Locator) {
 // what = the headline; how bad = the KPI row and the band of the top item; what to do = Waiting on you (decisions,
 // approvals, your tasks) or the recommendation on the top item.
 for (const [who, where] of [
-  ["Dana Levi", "VECTOR Retail Group"],
   ["Yossi Cohen", "North"],
   ["Avi Mizrahi", "Haifa Grand Canyon"],
-  ["Noa Friedman", "Supply Chain"],
 ] as const) {
   test(`${who}: the home dashboard (${where}) says what, how bad and what to do without scrolling`, async ({
     page,
@@ -48,9 +46,38 @@ for (const [who, where] of [
   });
 }
 
+// Plan v2, E2 (executive-home.md §1, §8): the C-suite home answers four questions above the fold, in English and in
+// Hebrew: how are we doing (health tile and the pulse or the regions), what changed and why (the headline), where it
+// is heading (month end on the revenue tile), where to spend attention (today's priorities).
+for (const [who, kind] of [
+  ["Dana Levi", "group"],
+  ["Michal Golan", "group"],
+  ["Noa Friedman", "department"],
+] as const) {
+  for (const lang of ["en", "he"] as const) {
+    test(`${who} (${lang}): the C-suite home answers the four questions without scrolling`, async ({ page }) => {
+      await as(page, who);
+      if (lang === "he") {
+        await page.context().addCookies([{ name: "vector_lang", value: "he", url: page.url() }]);
+        await page.reload();
+        await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+      }
+      await expect(page.getByTestId("executive-home")).toBeVisible();
+      await aboveFold(page.getByTestId("headline"));
+      await aboveFold(page.getByTestId("tile-health"));
+      await aboveFold(page.getByTestId("tile-revenue"));
+      await expect(page.getByTestId("tile-revenue")).toContainText(lang === "he" ? "סוף חודש" : "month end");
+      if (kind === "group") await aboveFold(page.getByTestId("pulse"));
+      else
+        await aboveFold(page.getByRole("heading", { level: 1, name: lang === "he" ? "שרשרת אספקה" : "Supply Chain" }));
+      await aboveFold(page.getByTestId("priorities"));
+    });
+  }
+}
+
 test("any branch is two clicks from the CEO's home", async ({ page }) => {
   await as(page, "Dana Levi");
-  await page.getByRole("link", { name: "North", exact: true }).first().click(); // 1: region from Health by region
+  await page.getByTestId("region-links").getByRole("link", { name: "North", exact: true }).click(); // 1: region
   await page.waitForURL(/\/units\//);
   await page.getByRole("link", { name: "Haifa Grand Canyon", exact: true }).first().click(); // 2: branch
   await expect(page.getByRole("heading", { level: 1, name: "Haifa Grand Canyon" })).toBeVisible();

@@ -44,9 +44,16 @@ export function Pill({
   return <span className={`inline-flex rounded-md border px-2 py-0.5 text-[13px] ${cls}`}>{children}</span>;
 }
 
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  ...rest
+}: { children: React.ReactNode; className?: string } & Omit<React.HTMLAttributes<HTMLElement>, "className">) {
   return (
-    <section className={`rounded-xl border border-line bg-panel/90 p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.2)] ${className}`}>
+    <section
+      {...rest}
+      className={`rounded-xl border border-line bg-panel/90 p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.2)] ${className}`}
+    >
       {children}
     </section>
   );

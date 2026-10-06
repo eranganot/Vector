@@ -4,6 +4,23 @@
  * with " · " or " × " are translated part by part. Codes (AP-1, sku-set:…, catalog:R3) are never translated.
  */
 export const HE_CONTENT: Record<string, string> = {
+  // ── Money lines (plan v2, E1c/E2)
+  "Cost of goods sold": "עלות המכר",
+  "Store labor cost": "עלות כוח אדם בסניפים",
+  "Rent and occupancy": "שכירות ואחזקה",
+  Shrinkage: "פחת",
+  "Fresh waste": "פחת טריים",
+  "Logistics (DC and transport)": "לוגיסטיקה (מרלו״ג והובלה)",
+  "Inventory days on hand": "ימי מלאי",
+  "Marketing spend": "הוצאות שיווק",
+  "Campaign incremental sales": "מכירות נוספות מקמפיינים",
+  "Headcount cost (all staff)": "עלות כוח אדם (כל העובדים)",
+  Overtime: "שעות נוספות",
+  "Open penalty exposure": "חשיפה פתוחה לקנסות",
+  "IT operating spend": "הוצאות תפעול מערכות מידע",
+  "IT capital spend": "השקעות הוניות במערכות מידע",
+  "Department operating cost": "עלות תפעול המחלקה",
+  "Operating profit": "רווח תפעולי",
   // ── Organization
   "VECTOR Retail Group": "קבוצת VECTOR קמעונאות",
   North: "צפון",
