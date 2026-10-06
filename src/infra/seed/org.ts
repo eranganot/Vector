@@ -3,7 +3,7 @@
  * 18 personas, 6 branch KPIs and 10 department KPIs. All names of people and the company are invented;
  * cities and coordinates are real (live weather arrives in Phase 6).
  */
-export const SEED_VERSION = "p4-v1";
+export const SEED_VERSION = "p4-v2";
 export const ORG_NAME = "VECTOR Retail Group";
 /** The demo story's "today": data exists up to the day before. */
 export const STORY_DAY = "2026-10-22";
@@ -137,6 +137,8 @@ export type UserSeed = {
   name: string;
   email: string;
   title: string;
+  /** C-suite member (ADR-008): executive layout and navigation; never a permission. */
+  isCSuite?: boolean;
   roles: {
     role: "admin" | "executive" | "department_manager" | "regional_manager" | "viewer";
     unit: string;
@@ -161,7 +163,7 @@ const person = (
 });
 
 /** A branch manager is a regional_manager assignment at a branch unit (no separate role; authorization.md §2). */
-export const USERS: UserSeed[] = [
+const BASE_USERS: UserSeed[] = [
   person("dana", "Dana Levi", "CEO", "executive", "GROUP"),
   person("yossi", "Yossi Cohen", "Regional Manager, North", "regional_manager", "NORTH"),
   person("gil", "Gil Peretz", "Regional Manager, Coast", "regional_manager", "COAST"),
@@ -175,7 +177,23 @@ export const USERS: UserSeed[] = [
   person("ben", "Ben Shalom", "Head of DC Operations, Supply Chain", "department_manager", "D-SUPPLY", false),
   person("eitan", "Eitan Rosen", "VP Trade & Commercial", "department_manager", "D-TRADE"),
   person("ronit", "Ronit Shapiro", "VP Marketing", "department_manager", "D-MKT"),
-  person("michal", "Michal Golan", "CFO", "department_manager", "D-FIN"),
+  // ADR-008: the CFO reads the whole group (Viewer @ Group) and acts only in Finance.
+  {
+    ...person("michal", "Michal Golan", "CFO", "department_manager", "D-FIN"),
+    roles: [
+      { role: "department_manager", unit: "D-FIN", isHead: true },
+      { role: "viewer", unit: "GROUP", isHead: false },
+    ],
+  },
+  // ADR-008: the COO reads the whole group and acts in the two operations departments, where the VPs stay heads.
+  {
+    ...person("oren", "Oren Halevi", "COO", "department_manager", "D-STORE"),
+    roles: [
+      { role: "department_manager", unit: "D-STORE", isHead: false },
+      { role: "department_manager", unit: "D-SUPPLY", isHead: false },
+      { role: "viewer", unit: "GROUP", isHead: false },
+    ],
+  },
   person("hila", "Hila Dahan", "VP HR", "department_manager", "D-HR"),
   person("yael", "Yael Barak", "General Counsel", "department_manager", "D-LEGAL"),
   person("dafna", "Dafna Mor", "Senior Legal Counsel", "department_manager", "D-LEGAL", false),
@@ -183,6 +201,11 @@ export const USERS: UserSeed[] = [
   person("tal", "Tal Ben-David", "Board observer", "viewer", "GROUP"),
   person("admin", "Ops Admin", "System administrator", "admin", "GROUP"),
 ];
+
+/** The C-suite (ADR-008, FB-1): CEO, CFO, COO and the VPs who head a department. */
+export const C_SUITE = ["dana", "michal", "oren", "shira", "noa", "eitan", "ronit", "hila", "yael", "amir"];
+
+export const USERS: UserSeed[] = BASE_USERS.map((u) => ({ ...u, isCSuite: C_SUITE.includes(u.key) }));
 
 export type KpiSeed = {
   code: string;

@@ -43,28 +43,29 @@ North so the Phase 2 story keeps its regional manager.
 
 ## Personas (seeded users)
 
-| Name          | Title                              | Role @ scope                                        |
-| ------------- | ---------------------------------- | --------------------------------------------------- |
-| Dana Levi     | CEO                                | Executive @ Group                                   |
-| Yossi Cohen   | Regional Manager, North            | Regional Manager @ North                            |
-| Gil Peretz    | Regional Manager, Coast            | Regional Manager @ Coast                            |
-| Maya Azulay   | Regional Manager, Center           | Regional Manager @ Center                           |
-| Rina Avraham  | Regional Manager, Jerusalem        | Regional Manager @ Jerusalem                        |
-| Omer Biton    | Regional Manager, South            | Regional Manager @ South                            |
-| Avi Mizrahi   | Branch Manager, Haifa Grand Canyon | Regional Manager role @ the branch (branch manager) |
-| Lior Ben-Ami  | Branch Manager, Tel Aviv Dizengoff | Regional Manager role @ the branch (branch manager) |
-| Shira Katz    | VP Store Operations                | Department Manager @ Store Operations               |
-| Noa Friedman  | VP Supply Chain                    | Department Manager @ Supply Chain                   |
-| Eitan Rosen   | VP Trade & Commercial              | Department Manager @ Trade & Commercial             |
-| Ronit Shapiro | VP Marketing                       | Department Manager @ Marketing                      |
-| Michal Golan  | CFO                                | Department Manager @ Finance                        |
-| Hila Dahan    | VP HR                              | Department Manager @ HR                             |
-| Yael Barak    | General Counsel                    | Department Manager @ Legal & Compliance (AP-7)      |
-| Dafna Mor     | Senior Legal Counsel               | Department Manager @ Legal & Compliance (AP-7)      |
-| Ben Shalom    | Head of DC Operations              | Department Manager @ Supply Chain                   |
-| Amir Klein    | CIO                                | Department Manager @ IT                             |
-| Tal Ben-David | Board observer                     | Viewer @ Group                                      |
-| Ops Admin     | System administrator               | Admin @ Group                                       |
+| Name          | Title                              | Role @ scope                                                                                   |
+| ------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Dana Levi     | CEO                                | Executive @ Group                                                                              |
+| Yossi Cohen   | Regional Manager, North            | Regional Manager @ North                                                                       |
+| Gil Peretz    | Regional Manager, Coast            | Regional Manager @ Coast                                                                       |
+| Maya Azulay   | Regional Manager, Center           | Regional Manager @ Center                                                                      |
+| Rina Avraham  | Regional Manager, Jerusalem        | Regional Manager @ Jerusalem                                                                   |
+| Omer Biton    | Regional Manager, South            | Regional Manager @ South                                                                       |
+| Avi Mizrahi   | Branch Manager, Haifa Grand Canyon | Regional Manager role @ the branch (branch manager)                                            |
+| Lior Ben-Ami  | Branch Manager, Tel Aviv Dizengoff | Regional Manager role @ the branch (branch manager)                                            |
+| Shira Katz    | VP Store Operations                | Department Manager @ Store Operations                                                          |
+| Noa Friedman  | VP Supply Chain                    | Department Manager @ Supply Chain                                                              |
+| Eitan Rosen   | VP Trade & Commercial              | Department Manager @ Trade & Commercial                                                        |
+| Ronit Shapiro | VP Marketing                       | Department Manager @ Marketing                                                                 |
+| Michal Golan  | CFO                                | Department Manager @ Finance + Viewer @ Group (ADR-008)                                        |
+| Oren Halevi   | COO (E1b)                          | Department Manager @ Store Operations and @ Supply Chain (not head) + Viewer @ Group (ADR-008) |
+| Hila Dahan    | VP HR                              | Department Manager @ HR                                                                        |
+| Yael Barak    | General Counsel                    | Department Manager @ Legal & Compliance (AP-7)                                                 |
+| Dafna Mor     | Senior Legal Counsel               | Department Manager @ Legal & Compliance (AP-7)                                                 |
+| Ben Shalom    | Head of DC Operations              | Department Manager @ Supply Chain                                                              |
+| Amir Klein    | CIO                                | Department Manager @ IT                                                                        |
+| Tal Ben-David | Board observer                     | Viewer @ Group                                                                                 |
+| Ops Admin     | System administrator               | Admin @ Group                                                                                  |
 
 A branch manager is a `regional_manager` assignment at a branch unit; there is no separate role (authorization.md §2).
 

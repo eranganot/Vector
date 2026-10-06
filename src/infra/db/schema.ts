@@ -92,7 +92,7 @@ export const orgUnit = pgTable(
   (t) => [uniqueIndex("org_unit_code_uq").on(t.orgId, t.code), index("org_unit_parent_idx").on(t.parentId)],
 );
 
-// ── Auth (Better Auth tables; extra fields: orgId, title, isSeeded) ──────────
+// ── Auth (Better Auth tables; extra fields: orgId, title, isSeeded, isCSuite) ─
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -104,6 +104,8 @@ export const user = pgTable("user", {
   orgId: uuid("org_id").references(() => organization.id),
   title: text("title"),
   isSeeded: boolean("is_seeded").notNull().default(false),
+  /** C-suite member (ADR-008): chooses the executive layout and navigation, never permissions. */
+  isCSuite: boolean("is_c_suite").notNull().default(false),
 });
 
 export const session = pgTable("session", {

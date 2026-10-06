@@ -183,6 +183,16 @@ const checks: Check[] = [
       return "en and he titles";
     },
   },
+  {
+    phase: 5,
+    name: "E1: the C-suite cast is seeded: the COO persona exists (ADR-008)",
+    run: async (base) => {
+      const text = (await get(base, "/login")).text;
+      if (!text.includes("Demo personas")) return "skipped (personas off in this environment)";
+      if (!text.includes("Oren Halevi")) throw new Error("COO persona missing");
+      return "Oren Halevi (COO) listed";
+    },
+  },
 ];
 
 async function main() {

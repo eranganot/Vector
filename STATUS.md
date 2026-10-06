@@ -5,34 +5,52 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Shipped
 
-| Date       | What                                                                                                                                                                                                                                | PR       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| 2026-10-04 | Phase 0 foundation; close-out                                                                                                                                                                                                       | #1, #2   |
-| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                                                                                                                                                  | #3, #4   |
-| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI                                                                                                                                 | #5–#9    |
-| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492)                                                                                                                               | #10      |
-| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme                                                                                                                                  | #11      |
-| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)                                                                                                                                  | #13–#15  |
-| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                                                                                                                                                           | #16      |
-| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU                                                                                                                                 | #17      |
-| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf                                                                                                                                             | #18      |
-| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                                                                                                                                                         | #21      |
-| 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor)                                                                                                                            | #23, #24 |
-| 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces                                                                                                                               | #25      |
-| 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                                                                                                                                               | #26      |
-| 2026-10-05 | P4f: Actions & outcomes tracker, lessons library, "Last time we did this"                                                                                                                                                           | #27      |
-| 2026-10-05 | P4g: scoped audit explorer; audit entity ids always UUIDs on refusal paths                                                                                                                                                          | #28      |
-| 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                                                                                                                                          | #29      |
-| 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates                                                                                                                        | #30      |
-| 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)                                                                                                                           | #31      |
-| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` 0ecc8e1 merged into `demo` as e8ff6ab)                                                                                                                                  | —        |
-| 2026-10-05 | Prod verified at e8ff6ab: health ok, migrations 8/8, seed p4-v1; smoke 11/11; CEO persona sign-in and home                                                                                                                          | —        |
-| 2026-10-05 | Phase 5 (AI intelligence) parked by Eran; no Phase 5 work until he resumes it                                                                                                                                                       | —        |
-| 2026-10-06 | Plan v2 adopted (FB-0–FB-12). E0 specs and design: C-suite home and IA v2, health-v2, projection-v1, financials and data v5, ADR-008, cross-department, Action Center, reports, market (sources checked), mail agent; wireframes v2 | #32      |
-| 2026-10-06 | E0 design review (G-E0a–f): wireframes v3 (visual-first, reference style), specs updated for cross-department action items, action-driven Action Center, editable report charts, competitor charts                                  | #33      |
-| 2026-10-06 | E0 signed off (G-E0); gross margin to 26% (G-E0g). E1a: product name "VECTOR \| Organizational Intelligence" / "VECTOR \| אינטליגנציה ארגונית" on every screen, tab title and sign-in (one source, `src/i18n/brand.ts`)             | #34      |
+| Date       | What                                                                                                                                                                                                                                      | PR       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 2026-10-04 | Phase 0 foundation; close-out                                                                                                                                                                                                             | #1, #2   |
+| 2026-10-04 | Phase 1 specs; amendment (departments, cross-department scenarios)                                                                                                                                                                        | #3, #4   |
+| 2026-10-04 | Phase 2a–2e: schema + audit integrity, domain, commands, detector + scenario engine, auth + thin UI                                                                                                                                       | #5–#9    |
+| 2026-10-04 | Priority v2, local priority, opportunity workstream, full scenario catalog (Dev smoke 5/5 on 09f7492)                                                                                                                                     | #10      |
+| 2026-10-04 | Phase 2 complete: full synthetic org, live catalog, local v2.1, performance dashboards, dark theme                                                                                                                                        | #11      |
+| 2026-10-04 | Error pages, Waiting on you, recall to Legal/Supply Chain, build cache, `is_head` (Dev + CI fixes)                                                                                                                                        | #13–#15  |
+| 2026-10-04 | The five Phase 2 known issues; Phase 2 sign-off; Prod (`demo`) at 9cec7c6                                                                                                                                                                 | #16      |
+| 2026-10-04 | Phase 3: Command Center, unit views, hierarchy, role-routed home, actionable cards, Zod inputs, TtU                                                                                                                                       | #17      |
+| 2026-10-04 | Reseed on a rotated `SEED_USER_PASSWORD` (Prod sign-in); also on Prod as `demo` 21733bf                                                                                                                                                   | #18      |
+| 2026-10-04 | Home is a dashboard for every persona (G-P3a); Risks and Opportunities tabs                                                                                                                                                               | #21      |
+| 2026-10-04 | Phase 4 plan; P4b commitments, dependencies, conflicts (schema 0006, commands, seed p4-v1, live monitor)                                                                                                                                  | #23, #24 |
+| 2026-10-04 | P4c/P4d: Commitments tab, live conflict from the UI, Dependencies card on every home, plans on traces                                                                                                                                     | #25      |
+| 2026-10-05 | P4e: approval workflow UX; every lifecycle command in the UI; AZ-2 fix for amendments                                                                                                                                                     | #26      |
+| 2026-10-05 | P4f: Actions & outcomes tracker, lessons library, "Last time we did this"                                                                                                                                                                 | #27      |
+| 2026-10-05 | P4g: scoped audit explorer; audit entity ids always UUIDs on refusal paths                                                                                                                                                                | #28      |
+| 2026-10-05 | Phase 4 verified on Dev; gate docs, screens, handoff; actions table layout                                                                                                                                                                | #29      |
+| 2026-10-05 | Home: commitments and actions & outcomes (G-P4a); Q1 escalation (migration 0007); Q3 level above moves dates                                                                                                                              | #30      |
+| 2026-10-05 | Hebrew and right-to-left with a language switch: every screen, names, seeded and generated text (ADR-007)                                                                                                                                 | #31      |
+| 2026-10-05 | Phase 4 signed off (G-P4); Prod promoted to Phase 4 (`main` 0ecc8e1 merged into `demo` as e8ff6ab)                                                                                                                                        | —        |
+| 2026-10-05 | Prod verified at e8ff6ab: health ok, migrations 8/8, seed p4-v1; smoke 11/11; CEO persona sign-in and home                                                                                                                                | —        |
+| 2026-10-05 | Phase 5 (AI intelligence) parked by Eran; no Phase 5 work until he resumes it                                                                                                                                                             | —        |
+| 2026-10-06 | Plan v2 adopted (FB-0–FB-12). E0 specs and design: C-suite home and IA v2, health-v2, projection-v1, financials and data v5, ADR-008, cross-department, Action Center, reports, market (sources checked), mail agent; wireframes v2       | #32      |
+| 2026-10-06 | E0 design review (G-E0a–f): wireframes v3 (visual-first, reference style), specs updated for cross-department action items, action-driven Action Center, editable report charts, competitor charts                                        | #33      |
+| 2026-10-06 | E0 signed off (G-E0); gross margin to 26% (G-E0g). E1a: product name "VECTOR \| Organizational Intelligence" / "VECTOR \| אינטליגנציה ארגונית" on every screen, tab title and sign-in (one source, `src/i18n/brand.ts`)                   | #34      |
+| 2026-10-06 | E1b: C-suite flag (migration 0008), COO persona (Oren Halevi), CFO and COO read the group (Viewer @ Group, ADR-008), C-suite navigation; seed p4-v2; fix: a read-only grant no longer counts as "working in" a unit for commitment owners | #35      |
 
 ## Root-cause records
+
+### 2026-10-06 · A read-only grant let someone own another department's commitment (caught by a test while building E1b)
+
+- **Symptom:** after giving the CFO Viewer @ Group (ADR-008), the integration test "the owner must work in the owning
+  unit" failed: recording a Marketing commitment owned by Michal (CFO) succeeded instead of being refused.
+- **Proven cause:** `recordCommitment` checked that the owner holds _any_ role whose unit contains the owning unit.
+  Viewer @ Group contains every unit, so a read-only grant counted as "working in" Marketing. Proven by the failing test
+  (run before and after the fix) and by her role rows in the test database (department_manager @ D-FIN, viewer @ GROUP).
+- **Ruled out:** authorization of the recorder (Dana may record anywhere; the refusal is about the owner); the other
+  role-assignment checks. A search of every role-assignment query found that the others either go through
+  `authorize()`, which filters by permission, or select a specific role (`holderOf`, approval rules).
+- **Why silent:** until ADR-008, no one held a read-only role above a department, so "any role" and "a role that can
+  act" were the same set.
+- **Fix:** only roles with `commitment.update` count (`canKeep` in `src/application/commands/commitments.ts`).
+  Two tests now ask for Finance's own view, because the CFO's default scope is the group by design
+  (integration `phase4.test.ts`; e2e "dependencies on every home"). The new `tests/integration/c-suite.test.ts`
+  covers the ADR-008 matrix.
 
 ### 2026-10-05 · CI `verify` failed on `main` at 0776804 (ship-rules commit to CLAUDE.md)
 

@@ -58,7 +58,7 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
       if (existing.length) {
         await tx
           .update(s.user)
-          .set({ orgId: org.id, name: u.name, title: u.title, isSeeded: true })
+          .set({ orgId: org.id, name: u.name, title: u.title, isSeeded: true, isCSuite: u.isCSuite ?? false })
           .where(eq(s.user.id, id));
         await tx
           .update(s.account)
@@ -73,6 +73,7 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
           orgId: org.id,
           title: u.title,
           isSeeded: true,
+          isCSuite: u.isCSuite ?? false,
         });
         await tx
           .insert(s.account)
