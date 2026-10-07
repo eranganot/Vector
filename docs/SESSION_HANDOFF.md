@@ -4,12 +4,13 @@ _Last updated: 2026-10-07 (E4)_
 
 ## Current phase
 
-**Plan v2, stage E4 (Action Center): built; verifying on Dev, then Eran's E4 gate** (docs/phases/STAGE_E4.md).
+**Plan v2, stage E4 (Action Center): built and verified on Dev (4dc66f0); awaiting Eran's E4 gate** (docs/phases/STAGE_E4.md).
 E3 was accepted by Eran 2026-10-07 (G-E3), with one comment fixed in E4 (Action plan due date and ₪ formatting).
 Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E4 #47: Action Center (queue, selected item, approve and send through the lifecycle, in-app messages; migration
   0012), Messages for you in Waiting on you, Action plan formatting. Spec as built: docs/specs/action-center.md §6.
+  Dev 4dc66f0: migrations 13/13, smoke 18/18, e2e 43/43 against Dev, demo reset after.
 - E3a–E3c #42–#46 shipped and verified on Dev (smoke 17/17, e2e 40/40).
 
 ## Objective (E0, done)
