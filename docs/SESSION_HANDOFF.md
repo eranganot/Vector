@@ -1,6 +1,6 @@
 # Session handoff
 
-_Last updated: 2026-10-07 (E3a)_
+_Last updated: 2026-10-07 (E3b)_
 
 ## Current phase
 
@@ -8,7 +8,8 @@ _Last updated: 2026-10-07 (E3a)_
 with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
-- Next: E3b, the Cross-department tab (initiative status, M1–M5, your action items, Gantt), then the E3 gate.
+- E3b #43: the Cross-department tab (initiative-rules-v1, your action items, audited commands; migration 0011).
+- Next: the E3 gate (verify on Dev, docs/phases/STAGE_E3.md).
 
 ## Objective (E0, done)
 
@@ -29,7 +30,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Build E3b (Cross-department tab), verify on Dev, write docs/phases/STAGE_E3.md for Eran's gate.
+1. Verify E3 on Dev and write docs/phases/STAGE_E3.md for Eran's gate; on sign-off, E4 (Action Center).
 
 ## Reproducible commands
 

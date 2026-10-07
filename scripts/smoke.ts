@@ -227,6 +227,22 @@ const checks: Check[] = [
       return "3 routes → /login";
     },
   },
+  {
+    phase: 7,
+    name: "E3: initiative updates are migrated (0011); the Cross-department tab requires sign-in",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 12) throw new Error(`expected migration 0011, got ${body.migrations.applied}`);
+      for (const path of ["/initiatives", "/initiatives?i=I-NORTH-DC"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/North DC recovery|Your action items/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
+    },
+  },
 ];
 
 async function main() {

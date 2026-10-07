@@ -60,6 +60,11 @@ export function weekday(isoDay: string): number {
   return new Date(`${isoDay}T12:00:00Z`).getUTCDay();
 }
 
+/** Whole days from a to b (b − a), both ISO days. */
+export function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86_400_000);
+}
+
 export function addDays(isoDay: string, n: number): string {
   const d = new Date(`${isoDay}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);

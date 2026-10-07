@@ -1,13 +1,40 @@
 /**
  * Initiatives the viewer may read (ADR-008 §3): the read rule is the insight's. An initiative is visible when one of
- * the viewer's read scopes is among its participating units or their ancestors. Status and the M1–M5 flags are
- * derived in E3; this read model returns the recorded facts.
+ * the viewer's read scopes is among its participating units or their ancestors.
+ *
+ * `initiativesView` (plan v2, E3; cross-department.md §3) derives status, milestone states and the M1–M5 flags with
+ * initiative-rules-v1, resolves who should step in, and lists what in the selected initiative waits on the viewer.
  */
 import { and, arrayOverlaps, eq, inArray } from "drizzle-orm";
+import { commonAncestor, dependencyStatus } from "@/domain/commitments";
+import {
+  initiativeStatus,
+  managementFlags,
+  milestoneState,
+  nextMilestone,
+  onTimeRate,
+  progressOf,
+  projectedSpend,
+  type Flag,
+  type InitiativeFacts,
+} from "@/domain/initiatives";
+import { hasPermission } from "@/domain/policy/permissions";
 import type { Actor } from "@/domain/types";
-import { barrier, initiative, milestone } from "@/infra/db/schema";
+import {
+  barrier,
+  commitment,
+  conflict,
+  demoClock,
+  dependency,
+  initiative,
+  initiativeReminder,
+  milestone,
+  orgUnit,
+  roleAssignment,
+  user,
+} from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
-import { readScope } from "./insights";
+import { listMyApprovals, listMyDecisions, readScope } from "./insights";
 
 export async function listInitiatives(db: DbOrTx, orgId: string, actor: Actor) {
   const scope = readScope(actor);
@@ -30,3 +57,311 @@ export async function listInitiatives(db: DbOrTx, orgId: string, actor: Actor) {
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 }
+
+const STATUS_RANK = { blocked: 0, at_risk: 1, on_track: 2, done: 3 } as const;
+
+export type YourItem = {
+  key: string;
+  kind: "approve" | "decide" | "settle" | "remind" | "resolve" | "reforecast" | "milestone" | "reminder";
+  title: string;
+  detail: string;
+  href?: string;
+  /** For the forms: what the button acts on. */
+  milestoneId?: string;
+  barrierId?: string;
+  toUnitId?: string;
+  subjectKind?: "milestone" | "barrier" | "budget";
+  subjectId?: string;
+  /** For items raised by a rule: the rule and its numbers, phrased by the screen (ADR-007). */
+  rule?: Flag["rule"];
+  facts?: Flag["facts"];
+  unitName?: string;
+};
+
+export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, opts: { key?: string } = {}) {
+  if (actor.kind !== "user") return null;
+  const list = await listInitiatives(db, orgId, actor);
+  const [units, people, roles, [clock], cs, deps, ks, reminders] = await Promise.all([
+    db.select().from(orgUnit).where(eq(orgUnit.orgId, orgId)),
+    db.select({ id: user.id, name: user.name, title: user.title }).from(user).where(eq(user.orgId, orgId)),
+    db.select().from(roleAssignment).where(eq(roleAssignment.orgId, orgId)),
+    db.select().from(demoClock).where(eq(demoClock.orgId, orgId)),
+    db.select().from(commitment).where(eq(commitment.orgId, orgId)),
+    db.select().from(dependency).where(eq(dependency.orgId, orgId)),
+    db
+      .select()
+      .from(conflict)
+      .where(and(eq(conflict.orgId, orgId), eq(conflict.status, "open"))),
+    list.length
+      ? db
+          .select()
+          .from(initiativeReminder)
+          .where(
+            inArray(
+              initiativeReminder.initiativeId,
+              list.map((i) => i.id),
+            ),
+          )
+      : Promise.resolve([] as (typeof initiativeReminder.$inferSelect)[]),
+  ]);
+  const now = clock?.now ?? new Date();
+  const today = now.toISOString().slice(0, 10);
+  const unit = new Map(units.map((u) => [u.id, u]));
+  const unitName = (id: string | null) => (id ? (unit.get(id)?.name ?? "—") : "—");
+  const personName = (id: string) => people.find((p) => p.id === id)?.name ?? "—";
+  const managersOf = (unitId: string) =>
+    roles
+      .filter((r) => r.orgUnitId === unitId && (r.role === "executive" || r.role === "department_manager"))
+      .map((r) => r.userId);
+  const titled = (t: string) => people.filter((p) => p.title === t).map((p) => p.id);
+  const me = actor.userId;
+  const myManaged = new Set(
+    actor.assignments.filter((a) => hasPermission(a.role, "initiative.update")).map((a) => a.unit.id),
+  );
+
+  /** People who should step in for a flag (cross-department.md §3), by user id. */
+  function stepInPeople(f: Flag, sponsor: string, k?: (typeof ks)[number]) {
+    if (f.stepIn === "sponsor") return [sponsor];
+    if (f.stepIn === "cfo_sponsor") return [...new Set([...titled("CFO"), sponsor])];
+    if (f.stepIn === "ceo_coo") return [...new Set([...titled("CEO"), ...titled("COO")])];
+    // Common manager of the two parties (G4-Q Q1): the CEO for two departments.
+    const a = cs.find((c) => c.id === k?.commitmentAId);
+    const b = cs.find((c) => c.id === k?.commitmentBId);
+    const pa = a && unit.get(a.ownerUnitId)?.pathIds;
+    const pb = b && unit.get(b.ownerUnitId)?.pathIds;
+    const common = pa && pb ? commonAncestor(pa, pb) : null;
+    return common ? managersOf(common) : [];
+  }
+
+  const items = list.map((i) => {
+    const linked = new Set(i.commitmentIds);
+    const conflicts = ks.map((k) => {
+      const a = cs.find((c) => c.id === k.commitmentAId);
+      const b = cs.find((c) => c.id === k.commitmentBId);
+      return {
+        id: k.id,
+        unitA: a?.ownerUnitId ?? "",
+        unitB: b?.ownerUnitId ?? "",
+        linked: linked.has(k.commitmentAId) || linked.has(k.commitmentBId),
+        insightId: k.insightId,
+      };
+    });
+    const facts: InitiativeFacts = {
+      ownerUnitId: i.ownerUnitId,
+      participatingUnitIds: i.participatingUnitIds,
+      budgetIls: Number(i.budgetIls),
+      spentIls: Number(i.spentIls),
+      milestones: i.milestones.map((m) => ({ ...m, progress: m.progress })),
+      barriers: i.barriers.map((b) => ({ ...b, costIls: Number(b.costIls) })),
+    };
+    const status = initiativeStatus(facts, today);
+    const flags = managementFlags(facts, conflicts, today).map((f) => {
+      const k = f.subject.kind === "conflict" ? ks.find((x) => x.id === f.subject.id) : undefined;
+      const who = stepInPeople(f, i.sponsorUserId, k);
+      const parties =
+        k && [cs.find((c) => c.id === k.commitmentAId), cs.find((c) => c.id === k.commitmentBId)].filter(Boolean);
+      return {
+        ...f,
+        subject:
+          f.subject.kind === "conflict" && parties
+            ? { ...f.subject, title: parties.map((c) => unitName(c!.ownerUnitId)).join(" ↔ ") }
+            : f.subject,
+        insightId: k?.insightId ?? null,
+        stepInNames: who.map(personName),
+        stepInIds: who,
+        you: who.includes(me),
+      };
+    });
+    const next = nextMilestone(facts);
+    const live = (d: (typeof deps)[number]) => {
+      const c = cs.find((x) => x.id === d.commitmentId);
+      if (!c) return null;
+      const st = dependencyStatus(d, c, now);
+      return st === "met" || st === "cancelled" ? null : { d, c, st };
+    };
+    const waitedOnBy = deps
+      .filter((d) => linked.has(d.commitmentId))
+      .map(live)
+      .filter((x) => !!x)
+      .map((x) => ({ unit: unitName(x!.d.downstreamUnitId), status: x!.st }));
+    const waitingOn = deps
+      .filter((d) => d.downstreamCommitmentId && linked.has(d.downstreamCommitmentId))
+      .map(live)
+      .filter((x) => !!x)
+      .map((x) => ({ unit: unitName(x!.c.ownerUnitId), status: x!.st }));
+    const milestones = i.milestones.map((m) => ({
+      id: m.id,
+      title: m.title,
+      ownerUnitId: m.ownerUnitId,
+      ownerName: unitName(m.ownerUnitId),
+      startsOn: m.startsOn,
+      dueOn: m.dueOn,
+      doneOn: m.doneOn,
+      progress: m.doneOn ? 100 : m.progress,
+      state: milestoneState(
+        facts.milestones.find((x) => x.id === m.id)!,
+        today,
+      ),
+      moves: ((m.history as { from: string; to: string; reason: string }[]) ?? []).length,
+    }));
+    const openBarriers = i.barriers
+      .filter((b) => !b.resolvedOn || b.resolvedOn > today)
+      .map((b) => ({ ...b, costIls: Number(b.costIls), ownerName: unitName(b.ownerUnitId) }));
+    return {
+      id: i.id,
+      key: i.key,
+      title: i.title,
+      kind: i.kind,
+      status,
+      progress: Math.round(progressOf(facts)),
+      sponsorId: i.sponsorUserId,
+      sponsorName: personName(i.sponsorUserId),
+      ownerUnitId: i.ownerUnitId,
+      ownerName: unitName(i.ownerUnitId),
+      participants: i.participatingUnitIds.map((id) => ({ id, name: unitName(id) })),
+      budget: Number(i.budgetIls),
+      spent: Number(i.spentIls),
+      projectedSpend: Math.round(projectedSpend(facts)),
+      value: Number(i.valueIls),
+      startsOn: i.startsOn,
+      endsOn: i.endsOn,
+      next: next ? milestones.find((m) => m.id === next.id)! : null,
+      milestones,
+      barriers: openBarriers,
+      flags,
+      waitingOn,
+      waitedOnBy,
+      onTime: onTimeRate(i.milestones),
+      insightIds: i.insightIds,
+      reminders: reminders
+        .filter((r) => r.initiativeId === i.id)
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .map((r) => ({
+          id: r.id,
+          toUnitId: r.toUnitId,
+          toName: unitName(r.toUnitId),
+          from: personName(r.fromUserId),
+          body: r.body,
+          at: r.createdAt,
+          subjectKind: r.subjectKind,
+          subjectId: r.subjectId,
+        })),
+    };
+  });
+  items.sort(
+    (a, b) =>
+      b.flags.length - a.flags.length ||
+      STATUS_RANK[a.status] - STATUS_RANK[b.status] ||
+      a.title.localeCompare(b.title),
+  );
+
+  const selected = items.find((i) => i.key === opts.key) ?? items[0] ?? null;
+  if (opts.key && selected?.key !== opts.key) return { notFound: true as const };
+
+  // ── What in the selected initiative waits on the viewer ──
+  const yours: YourItem[] = [];
+  if (selected) {
+    const [approvals, decisions] = await Promise.all([
+      listMyApprovals(db, orgId, actor),
+      listMyDecisions(db, orgId, actor),
+    ]);
+    const linkedInsights = new Set(selected.insightIds);
+    for (const a of approvals.filter((x) => linkedInsights.has(x.insightId)))
+      yours.push({
+        key: `ap:${a.approval.id}`,
+        kind: "approve",
+        title: a.action.title,
+        detail: a.insightTitle,
+        href: "/approvals",
+      });
+    for (const d of decisions.filter((x) => linkedInsights.has(x.insightId)))
+      yours.push({
+        key: `de:${d.decisionId}`,
+        kind: "decide",
+        title: d.title,
+        detail: d.statement,
+        href: `/insights/${d.insightId}`,
+      });
+    for (const f of selected.flags.filter((x) => x.you)) {
+      if (f.rule === "M3")
+        yours.push({
+          key: `m3:${f.subject.id}`,
+          kind: "settle",
+          title: f.subject.title,
+          detail: f.reason,
+          rule: f.rule,
+          facts: f.facts,
+          href: f.insightId ? `/insights/${f.insightId}` : "/commitments",
+        });
+      else if (f.rule === "M4")
+        yours.push({
+          key: `m4:${f.subject.id}`,
+          kind: "resolve",
+          title: f.subject.title,
+          detail: f.reason,
+          barrierId: f.subject.id ?? undefined,
+          rule: f.rule,
+          facts: f.facts,
+          unitName: f.unitId ? unitName(f.unitId) : undefined,
+        });
+      else if (f.rule === "M5")
+        yours.push({
+          key: "m5",
+          kind: "reforecast",
+          title: selected.ownerName,
+          detail: f.reason,
+          toUnitId: selected.ownerUnitId,
+          subjectKind: "budget",
+          rule: f.rule,
+          facts: f.facts,
+          unitName: selected.ownerName,
+        });
+      else if (f.unitId)
+        yours.push({
+          key: `${f.rule}:${f.subject.id}`,
+          kind: "remind",
+          title: f.subject.title,
+          detail: f.reason,
+          toUnitId: f.unitId,
+          subjectKind: f.subject.kind === "barrier" ? "barrier" : "milestone",
+          subjectId: f.subject.id ?? undefined,
+          rule: f.rule,
+          facts: f.facts,
+          unitName: unitName(f.unitId),
+        });
+    }
+    // Reminders sent to a unit the viewer manages.
+    for (const r of selected.reminders.filter((x) => myManaged.has(x.toUnitId)).slice(0, 3))
+      yours.push({ key: `rm:${r.id}`, kind: "reminder", title: r.from, detail: r.body });
+    // The viewer's own open milestones (a unit they manage owns them).
+    for (const m of selected.milestones.filter((x) => !x.doneOn && myManaged.has(x.ownerUnitId)))
+      yours.push({
+        key: `ms:${m.id}`,
+        kind: "milestone",
+        title: m.title,
+        detail: m.dueOn,
+        milestoneId: m.id,
+      });
+  }
+  const dedup = [...new Map(yours.map((y) => [y.key, y])).values()];
+
+  const all = items.flatMap((i) => i.milestones);
+  return {
+    today,
+    items,
+    selected,
+    yours: dedup,
+    groupOnTime: onTimeRate(all.map((m) => ({ dueOn: m.dueOn, doneOn: m.doneOn }))),
+    money: {
+      budget: items.reduce((a, i) => a + i.budget, 0),
+      spent: items.reduce((a, i) => a + i.spent, 0),
+      valueAtRisk: items
+        .filter((i) => i.status === "blocked" || i.status === "at_risk")
+        .reduce((a, i) => a + i.value, 0),
+      flagged: items.filter((i) => i.flags.length > 0).length,
+      needYou: items.filter((i) => i.flags.some((f) => f.you)).length,
+    },
+  };
+}
+
+export type InitiativesView = Exclude<NonNullable<Awaited<ReturnType<typeof initiativesView>>>, { notFound: true }>;

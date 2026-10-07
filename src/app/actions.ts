@@ -292,3 +292,58 @@ export async function setLanguageAction(form: FormData) {
   }
   redirect(back);
 }
+
+// ── Initiatives (plan v2, E3; cross-department.md §3) ──
+const INITIATIVES_PATH = "/initiatives";
+async function onInitiative(
+  form: FormData,
+  done: string,
+  run: (actor: Awaited<ReturnType<typeof requireActor>>["actor"], key: string) => Promise<unknown>,
+) {
+  const { actor } = await requireActor();
+  const key = String(form.get("key") ?? "");
+  const back = key ? `${INITIATIVES_PATH}?i=${encodeURIComponent(key)}` : INITIATIVES_PATH;
+  try {
+    await run(actor, key);
+  } catch (e) {
+    if (e instanceof DomainError)
+      redirect(`${back}${back.includes("?") ? "&" : "?"}error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(INITIATIVES_PATH);
+  redirect(`${back}${back.includes("?") ? "&" : "?"}done=${done}`);
+}
+
+export async function completeMilestoneAction(form: FormData) {
+  await onInitiative(form, "milestone_done", async (a) =>
+    api.completeMilestone(a, parseInput("completeMilestone", form).milestoneId),
+  );
+}
+
+export async function moveMilestoneAction(form: FormData) {
+  await onInitiative(form, "milestone_moved", async (a) => {
+    const i = parseInput("moveMilestone", form);
+    await api.moveMilestone(a, i.milestoneId, i.dueOn, i.reason);
+  });
+}
+
+export async function resolveBarrierAction(form: FormData) {
+  await onInitiative(form, "barrier_resolved", async (a) => {
+    const i = parseInput("resolveBarrier", form);
+    await api.resolveBarrier(a, i.barrierId, i.resolution);
+  });
+}
+
+export async function raiseBarrierAction(form: FormData) {
+  await onInitiative(form, "barrier_raised", async (a) => {
+    const i = parseInput("raiseBarrier", form);
+    await api.raiseBarrier(a, i.initiativeId, i);
+  });
+}
+
+export async function sendReminderAction(form: FormData) {
+  await onInitiative(form, "reminder_sent", async (a) => {
+    const i = parseInput("sendReminder", form);
+    await api.sendInitiativeReminder(a, i.initiativeId, i);
+  });
+}

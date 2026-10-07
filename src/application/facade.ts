@@ -42,6 +42,14 @@ import {
 } from "./queries/insights";
 import { executiveHome } from "./queries/executive";
 import { workstreamMoney } from "./queries/money";
+import { initiativesView } from "./queries/initiatives";
+import {
+  completeMilestone,
+  moveMilestone,
+  raiseBarrier,
+  resolveBarrier,
+  sendInitiativeReminder,
+} from "./commands/initiatives";
 import { valueMap } from "./queries/value-map";
 import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
@@ -100,6 +108,22 @@ export const api = {
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
   executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
   valueMap: async (a: Actor, insightIds: string[]) => valueMap(db(), await activeOrgId(db()), a, insightIds),
+  initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
+  completeMilestone: async (a: Actor, milestoneId: string) => completeMilestone(await ctx(), a, milestoneId),
+  moveMilestone: async (a: Actor, milestoneId: string, dueOn: string, reason: string) =>
+    moveMilestone(await ctx(), a, milestoneId, dueOn, reason),
+  raiseBarrier: async (
+    a: Actor,
+    initiativeId: string,
+    input: { title: string; kind: string; ownerUnitId: string; costIls?: number },
+  ) => raiseBarrier(await ctx(), a, initiativeId, input),
+  resolveBarrier: async (a: Actor, barrierId: string, resolution: string) =>
+    resolveBarrier(await ctx(), a, barrierId, resolution),
+  sendInitiativeReminder: async (
+    a: Actor,
+    initiativeId: string,
+    input: { toUnitId: string; subjectKind: "milestone" | "barrier" | "budget"; subjectId?: string; body: string },
+  ) => sendInitiativeReminder(await ctx(), a, initiativeId, input),
   workstreamMoney: async (a: Actor, insightIds: string[]) =>
     workstreamMoney(db(), await activeOrgId(db()), a, insightIds),
   orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
@@ -163,6 +187,7 @@ export const api = {
 export type { KpiStat, PerformanceView } from "./queries/performance";
 export type { ExecutiveHome, MoneyLine } from "./queries/executive";
 export type { ValuePoint } from "./queries/value-map";
+export type { InitiativesView, YourItem } from "./queries/initiatives";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

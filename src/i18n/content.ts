@@ -51,7 +51,7 @@ export function heContent(s: string, depth = 0): string | undefined {
     return c.he.replace(/\{(\w+)\}/g, (_, k: string) => heValue(vals[k], depth + 1));
   }
   // Lists: "₪600k/week at stake · impact within 48 h · company-wide", "Plan A × Plan B".
-  for (const sep of [" · ", " × "]) {
+  for (const sep of [" · ", " × ", " ↔ "]) {
     if (!s.includes(sep)) continue;
     const parts = s.split(sep).map((p) => heContent(p, depth + 1));
     if (parts.some((p) => p !== undefined)) return parts.map((p, i) => p ?? s.split(sep)[i]).join(sep);

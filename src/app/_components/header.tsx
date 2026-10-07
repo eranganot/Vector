@@ -26,6 +26,7 @@ const ICONS = {
   approvals: "M9 12l2 2 4-4M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z",
   audit: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",
   demo: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
+  cross: "M5 5h5v5H5zM14 14h5v5h-5zM14 5h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v6.5H14",
 };
 
 function groupOf(title: string | null) {
@@ -73,6 +74,8 @@ export async function Shell({
   );
   // C-suite navigation (IA v2, executive-home.md §2): what waits on you comes right after Home.
   const cSuite = !!me.isCSuite;
+  // Cross-department (E3): the C-suite and anyone who manages a department or the group, where initiatives live.
+  const seeCross = cSuite || ["executive", "department_manager"].some((r) => roles.includes(r));
   const nav = (
     <>
       <NavLink href="/">
@@ -85,6 +88,11 @@ export async function Shell({
       <NavLink href="/opportunities">
         <Icon d={ICONS.opportunities} /> {t("Opportunities")}
       </NavLink>
+      {seeCross && (
+        <NavLink href="/initiatives">
+          <Icon d={ICONS.cross} /> {t("Cross-department")}
+        </NavLink>
+      )}
       <NavLink href="/commitments">
         <Icon d={ICONS.commitments} /> {t("Commitments")}
       </NavLink>
