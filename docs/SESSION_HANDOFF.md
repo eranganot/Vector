@@ -1,6 +1,6 @@
 # Session handoff
 
-_Last updated: 2026-10-07 (E4)_
+_Last updated: 2026-10-08 (E4d)_
 
 ## Current phase
 
@@ -11,6 +11,9 @@ Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 - E4 #47: Action Center (queue, selected item, approve and send through the lifecycle, in-app messages; migration
   0012), Messages for you in Waiting on you, Action plan formatting. Spec as built: docs/specs/action-center.md §6.
   Dev 4dc66f0: migrations 13/13, smoke 18/18, e2e 43/43 against Dev, demo reset after.
+- E4d #49: Eran's E4 review — event → action plan rebuilt; Cross-department dependency flow with what-if (knock-on-v1).
+  On 2026-10-07 Eran wrote "E3 is signed off" in his E4 review; G-E3 was already recorded. Whether he meant E4 is
+  asked, not inferred.
 - E3a–E3c #42–#46 shipped and verified on Dev (smoke 17/17, e2e 40/40).
 
 ## Objective (E0, done)

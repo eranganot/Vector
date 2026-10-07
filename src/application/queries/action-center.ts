@@ -359,43 +359,11 @@ export async function actionCenter(
     };
   }
 
-  // ── "From event to action plan": the latest meeting or plan that created commitments in scope ──
-  const visibleCs = cs.filter((c) =>
-    c.visibleUnitIds.some((v) => scope.includes(v) || unit.get(v)?.pathIds.some((p) => scope.includes(p))),
-  );
-  const sources = [...new Set(visibleCs.map((c) => c.source))];
-  const latest = sources
-    .map((s) => ({
-      s,
-      at: Math.max(...visibleCs.filter((c) => c.source === s).map((c) => c.madeAt.getTime())),
-      n: visibleCs.filter((c) => c.source === s).length,
-    }))
-    .filter((x) => x.n >= 2)
-    .sort((a, b) => b.at - a.at)[0];
-  const event = latest
-    ? {
-        source: latest.s,
-        tasks: visibleCs
-          .filter((c) => c.source === latest.s)
-          .map((c) => ({
-            title: c.title,
-            unitName: unitName(c.ownerUnitId),
-            owner: nameOf(c.ownerUserId),
-            status: c.status,
-            due: c.dueAt.toISOString().slice(0, 10),
-          })),
-        conflicts: ks.filter((k) =>
-          visibleCs.some((c) => c.source === latest.s && (c.id === k.commitmentAId || c.id === k.commitmentBId)),
-        ).length,
-      }
-    : null;
-
   const weekAgo = now.getTime() - 7 * 86_400_000;
   return {
     now,
     queue,
     selected: detail,
-    event,
     sent: msgs
       .filter((m) => m.fromUserId === me || m.toUserIds.includes(me) || m.ccUserIds.includes(me))
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

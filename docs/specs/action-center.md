@@ -104,8 +104,14 @@ Every state change of a message is audited (`message.drafted`, `message.edited` 
 - **Channels:** only the in-app adapter is registered; any other channel is refused unless `CHANNELS_LIVE=on`
   (unit-tested). Delivered messages appear under "Messages for you" in Waiting on you. There is no separate Inbox yet
   (the mail agent is E7).
-- **From event to action plan:** the latest meeting or plan in scope that created two or more commitments, with its
-  tasks, owners, dates, status and the conflicts it caused.
+- **From event to action plan** (revised in E4d after Eran's review: "not clear enough; I don't understand the action
+  items; the risk/value/cost of doing or not doing it; the status should show it, e.g. overdue in red"): the latest
+  meeting in scope that produced two or more commitments. Header: what the meeting produced, how many departments are
+  involved, counts by status, ₪ a week depending on the open tasks, ₪ lost so far. One card per task, late first, with
+  a coloured status (late red, at risk or due soon amber, on track green), the owner, the next step in words, who waits
+  on it (department, what, needed by, ₪ a week), and its money: cost to do (the linked insight's actions), at stake if
+  not done, each week it slips (knock-on-v1, cross-department.md §7) and lost so far (from the need-by dates that have
+  passed, so a task late within its slack has lost nothing yet).
 - **Not built in E4:** "Edit action" from the panel (amending stays on the insight's trace).
 - **Acceptance as run:** the integration test covers the North stock-out (Noa suggested; Dana's own AP-3 staffing
   approval granted on the same click; the message held until the AP-4/AP-5 transfer approval, then delivered in-app;

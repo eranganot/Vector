@@ -6,6 +6,7 @@ Status: **Built and verified on Dev (4dc66f0); awaiting Eran's E4 gate.** Prod p
 
 | PR  | What                                                                                                                                                                                                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| #49 | E4d (your review): event → action plan rebuilt; Cross-department "How a delay travels between departments" with what-if                                                                                                              |
 | #47 | Action Center: queue with one button, selected item (who is involved, steps, "When you approve, VECTOR will…", with whom and why, editable message), Approve and send through the lifecycle, in-app messages; Action plan formatting |
 
 ## What to look at in the demo (Dev)
@@ -29,6 +30,18 @@ Status: **Built and verified on Dev (4dc66f0); awaiting Eran's E4 gate.** Prod p
 8. **Your E3 comment:** the Action plan's Due column reads "24 Oct" with "in 2 d" or "overdue" under it, and Net reads
    "+₪307k" with the risk under it; neither wraps (English and Hebrew).
 9. **עברית:** all of it in Hebrew, right to left, including the suggested message.
+
+## Your review, as revised (E4d)
+
+1. **From event to action plan** (Action Center, bottom): what the meeting produced and how many departments depend on
+   it; tiles for late / at risk or due soon / on track / done, ₪ a week depending on the open tasks and ₪ lost so far.
+   One card per task, late first: a coloured status ("Late · 3 d past 19 Oct" in red), the owner, **Next step** in
+   words, **Who waits on it** (department, what, needed by, ₪ a week), and the money: **cost to do**, **at stake if not
+   done**, **each week it slips** (and who it would be late for), **lost so far** (with the days of slack left).
+2. **Cross-department → How a delay travels between departments** (under the initiative's map): each department's
+   commitments in the order they feed each other, arrows for "needs it by", red where something arrives late, with the
+   days and ₪. **What if it slips?** +3 / +7 / +14 days on any box shows who gets it late and what it costs; for the
+   holiday initiative, a week's slip at Marketing makes Store Operations and the five regions 6 days late, about ₪514k.
 
 ## Verified
 

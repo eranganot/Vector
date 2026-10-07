@@ -47,10 +47,7 @@ describe("Action Center (E4)", () => {
   it("ranks a queue with one button each and suggests whom to send to, with reasons and a message", async () => {
     const v = (await actionCenter(appDb, orgId, await as("dana"), { locale: "en" }))!;
     if (process.env.AC_DUMP)
-      writeFileSync(
-        process.env.AC_DUMP,
-        JSON.stringify({ queue: v.queue, selected: v.selected, event: v.event }, null, 1),
-      );
+      writeFileSync(process.env.AC_DUMP, JSON.stringify({ queue: v.queue, selected: v.selected }, null, 1));
     expect(v.queue.length).toBeGreaterThan(2);
     const scores = v.queue.map((q) => q.score);
     expect([...scores].sort((a, b) => b - a)).toEqual(scores);

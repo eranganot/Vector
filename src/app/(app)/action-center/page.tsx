@@ -19,7 +19,10 @@ export default async function ActionCenterPage({
   const t = await getT();
   const locale = await getLocale();
   const { item, done, error } = await searchParams;
-  const v = await api.actionCenter(actor, item && UUID.test(item) ? item : undefined, locale === "he" ? "he" : "en");
+  const [v, event] = await Promise.all([
+    api.actionCenter(actor, item && UUID.test(item) ? item : undefined, locale === "he" ? "he" : "en"),
+    api.eventPlan(actor),
+  ]);
   if (!v) return <p className="text-sm text-muted">{t("Nothing in your scope yet.")}</p>;
-  return <ActionCenterScreen v={v} locale={locale} done={done} error={error} />;
+  return <ActionCenterScreen v={v} event={event} locale={locale} done={done} error={error} />;
 }

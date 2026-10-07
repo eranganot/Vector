@@ -293,6 +293,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
       waitedOnBy,
       onTime: onTimeRate(i.milestones),
       insightIds: i.insightIds,
+      commitmentIds: i.commitmentIds,
       reminders: reminders
         .filter((r) => r.initiativeId === i.id)
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
