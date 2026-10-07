@@ -1,7 +1,7 @@
 # Stage E2: C-suite home v2 (plan v2)
 
-Status: **Built and verified on Dev 2026-10-07; awaiting Eran's E2 gate.** Prod stays on Phase 4 until he asks for a
-promotion.
+Status: **Signed off by Eran 2026-10-07 (G-E2)**, with store labor budgeted at its run-rate (G-E2a). Prod promotion is
+a separate step.
 
 ## What shipped
 

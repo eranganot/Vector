@@ -39,6 +39,19 @@ execution_risk = 0.30 × dependency risk      (open dependencies the action need
                + 0.20 × owner load           (owner's overdue items ÷ open items)
 ```
 
+### As built (E3a, 2026-10-07)
+
+- `executionRisk` in `src/domain/economics.ts` (economics-v1) is computed at read time by `valueMap`
+  (`src/application/queries/value-map.ts`), so it follows the live state; the stored v0 baseline is no longer shown.
+- **Dependency risk:** the share of open dependencies at risk or blocked whose waiting unit is one of the action's
+  target units or a unit above them (not the group).
+- **Conflict risk:** 1 when an open conflict has a plan owned by one of the action's target units. Counting the
+  response's owner department as well flagged every action (each department is in some conflict), so it is left out.
+- **Track record:** 1 − worked ÷ judged over outcomes of the same action type; 0.5 with no history.
+- **Owner load:** the owner's overdue ÷ open action items.
+- The map plots each live action item (cancelled and rejected left out); bubbles open the action on its insight page
+  (`#action-<id>`). The list beside it ranks by net value (impact − cost) with risk, days to value and the window.
+
 ## 3. Initiatives: the Cross-department tab
 
 **Layout v3 (G-E0c, Eran 2026-10-06: "where are the action items for the user?").** The tab is built around what

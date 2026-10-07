@@ -6,6 +6,7 @@ import type { Actor } from "@/domain/types";
 import { laneHref } from "./dashboard";
 import { Breadcrumb, InsightCard } from "./unit";
 import { ils, MoneyHeader } from "./money-header";
+import { ValueMapCard } from "./value-map";
 import { Band, Pill, SectionTitle } from "./ui";
 import { getT } from "../_lib/locale";
 
@@ -32,6 +33,10 @@ export async function WorkstreamPage({
   const resolved = v.resolved.filter((r) => r.workstream === ws);
   const label = ws === "risk" ? t("Risks") : t("Opportunities");
   const local = v.position === "region" || v.position === "branch";
+  const points = await api.valueMap(
+    actor,
+    shown.map((i) => i.id),
+  );
   const money = await api.workstreamMoney(
     actor,
     shown.map((i) => i.id),
@@ -145,6 +150,7 @@ export async function WorkstreamPage({
           );
         })}
       </nav>
+      <ValueMapCard points={points} t={t} ws={ws} />
       {shown.length === 0 ? (
         <p className="text-sm text-muted">{band ? t("Nothing in {band} here.", { band }) : t("Nothing here.")}</p>
       ) : (

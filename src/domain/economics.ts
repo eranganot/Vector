@@ -92,3 +92,53 @@ export function actionEconomics(i: EconomicsInput): Economics {
     },
   };
 }
+
+// ── economics-v1: live execution risk (E3; cross-department.md §2) ──────────────────────────────────────────────
+
+export const EXECUTION_RISK_MODEL = "economics-v1";
+export const EXECUTION_RISK_WEIGHTS = { dependency: 0.3, conflict: 0.25, trackRecord: 0.25, ownerLoad: 0.2 } as const;
+
+export type ExecutionRiskInput = {
+  /** Open dependencies the action needs (its target units wait on them), and how many are at risk or blocked. */
+  dependencies: { open: number; troubled: number };
+  /** An open conflict touches the action's units. */
+  inConflict: boolean;
+  /** Past outcomes of the same action type: worked and judged (worked, partly worked, did not work). */
+  pastOutcomes: { worked: number; judged: number };
+  /** The owner's open action items and how many of them are overdue. */
+  ownerItems: { open: number; overdue: number };
+};
+
+export type ExecutionRisk = {
+  model: string;
+  score: number;
+  level: "low" | "medium" | "high";
+  factors: { dependency: number; conflict: number; trackRecord: number; ownerLoad: number };
+};
+
+/**
+ * execution risk = 0.30 × dependency (share of the open dependencies it needs that are at risk or blocked)
+ *               + 0.25 × conflict (1 when an open conflict touches its units)
+ *               + 0.25 × track record (1 − hit rate of the same action type; 0.5 with no history)
+ *               + 0.20 × owner load (owner's overdue ÷ open items)
+ */
+export function executionRisk(i: ExecutionRiskInput): ExecutionRisk {
+  const factors = {
+    dependency: i.dependencies.open ? i.dependencies.troubled / i.dependencies.open : 0,
+    conflict: i.inConflict ? 1 : 0,
+    trackRecord: i.pastOutcomes.judged ? 1 - i.pastOutcomes.worked / i.pastOutcomes.judged : 0.5,
+    ownerLoad: i.ownerItems.open ? i.ownerItems.overdue / i.ownerItems.open : 0,
+  };
+  const w = EXECUTION_RISK_WEIGHTS;
+  const score =
+    Math.round(
+      (w.dependency * factors.dependency +
+        w.conflict * factors.conflict +
+        w.trackRecord * factors.trackRecord +
+        w.ownerLoad * factors.ownerLoad) *
+        100,
+    ) / 100;
+  return { model: EXECUTION_RISK_MODEL, score, level: riskLevel(score), factors };
+}
+
+export const riskLevel = (r: number): ExecutionRisk["level"] => (r < 0.3 ? "low" : r <= 0.6 ? "medium" : "high");

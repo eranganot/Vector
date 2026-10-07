@@ -65,6 +65,7 @@ test("cancelling one side resolves the conflict; the trace says why", async ({ p
   await page.goto("/risks");
   await page
     .getByRole("link", { name: /Weekend dairy discount in South/ })
+    .and(page.locator(":not([data-testid=value-bubble])")) // the insight card, not its bubble on the value map
     .first()
     .click();
   await expect(page.getByText(/Conflict resolved \(a commitment was cancelled\)/)).toBeVisible();
