@@ -1,18 +1,14 @@
 # Session handoff
 
-_Last updated: 2026-10-07 (E2b)_
+_Last updated: 2026-10-07 (E3a)_
 
 ## Current phase
 
-**Plan v2, stage E2 (C-suite home v2): built and verified on Dev 2026-10-07; awaiting Eran's E2 gate** (docs/phases/STAGE_E2.md). E1 was signed off by Eran 2026-10-06 (G-E1). Prod (`demo`
-e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
+**Plan v2, stage E3 (opportunities & cross-department), in progress.** E2 was signed off by Eran 2026-10-07 (G-E2),
+with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
-- E2a #38: health-v2, projection-v1 and the read model `executiveHome` (no UI yet); money lines follow the demo
-  clock; migration 0010 (org/day indexes).
-- E2b #39: the C-suite home on screen, department drill-down, VP home, EN/HE, TtU e2e (Dana, Michal, Noa).
-- E2c #40: ₪ headers on Risks, Opportunities, Commitments, Actions & outcomes.
-- Dev 209bc25: migrations 11/11, smoke 16/16, e2e 34/34 against Dev, then the Dev demo was reset.
-- Open for Eran: store labor budget at run-rate 15.3% (recommended) or keep 15.8%; Prod promotion.
+- E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
+- Next: E3b, the Cross-department tab (initiative status, M1–M5, your action items, Gantt), then the E3 gate.
 
 ## Objective (E0, done)
 
@@ -33,7 +29,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E2 on Dev (STAGE_E2.md) and answers the labor-budget question; on sign-off, E3.
+1. Build E3b (Cross-department tab), verify on Dev, write docs/phases/STAGE_E3.md for Eran's gate.
 
 ## Reproducible commands
 

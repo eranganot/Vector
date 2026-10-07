@@ -742,4 +742,27 @@ export const HE_SCREENS: Record<string, string> = {
   "captured so far": "מומש עד כה",
   "₪ a week of opportunities whose action worked (half when it partly worked)":
     "₪ בשבוע מהזדמנויות שהפעולה בהן עבדה (מחצית כשעבדה חלקית)",
+  // ── Value map (E3a)
+  "Execution risk {score} ({level}): dependencies {d}, conflict {c}, track record {r}, owner load {o}":
+    "סיכון ביצוע {score} ({level}): תלויות {d}, התנגשות {c}, היסטוריה {r}, עומס על האחראי {o}",
+  "Value map": "מפת ערך",
+  "Break-even: impact = cost": "איזון: השפעה = עלות",
+  "↖ cheap and valuable": "↖ זול ושווה",
+  "costs more than it returns ↘": "עולה יותר ממה שמחזיר ↘",
+  "cost →": "עלות →",
+  "impact {i} · cost {c} · net {n}": "השפעה {i} · עלות {c} · נטו {n}",
+  "₪ protected by quarter end": "₪ שנשמרים עד סוף הרבעון",
+  "₪ gained by quarter end": "₪ שמרוויחים עד סוף הרבעון",
+  "Response map": "מפת תגובה",
+  "impact vs cost · size = execution risk": "השפעה מול עלות · גודל = סיכון ביצוע",
+  "Action items by net value": "פריטי פעולה לפי ערך נטו",
+  "by quarter end": "עד סוף הרבעון",
+  cost: "עלות",
+  "risk {level}": "סיכון {level}",
+  "value in {n} days": "ערך בעוד {n} ימים",
+  "bites {date}": "פוגע ב־{date}",
+  "window closes {date}": "החלון נסגר ב־{date}",
+  low: "נמוך",
+  medium: "בינוני",
+  high: "גבוה",
 };

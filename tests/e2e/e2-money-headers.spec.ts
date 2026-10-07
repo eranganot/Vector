@@ -42,3 +42,19 @@ test("Risks, Opportunities, Commitments and Actions each open with their ₪ fig
     .innerText();
   expect(p4).not.toBe(all);
 });
+
+test("E3a: the value map on Opportunities and Risks — every bubble opens its action item", async ({ page }) => {
+  await as(page, "Dana Levi");
+  for (const path of ["/opportunities", "/risks"]) {
+    await page.goto(path);
+    await expect(page.getByTestId("value-map")).toBeVisible();
+    const bubbles = page.getByTestId("value-bubble");
+    expect(await bubbles.count(), path).toBeGreaterThan(0);
+    await expect(page.getByTestId("value-row").first()).toBeVisible();
+  }
+  await page.goto("/opportunities");
+  const href = await page.getByTestId("value-bubble").first().getAttribute("href");
+  expect(href).toMatch(/^\/insights\/[0-9a-f-]+#action-[0-9a-f-]+$/);
+  await page.goto(href!);
+  await expect(page.locator(`[id="${href!.split("#")[1]}"]`)).toBeVisible();
+});

@@ -170,7 +170,8 @@ test("every insight page renders for the CEO and the board observer (regression:
       links.push(
         ...(await page
           .locator("main a[href^='/insights/']")
-          .evaluateAll((as) => as.map((a) => a.getAttribute("href")!))),
+          // Value-map bubbles link to an action on the same pages (#action-…): check each page once.
+          .evaluateAll((as) => as.map((a) => a.getAttribute("href")!.split("#")[0]))),
       );
     }
     links.splice(0, links.length, ...new Set(links));

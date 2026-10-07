@@ -390,7 +390,11 @@ export default async function TracePage({
                 const ap = trace.approvals.filter((x) => x.actionId === a.id).at(-1);
                 const out = trace.outcomes.find((o) => o.actionId === a.id);
                 return (
-                  <div key={a.id} className="flex flex-col gap-1.5 rounded-lg border border-line px-4 py-3 text-sm">
+                  <div
+                    key={a.id}
+                    id={`action-${a.id}`}
+                    className="flex scroll-mt-20 flex-col gap-1.5 rounded-lg border border-line px-4 py-3 text-sm"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <b>{a.title}</b>
                       <span className="flex items-center gap-2">

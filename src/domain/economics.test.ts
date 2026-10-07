@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actionEconomics, endOfQuarter } from "./economics";
+import { actionEconomics, endOfQuarter, executionRisk } from "./economics";
 
 const story = new Date("2026-10-22T05:00:00Z");
 
@@ -35,5 +35,31 @@ describe("action economics (economics-v0)", () => {
     expect(e.riskFactors.weeks).toBe(1);
     expect(e.expectedImpactIls).toBe(3_000);
     expect(e.executionRisk).toBe(0.3);
+  });
+});
+
+describe("economics-v1 execution risk (cross-department.md §2)", () => {
+  it("weighs dependencies 30%, conflict 25%, track record 25%, owner load 20% (hand-computed)", () => {
+    // 1 of 2 dependencies blocked → 0.5; in conflict → 1; 1 of 4 past outcomes worked → 0.75; 1 of 4 items overdue → 0.25.
+    const r = executionRisk({
+      dependencies: { open: 2, troubled: 1 },
+      inConflict: true,
+      pastOutcomes: { worked: 1, judged: 4 },
+      ownerItems: { open: 4, overdue: 1 },
+    });
+    expect(r.score).toBeCloseTo(0.3 * 0.5 + 0.25 + 0.25 * 0.75 + 0.2 * 0.25, 2);
+    expect(r.level).toBe("high");
+  });
+
+  it("scores a clean action with no history as low: only the unknown track record counts", () => {
+    const r = executionRisk({
+      dependencies: { open: 0, troubled: 0 },
+      inConflict: false,
+      pastOutcomes: { worked: 0, judged: 0 },
+      ownerItems: { open: 0, overdue: 0 },
+    });
+    expect(r.score).toBe(0.13); // 0.25 × 0.5 = 0.125, rounded to 2 places
+    expect(r.level).toBe("low");
+    expect(r.factors.trackRecord).toBe(0.5);
   });
 });

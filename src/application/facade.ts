@@ -42,6 +42,7 @@ import {
 } from "./queries/insights";
 import { executiveHome } from "./queries/executive";
 import { workstreamMoney } from "./queries/money";
+import { valueMap } from "./queries/value-map";
 import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
@@ -98,6 +99,7 @@ export const api = {
   unit: async (a: Actor, unitId: string) => performanceView(db(), await activeOrgId(db()), a, unitId),
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
   executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
+  valueMap: async (a: Actor, insightIds: string[]) => valueMap(db(), await activeOrgId(db()), a, insightIds),
   workstreamMoney: async (a: Actor, insightIds: string[]) =>
     workstreamMoney(db(), await activeOrgId(db()), a, insightIds),
   orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
@@ -160,6 +162,7 @@ export const api = {
 };
 export type { KpiStat, PerformanceView } from "./queries/performance";
 export type { ExecutiveHome, MoneyLine } from "./queries/executive";
+export type { ValuePoint } from "./queries/value-map";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

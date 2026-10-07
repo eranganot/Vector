@@ -187,6 +187,8 @@ export const FIN_ACCOUNTS: FinAccountSeed[] = [
 export const PLAN = {
   grossMargin: 0.26,
   labor: 0.158,
+  /** Store labor is budgeted at its run-rate, not the KPI target (G-E2a, Eran 2026-10-07). */
+  laborBudget: 0.153,
   logistics: 0.025,
   occupancy: 0.032,
   marketing: 0.008,
@@ -358,7 +360,7 @@ export function budgets(firstMonth: string, lastMonth: string): BudgetRow[] {
         { account: "rev_net_sales", unit: region, month: m, amount: round(sales) },
         { account: "gm_amount", unit: region, month: m, amount: round(sales * PLAN.grossMargin) },
         { account: "cogs", unit: region, month: m, amount: round(sales * (1 - PLAN.grossMargin)) },
-        { account: "labor_cost", unit: region, month: m, amount: round(sales * PLAN.labor) },
+        { account: "labor_cost", unit: region, month: m, amount: round(sales * PLAN.laborBudget) },
         { account: "occupancy_cost", unit: region, month: m, amount: round(occ) },
         { account: "shrink_cost", unit: region, month: m, amount: round(sales * PLAN.shrink) },
         { account: "waste_cost", unit: region, month: m, amount: round(sales * PLAN.waste) },
@@ -366,7 +368,7 @@ export function budgets(firstMonth: string, lastMonth: string): BudgetRow[] {
     }
     void groupOcc;
     const mkt = groupSales * PLAN.marketing;
-    const headcount = groupSales * (PLAN.labor + PLAN.hqStaff);
+    const headcount = groupSales * (PLAN.laborBudget + PLAN.hqStaff);
     out.push(
       { account: "logistics_cost", unit: "D-SUPPLY", month: m, amount: round(groupSales * PLAN.logistics) },
       { account: "inventory_days", unit: "D-SUPPLY", month: m, amount: PLAN.inventoryDays },

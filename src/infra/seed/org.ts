@@ -3,7 +3,7 @@
  * 18 personas, 6 branch KPIs and 10 department KPIs. All names of people and the company are invented;
  * cities and coordinates are real (live weather arrives in Phase 6).
  */
-export const SEED_VERSION = "p5-v1";
+export const SEED_VERSION = "p5-v2";
 export const ORG_NAME = "VECTOR Retail Group";
 /** The demo story's "today": data exists up to the day before. */
 export const STORY_DAY = "2026-10-22";
