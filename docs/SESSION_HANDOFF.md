@@ -4,12 +4,12 @@ _Last updated: 2026-10-07 (E3b)_
 
 ## Current phase
 
-**Plan v2, stage E3 (opportunities & cross-department), in progress.** E2 was signed off by Eran 2026-10-07 (G-E2),
+**Plan v2, stage E3 (opportunities & cross-department): built and verified on Dev 2026-10-07; awaiting Eran's E3 gate** (docs/phases/STAGE_E3.md). E2 was signed off by Eran 2026-10-07 (G-E2),
 with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
 - E3b #43: the Cross-department tab (initiative-rules-v1, your action items, audited commands; migration 0011).
-- Next: the E3 gate (verify on Dev, docs/phases/STAGE_E3.md).
+- Dev ab6ebf1: migrations 12/12, seed p5-v2, smoke 17/17, e2e 38/38 against Dev, then the Dev demo was reset.
 
 ## Objective (E0, done)
 
@@ -30,7 +30,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Verify E3 on Dev and write docs/phases/STAGE_E3.md for Eran's gate; on sign-off, E4 (Action Center).
+1. Eran reviews E3 on Dev (STAGE_E3.md); on sign-off, E4 (Action Center).
 
 ## Reproducible commands
 
