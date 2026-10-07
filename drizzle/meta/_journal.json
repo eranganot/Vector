@@ -85,6 +85,13 @@
       "when": 1791352430113,
       "tag": "0011_initiative_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791397141701,
+      "tag": "0012_outbound_messages",
+      "breakpoints": true
     }
   ]
 }

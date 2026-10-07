@@ -17,6 +17,7 @@ export type SystemOperation =
   | "action.propose"
   | "action.submit"
   | "action.execute"
+  | "message.send"
   | "approval.expire"
   | "approval.lapse"
   | "outcome.watch"
@@ -41,7 +42,7 @@ export const SYSTEM_ACTOR_OPERATIONS: Record<SystemActorId, ReadonlySet<SystemOp
     "conflict.escalate",
   ]),
   "system:policy": new Set(["action.submit", "decision.auto_decide"]),
-  "system:executor": new Set(["action.execute", "outcome.watch"]),
+  "system:executor": new Set(["action.execute", "outcome.watch", "message.send"]),
   "system:outcome-evaluator": new Set(["outcome.evaluate", "insight.resolve"]),
   "system:clock": new Set(["approval.expire", "approval.lapse"]),
   "system:ai": new Set(["insight.create", "decision.recommend", "action.propose"]),

@@ -994,12 +994,12 @@ function Table({ v, t }: { v: V; t: T }) {
               <td className="py-2 pe-3 text-xs text-muted">
                 {i.waitingOn.length > 0 && (
                   <span className="block">
-                    {t("waits on {list}", { list: [...new Set(i.waitingOn.map((d) => d.unit))].join(", ") })}
+                    {t("waits on {list}", { list: [...new Set(i.waitingOn.map((d) => d.unitName))].join(", ") })}
                   </span>
                 )}
                 {i.waitedOnBy.length > 0 && (
                   <span className="block">
-                    {t("waited on by {list}", { list: [...new Set(i.waitedOnBy.map((d) => d.unit))].join(", ") })}
+                    {t("waited on by {list}", { list: [...new Set(i.waitedOnBy.map((d) => d.unitName))].join(", ") })}
                   </span>
                 )}
                 {i.waitingOn.length + i.waitedOnBy.length === 0 && "—"}

@@ -347,3 +347,42 @@ export async function sendReminderAction(form: FormData) {
     await api.sendInitiativeReminder(a, i.initiativeId, i);
   });
 }
+
+// ── Action Center (plan v2, E4; action-center.md §3–§4) ──
+const CENTER_PATH = "/action-center";
+const centerBack = (f: FormData) => {
+  const raw = String(f.get("insightId") ?? "");
+  return /^[0-9a-f-]{36}$/i.test(raw) ? `${CENTER_PATH}?item=${raw}` : `${CENTER_PATH}?`;
+};
+
+export async function approveAndSendAction(form: FormData) {
+  const { actor } = await requireActor();
+  const back = centerBack(form);
+  try {
+    const i = parseInput("approveAndSend", {
+      ...Object.fromEntries([...form.entries()].filter(([k]) => !k.startsWith("$") && k !== "cc" && k !== "grant")),
+      ccUserIds: form.getAll("cc").map(String).filter(Boolean),
+      grantActionIds: form.getAll("grant").map(String).filter(Boolean),
+    });
+    await api.approveAndSend(actor, i.insightId, i);
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(CENTER_PATH);
+  redirect(`${back}&done=sent`);
+}
+
+export async function declineInCenterAction(form: FormData) {
+  const { actor } = await requireActor();
+  const back = centerBack(form);
+  try {
+    const i = parseInput("declineInCenter", form);
+    await api.declineInCenter(actor, i.insightId, i.rationale);
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(CENTER_PATH);
+  redirect(`${CENTER_PATH}?done=declined`);
+}

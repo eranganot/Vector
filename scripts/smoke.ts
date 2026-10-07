@@ -243,6 +243,22 @@ const checks: Check[] = [
       return `migrations ${body.migrations.applied} · 2 routes → /login`;
     },
   },
+  {
+    phase: 8,
+    name: "E4: outbound messages are migrated (0012); the Action Center requires sign-in and leaks nothing",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 13) throw new Error(`expected migration 0012, got ${body.migrations.applied}`);
+      for (const path of ["/action-center", "/action-center?item=00000000-0000-0000-0000-000000000000"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Approve and send|With whom|Stock-outs/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
+    },
+  },
 ];
 
 async function main() {

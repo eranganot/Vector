@@ -29,7 +29,7 @@ import {
   task,
 } from "@/infra/db/schema";
 import { type AppContext, type CommandScope, runCommand } from "../context";
-import type { Tx } from "../db";
+import type { DbOrTx, Tx } from "../db";
 import { playbook } from "../playbooks";
 import { notFound, orgFacts, SYSTEM, unitsByIds } from "./shared";
 
@@ -132,8 +132,8 @@ export async function dismissInsight(ctx: AppContext, actor: Actor, insightId: s
 }
 
 /** The approval requirement for an action under the current policy and the current facts (insight band, org). */
-async function requirementFor(
-  tx: Tx,
+export async function requirementFor(
+  tx: DbOrTx,
   orgId: string,
   a: typeof action.$inferSelect,
   ins: typeof insight.$inferSelect,

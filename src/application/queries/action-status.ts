@@ -19,7 +19,7 @@ export type ActionWorkflow = {
   waitingOn: string[];
   /** The viewer is asked to decide or approve it. */
   viewer: "decide" | "approve" | null;
-  owner: { id: string; name: string; unit: string };
+  owner: { id: string; name: string; unitName: string };
   /** The recommendation behind it (the insight's decision statement). */
   recommendation: string | null;
 };
@@ -83,7 +83,7 @@ export async function actionWorkflows(
   };
   for (const a of acts) {
     const dec = decs.find((d) => d.insightId === a.insightId);
-    const owner = { id: a.ownerUserId, name: nameOf(a.ownerUserId), unit: unitOf(a.ownerUserId) };
+    const owner = { id: a.ownerUserId, name: nameOf(a.ownerUserId), unitName: unitOf(a.ownerUserId) };
     const base = { owner, recommendation: dec?.statement ?? null };
     if (a.status === "proposed" && (!dec || dec.status === "recommended")) {
       const ids = decidersOf(a.insightId);

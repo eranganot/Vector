@@ -1,17 +1,16 @@
 # Session handoff
 
-_Last updated: 2026-10-07 (E3b)_
+_Last updated: 2026-10-07 (E4)_
 
 ## Current phase
 
-**Plan v2, stage E3 (opportunities & cross-department): revised after Eran's review (E3c); awaiting his E3 gate** (docs/phases/STAGE_E3.md). Rule readings approved (G-E3a). E2 was signed off by Eran 2026-10-07 (G-E2),
-with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
+**Plan v2, stage E4 (Action Center): built; verifying on Dev, then Eran's E4 gate** (docs/phases/STAGE_E4.md).
+E3 was accepted by Eran 2026-10-07 (G-E3), with one comment fixed in E4 (Action plan due date and ₪ formatting).
+Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
-- E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
-- E3b #43: the Cross-department tab (initiative-rules-v1, your action items, audited commands; migration 0011).
-- E3c #45: Eran's review — action plan and who acts, work items and item cards, clickable filters, fixed bars.
-  Dev 12a6ba6: smoke 17/17, e2e 40/40 against Dev, demo reset after.
-- Dev ab6ebf1: migrations 12/12, seed p5-v2, smoke 17/17, e2e 38/38 against Dev, then the Dev demo was reset.
+- E4 #47: Action Center (queue, selected item, approve and send through the lifecycle, in-app messages; migration
+  0012), Messages for you in Waiting on you, Action plan formatting. Spec as built: docs/specs/action-center.md §6.
+- E3a–E3c #42–#46 shipped and verified on Dev (smoke 17/17, e2e 40/40).
 
 ## Objective (E0, done)
 
@@ -32,7 +31,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E3 with the E3c revision on Dev; on sign-off, E4 (Action Center).
+1. Eran reviews E4 on Dev (docs/phases/STAGE_E4.md); on sign-off, E5 (reports).
 
 ## Reproducible commands
 

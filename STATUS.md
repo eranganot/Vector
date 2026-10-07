@@ -43,8 +43,26 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-07 | E3 verified on Dev (ab6ebf1): smoke 17/17, e2e 38/38 against Dev, demo reset after; gate brief docs/phases/STAGE_E3.md                                                                                                                                                                                                                                                                                                                                                                | #44      |
 | 2026-10-07 | E3 rule readings approved (G-E3a). E3c (Eran's review): action workflow (owner, step, who it waits on, viewer), Who needs to act and the Action plan on Opportunities/Risks, labelled band filters; Cross-department work items with who/due/next step/blockers, item card with analysis and recommendation, clickable status filters, deviations and Gantt bars; sticky top bar and sidebar; EN/HE                                                                                   | #45      |
 | 2026-10-07 | E3c verified on Dev (12a6ba6): smoke 17/17, e2e 40/40 against Dev, demo reset after; gate brief updated                                                                                                                                                                                                                                                                                                                                                                               | #46      |
+| 2026-10-07 | E4: Action Center — queue by ₪ × urgency with one button, selected item (who is involved, steps, "When you approve, VECTOR will…", with whom and why, editable action-suggest-v1 message), Approve and send through the lifecycle (held until approvals, in-app only, audited; migration 0012), Decline, event → action plan, ₪ header, Messages for you in Waiting on you; Action plan due/₪ formatting (Eran); EN/HE; e2e                                                           | #47      |
 
 ## Root-cause records
+
+### 2026-10-07 · Unit names in the Action plan "Owner" column stayed English in Hebrew
+
+- **What happened:** on Opportunities in Hebrew, the owner's department ("Store Operations") showed in English though
+  `he-content.ts` translates it.
+- **Root cause (proven by reading `localize`):** the localize walker skips fields named `unit` (`SKIP` in
+  `src/i18n/content.ts`, meant for KPI units such as "ILS"). The action workflow put the department name in
+  `owner.unit`, and initiatives put names in `waitingOn[].unit` / `waitedOnBy[].unit`.
+- **Ruled out:** a missing translation (the key exists), the client cache (server-rendered on each request).
+- **Fix:** those fields are now `unitName` (also the Action Center's event tasks).
+
+### 2026-10-07 · Action Center: switching items kept the previous item's recipient and message (found by e2e before merge)
+
+- **What happened:** after selecting another queue item, the To select still showed the first item's person.
+- **Root cause (proven by the e2e trace):** the fields are uncontrolled (`defaultValue`) and client navigation reused
+  the same form element, so React kept the old values.
+- **Fix:** the forms are keyed by the item id.
 
 ### 2026-10-07 · PR #45 was merged before its CI `verify` run finished (process lapse, no broken code)
 

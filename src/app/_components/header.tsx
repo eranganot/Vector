@@ -27,6 +27,7 @@ const ICONS = {
   audit: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",
   demo: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
   cross: "M5 5h5v5H5zM14 14h5v5h-5zM14 5h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v6.5H14",
+  center: "M13 2L4 14h7l-1 8 9-12h-7z",
 };
 
 function groupOf(title: string | null) {
@@ -76,12 +77,20 @@ export async function Shell({
   const cSuite = !!me.isCSuite;
   // Cross-department (E3): the C-suite and anyone who manages a department or the group, where initiatives live.
   const seeCross = cSuite || ["executive", "department_manager"].some((r) => roles.includes(r));
+  // Action Center (E4): whoever decides or approves: the C-suite and managers.
+  const seeCenter = cSuite || ["executive", "department_manager", "regional_manager"].some((r) => roles.includes(r));
+  const center = seeCenter && (
+    <NavLink href="/action-center">
+      <Icon d={ICONS.center} /> {t("Action Center")}
+    </NavLink>
+  );
   const nav = (
     <>
       <NavLink href="/">
         <Icon d={ICONS.today} /> {t("Home")}
       </NavLink>
       {cSuite && waiting}
+      {cSuite && center}
       <NavLink href="/risks">
         <Icon d={ICONS.risks} /> {t("Risks")}
       </NavLink>
@@ -103,6 +112,7 @@ export async function Shell({
         <Icon d={ICONS.org} /> {t("Organization")}
       </NavLink>
       {!cSuite && waiting}
+      {!cSuite && center}
       {seeAudit && (
         <NavLink href="/audit">
           <Icon d={ICONS.audit} /> {t("Audit")}
