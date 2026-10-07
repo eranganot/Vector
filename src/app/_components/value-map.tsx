@@ -111,76 +111,231 @@ function ValueMapSvg({ points, t, yLabel }: { points: ValuePoint[]; t: T; yLabel
   );
 }
 
-export function ValueMapCard({ points, t, ws }: { points: ValuePoint[]; t: T; ws: "risk" | "opportunity" }) {
+const STEP: Record<ValuePoint["workflow"]["step"], { word: string; tone: string }> = {
+  decide: { word: "waiting for a decision", tone: "#fbbf24" },
+  approve: { word: "waiting for approval", tone: "#fbbf24" },
+  ready: { word: "ready to run", tone: "#22d3ee" },
+  executing: { word: "executing", tone: "#22d3ee" },
+  done: { word: "done", tone: "#34d399" },
+  failed: { word: "failed", tone: "#f87171" },
+  cancelled: { word: "cancelled", tone: "#8fa1bc" },
+};
+
+export function blockerText(t: T, b: ValuePoint["blockers"][number]) {
+  return b.kind === "dependency"
+    ? t("{waiting} waits on {on}: {title} ({status})", {
+        waiting: b.waiting,
+        on: b.on,
+        title: b.title,
+        status: t(b.status === "blocked" ? "blocked" : "at risk"),
+      })
+    : t("Conflict: {a} ({unitA}) ↔ {b} ({unitB})", { a: b.a, unitA: b.unitA, b: b.b, unitB: b.unitB });
+}
+
+/** Who has to act now, grouped by person: the decisions and approvals each one holds, and what is blocked. */
+function WhoActs({ points, t }: { points: ValuePoint[]; t: T }) {
+  const open = points.filter((p) => p.workflow.step === "decide" || p.workflow.step === "approve");
+  const byPerson = new Map<string, { decide: number; approve: number; ils: number }>();
+  for (const p of open)
+    for (const n of p.workflow.waitingOn) {
+      const e = byPerson.get(n) ?? { decide: 0, approve: 0, ils: 0 };
+      e[p.workflow.step as "decide" | "approve"] += 1;
+      e.ils += Math.max(0, p.net);
+      byPerson.set(n, e);
+    }
+  const people = [...byPerson.entries()].sort((a, b) => b[1].ils - a[1].ils);
+  const blocked = points.filter((p) => p.blockers.length > 0);
+  const counts = [
+    { n: points.filter((p) => p.workflow.step === "decide").length, label: t("wait for a decision"), color: "#fbbf24" },
+    { n: points.filter((p) => p.workflow.step === "approve").length, label: t("wait for approval"), color: "#fbbf24" },
+    { n: blocked.length, label: t("blocked"), color: "#f87171" },
+    { n: points.filter((p) => p.workflow.viewer).length, label: t("wait on you"), color: "#22d3ee" },
+  ];
+  return (
+    <Card className="min-w-0" data-testid="who-acts">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">{t("Who needs to act")}</h2>
+        <span className="text-xs text-muted">{t("{n} action items", { n: points.length })}</span>
+      </div>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        {counts.map((c) => (
+          <div key={c.label} className="rounded-lg border border-line px-3 py-2">
+            <span className="num block text-xl font-semibold" style={{ color: c.color }}>
+              {c.n}
+            </span>
+            <span className="text-xs text-muted">{c.label}</span>
+          </div>
+        ))}
+      </div>
+      {people.length === 0 ? (
+        <p className="text-sm text-muted">{t("No decision or approval is pending.")}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {people.map(([name, e]) => (
+            <li key={name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 text-sm">
+              <span className="min-w-0 truncate">{name}</span>
+              <span className="flex gap-1.5 text-[11px]">
+                {e.decide > 0 && (
+                  <span className="rounded-md border border-warn/60 px-1.5 text-warn">
+                    {t("decide {n}", { n: e.decide })}
+                  </span>
+                )}
+                {e.approve > 0 && (
+                  <span className="rounded-md border border-warn/60 px-1.5 text-warn">
+                    {t("approve {n}", { n: e.approve })}
+                  </span>
+                )}
+                <span className="num text-muted">{ils(e.ils)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+/** The action plan: every action item with what, who, its next step and who that waits on, blockers, due and value. */
+function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date }) {
+  return (
+    <Card className="min-w-0 overflow-x-auto" data-testid="action-plan">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">{t("Action plan")}</h2>
+        <span className="text-xs text-muted">{t("by net value by quarter end · click an item for its analysis")}</span>
+      </div>
+      <table className="w-full text-sm">
+        <thead className="text-xs text-muted">
+          <tr>
+            <th className="py-1 text-start font-normal">{t("What")}</th>
+            <th className="py-1 text-start font-normal">{t("Owner")}</th>
+            <th className="py-1 text-start font-normal">{t("Next step · waiting on")}</th>
+            <th className="py-1 text-start font-normal">{t("Blockers")}</th>
+            <th className="py-1 text-start font-normal">{t("Due")}</th>
+            <th className="py-1 text-end font-normal">{t("Net")}</th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((p) => {
+            const st = STEP[p.workflow.step];
+            const overdue = p.dueAt && p.dueAt.getTime() < now.getTime() && p.workflow.step !== "done";
+            return (
+              <tr key={p.actionId} className="border-t border-line align-top" data-testid="value-row">
+                <td className="py-2 pe-3">
+                  <span className="flex items-start gap-2">
+                    <Band band={p.band} />
+                    <span className="min-w-0">
+                      <Link href={p.href} className="font-semibold text-ink no-underline hover:underline">
+                        {p.title}
+                      </Link>
+                      <span className="block text-xs text-muted">{p.insightTitle}</span>
+                    </span>
+                  </span>
+                </td>
+                <td className="py-2 pe-3 text-xs">
+                  <span className="block text-ink">{p.workflow.owner.name}</span>
+                  <span className="text-muted">{p.workflow.owner.unit}</span>
+                </td>
+                <td className="py-2 pe-3 text-xs">
+                  <span className="block font-semibold" style={{ color: st.tone }}>
+                    {t(st.word)}
+                  </span>
+                  {p.workflow.waitingOn.length > 0 && (
+                    <span className="text-muted">{p.workflow.waitingOn.join(", ")}</span>
+                  )}
+                </td>
+                <td className="py-2 pe-3 text-xs">
+                  {p.blockers.length === 0 ? (
+                    <span className="text-muted">—</span>
+                  ) : (
+                    <ul className="flex flex-col gap-1 text-p1">
+                      {p.blockers.map((b, k) => (
+                        <li key={k}>
+                          {b.kind === "conflict" && b.insightId ? (
+                            <Link href={`/insights/${b.insightId}`} className="text-p1">
+                              {blockerText(t, b)}
+                            </Link>
+                          ) : (
+                            blockerText(t, b)
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
+                <td className={`num py-2 pe-3 text-xs ${overdue ? "text-p1" : "text-muted"}`}>
+                  {p.dueAt ? p.dueAt.toISOString().slice(5, 10) : "—"}
+                  {overdue && <span className="block">{t("overdue")}</span>}
+                </td>
+                <td className="py-2 pe-3 text-end text-xs">
+                  <span className={`num block font-semibold ${p.net >= 0 ? "text-good" : "text-p1"}`}>
+                    {ils(p.net)}
+                  </span>
+                  <span className={`block ${LEVEL_TONE[p.risk.level]}`} title={riskHint(t, p)}>
+                    {t("risk {level}", { level: t(LEVEL_WORD[p.risk.level]) })}
+                  </span>
+                </td>
+                <td className="py-2 text-end">
+                  {p.workflow.viewer === "approve" ? (
+                    <Link
+                      href="/approvals"
+                      className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-ink no-underline"
+                    >
+                      {t("Approve")}
+                    </Link>
+                  ) : p.workflow.viewer === "decide" ? (
+                    <Link
+                      href={p.href}
+                      className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-ink no-underline"
+                    >
+                      {t("Decide")}
+                    </Link>
+                  ) : (
+                    <Link
+                      href={p.href}
+                      className="rounded-md border border-line px-3 py-1 text-xs text-ink no-underline hover:border-accent"
+                    >
+                      {t("Open")}
+                    </Link>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Card>
+  );
+}
+
+export function ValueMapCard({
+  points,
+  t,
+  ws,
+  now,
+}: {
+  points: ValuePoint[];
+  t: T;
+  ws: "risk" | "opportunity";
+  now: Date;
+}) {
   if (points.length === 0) return null;
   const yLabel = ws === "risk" ? t("₪ protected by quarter end") : t("₪ gained by quarter end");
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-      <Card className="min-w-0" data-testid="value-map">
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">
-            {ws === "risk" ? t("Response map") : t("Value map")}
-          </h2>
-          <span className="text-xs text-muted">{t("impact vs cost · size = execution risk")}</span>
-        </div>
-        <ValueMapSvg points={points} t={t} yLabel={yLabel} />
-      </Card>
-      <Card className="min-w-0" data-testid="value-list">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">
-            {t("Action items by net value")}
-          </h2>
-          <span className="text-xs text-muted">{t("by quarter end")}</span>
-        </div>
-        <ol className="flex flex-col gap-2.5">
-          {points.slice(0, 8).map((p) => {
-            const scale = Math.max(1, ...points.map((q) => Math.max(q.impact, q.cost)));
-            return (
-              <li key={p.actionId} className="min-w-0" data-testid="value-row">
-                <div className="flex items-center gap-2 text-sm">
-                  <Band band={p.band} />
-                  <Link
-                    href={p.href}
-                    className="min-w-0 flex-1 truncate text-ink no-underline hover:underline"
-                    title={p.title}
-                  >
-                    {p.title}
-                  </Link>
-                  <span className={`num shrink-0 text-xs font-semibold ${p.net >= 0 ? "text-good" : "text-p1"}`}>
-                    {ils(p.net)}
-                  </span>
-                </div>
-                <div className="mt-1 grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-2 gap-y-0.5 text-[11px] text-muted">
-                  <span>{t("impact")}</span>
-                  <span className="block h-1.5 rounded bg-soft" title={ils(p.impact)}>
-                    <span className="block h-1.5 rounded bg-good" style={{ width: `${(p.impact / scale) * 100}%` }} />
-                  </span>
-                  <span>{t("cost")}</span>
-                  <span className="block h-1.5 rounded bg-soft" title={ils(p.cost)}>
-                    <span
-                      className="block h-1.5 rounded bg-muted"
-                      style={{ width: `${Math.max(p.cost ? 1 : 0, (p.cost / scale) * 100)}%` }}
-                    />
-                  </span>
-                </div>
-                <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted">
-                  <span className={LEVEL_TONE[p.risk.level]} title={riskHint(t, p)}>
-                    {t("risk {level}", { level: t(LEVEL_WORD[p.risk.level]) })}
-                  </span>
-                  {p.daysToValue !== null && <span>{t("value in {n} days", { n: p.daysToValue })}</span>}
-                  {p.windowAt && (
-                    <span>
-                      {ws === "risk"
-                        ? t("bites {date}", { date: p.windowAt.toISOString().slice(5, 10) })
-                        : t("window closes {date}", { date: p.windowAt.toISOString().slice(5, 10) })}
-                    </span>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      </Card>
-    </div>
+    <>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+        <Card className="min-w-0" data-testid="value-map">
+          <div className="mb-2 flex items-baseline justify-between gap-3">
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-muted">
+              {ws === "risk" ? t("Response map") : t("Value map")}
+            </h2>
+            <span className="text-xs text-muted">{t("impact vs cost · size = execution risk")}</span>
+          </div>
+          <ValueMapSvg points={points} t={t} yLabel={yLabel} />
+        </Card>
+        <WhoActs points={points} t={t} />
+      </div>
+      <ActionPlan points={points} t={t} now={now} />
+    </>
   );
 }

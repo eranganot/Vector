@@ -79,6 +79,23 @@ describe("value map (E3a)", () => {
     expect(Math.max(...scores)).toBeGreaterThan(Math.min(...scores));
   });
 
+  it("E3c: says who owns each action item, the step it waits on, who that step waits on, and its blockers", async () => {
+    const opps = await open("dana", "opportunity");
+    const pts = await valueMap(
+      appDb,
+      orgId,
+      await as("dana"),
+      opps.map((i) => i.id),
+    );
+    for (const p of pts) {
+      expect(p.workflow.owner.name, p.title).not.toBe("—");
+      if (p.workflow.step === "decide" || p.workflow.step === "approve")
+        expect(p.workflow.waitingOn.length, p.title).toBeGreaterThan(0);
+    }
+    const offer = pts.find((p) => p.title.startsWith("Buy ₪100k"))!;
+    expect(offer.blockers.map((b) => b.kind)).toEqual(["conflict"]);
+  });
+
   it("ignores insights the viewer may not read", async () => {
     const all = await open("dana", "risk");
     const hila = new Set((await open("hila", "risk")).map((i) => i.id));

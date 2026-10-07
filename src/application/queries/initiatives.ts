@@ -7,7 +7,9 @@
  */
 import { and, arrayOverlaps, eq, inArray } from "drizzle-orm";
 import { commonAncestor, dependencyStatus } from "@/domain/commitments";
+import { daysBetween } from "@/domain/calendar";
 import {
+  expectedProgress,
   initiativeStatus,
   managementFlags,
   milestoneState,
@@ -21,6 +23,7 @@ import {
 import { hasPermission } from "@/domain/policy/permissions";
 import type { Actor } from "@/domain/types";
 import {
+  action,
   barrier,
   commitment,
   conflict,
@@ -28,12 +31,14 @@ import {
   dependency,
   initiative,
   initiativeReminder,
+  insight,
   milestone,
   orgUnit,
   roleAssignment,
   user,
 } from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
+import { actionWorkflows } from "./action-status";
 import { listMyApprovals, listMyDecisions, readScope } from "./insights";
 
 export async function listInitiatives(db: DbOrTx, orgId: string, actor: Actor) {
@@ -76,6 +81,57 @@ export type YourItem = {
   rule?: Flag["rule"];
   facts?: Flag["facts"];
   unitName?: string;
+  /** The work item it belongs to (E3c): ms:/br:/ac:/cf:/budget, or ins:<insight> for a decision on it. */
+  itemId?: string;
+};
+
+export type WorkState = "late" | "blocked" | "at_risk" | "waiting" | "in_progress" | "done";
+export type WorkAnalysis =
+  | {
+      kind: "milestone";
+      progress: number;
+      expected: number;
+      startsOn: string;
+      dueOn: string;
+      doneOn: string | null;
+      daysLate: number;
+      moves: { from: string; to: string; reason: string }[];
+      reminders: { from: string; body: string; at: Date }[];
+    }
+  | { kind: "barrier"; barrierKind: string; since: string; days: number; costIls: number }
+  | { kind: "conflict"; a: string; b: string; unitA: string; unitB: string; from: string; to: string }
+  | { kind: "budget"; budget: number; spent: number; projected: number; progress: number }
+  | {
+      kind: "action";
+      step: string;
+      owner: string;
+      ownerUnit: string;
+      waitingOn: string[];
+      insightTitle: string;
+      what: string;
+      why: string;
+      recommendation: string | null;
+      cost: number;
+      impact: number;
+    };
+
+/** One thing that has to happen in an initiative (E3c): what, who does it, by when, its state and what blocks it. */
+export type WorkItem = {
+  id: string;
+  kind: "milestone" | "barrier" | "action" | "conflict" | "budget";
+  title: string;
+  unitName: string | null;
+  /** The people who have to act on it now. */
+  who: string[];
+  due: string | null;
+  state: WorkState;
+  rules: string[];
+  blockers: string[];
+  analysis: WorkAnalysis;
+  href?: string;
+  insightId?: string;
+  /** The buttons the viewer has on it. */
+  yours?: YourItem[];
 };
 
 export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, opts: { key?: string } = {}) {
@@ -167,6 +223,10 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
             ? { ...f.subject, title: parties.map((c) => unitName(c!.ownerUnitId)).join(" ↔ ") }
             : f.subject,
         insightId: k?.insightId ?? null,
+        itemId:
+          f.subject.kind === "budget"
+            ? "budget"
+            : `${f.subject.kind === "barrier" ? "br" : f.subject.kind === "milestone" ? "ms" : "cf"}:${f.subject.id}`,
         stepInNames: who.map(personName),
         stepInIds: who,
         you: who.includes(me),
@@ -273,6 +333,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         title: a.action.title,
         detail: a.insightTitle,
         href: "/approvals",
+        itemId: `ac:${a.action.id}`,
       });
     for (const d of decisions.filter((x) => linkedInsights.has(x.insightId)))
       yours.push({
@@ -281,12 +342,14 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         title: d.title,
         detail: d.statement,
         href: `/insights/${d.insightId}`,
+        itemId: `ins:${d.insightId}`,
       });
     for (const f of selected.flags.filter((x) => x.you)) {
       if (f.rule === "M3")
         yours.push({
           key: `m3:${f.subject.id}`,
           kind: "settle",
+          itemId: `cf:${f.subject.id}`,
           title: f.subject.title,
           detail: f.reason,
           rule: f.rule,
@@ -297,6 +360,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         yours.push({
           key: `m4:${f.subject.id}`,
           kind: "resolve",
+          itemId: `br:${f.subject.id}`,
           title: f.subject.title,
           detail: f.reason,
           barrierId: f.subject.id ?? undefined,
@@ -308,6 +372,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         yours.push({
           key: "m5",
           kind: "reforecast",
+          itemId: "budget",
           title: selected.ownerName,
           detail: f.reason,
           toUnitId: selected.ownerUnitId,
@@ -320,6 +385,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         yours.push({
           key: `${f.rule}:${f.subject.id}`,
           kind: "remind",
+          itemId: `${f.subject.kind === "barrier" ? "br" : "ms"}:${f.subject.id}`,
           title: f.subject.title,
           detail: f.reason,
           toUnitId: f.unitId,
@@ -332,7 +398,13 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
     }
     // Reminders sent to a unit the viewer manages.
     for (const r of selected.reminders.filter((x) => myManaged.has(x.toUnitId)).slice(0, 3))
-      yours.push({ key: `rm:${r.id}`, kind: "reminder", title: r.from, detail: r.body });
+      yours.push({
+        key: `rm:${r.id}`,
+        kind: "reminder",
+        title: r.from,
+        detail: r.body,
+        itemId: r.subjectKind === "budget" ? "budget" : `${r.subjectKind === "barrier" ? "br" : "ms"}:${r.subjectId}`,
+      });
     // The viewer's own open milestones (a unit they manage owns them).
     for (const m of selected.milestones.filter((x) => !x.doneOn && myManaged.has(x.ownerUnitId)))
       yours.push({
@@ -341,15 +413,190 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
         title: m.title,
         detail: m.dueOn,
         milestoneId: m.id,
+        itemId: `ms:${m.id}`,
       });
   }
   const dedup = [...new Map(yours.map((y) => [y.key, y])).values()];
+
+  // ── Work items of the selected initiative (E3c): what has to happen, who does it, by when, and what blocks it ──
+  const work: WorkItem[] = [];
+  if (selected) {
+    const headsOf = (unitId: string) => {
+      const heads = roles.filter((r) => r.orgUnitId === unitId && r.isHead).map((r) => r.userId);
+      return (heads.length ? heads : managersOf(unitId)).map(personName);
+    };
+    const flagsOn = (itemId: string) => selected.flags.filter((f) => f.itemId === itemId);
+    for (const m of selected.milestones) {
+      const id = `ms:${m.id}`;
+      const blockers = selected.barriers.filter((b) => b.ownerUnitId === m.ownerUnitId).map((b) => b.title);
+      const late = m.state === "late" ? daysBetween(m.dueOn, today) : 0;
+      const raw = list.find((x) => x.id === selected.id)!.milestones.find((x) => x.id === m.id)!;
+      work.push({
+        id,
+        kind: "milestone",
+        title: m.title,
+        unitName: m.ownerName,
+        who: headsOf(m.ownerUnitId),
+        due: m.dueOn,
+        state:
+          m.state === "done" ? "done" : blockers.length ? "blocked" : m.state === "planned" ? "in_progress" : m.state,
+        rules: flagsOn(id).map((f) => f.rule),
+        blockers,
+        analysis: {
+          kind: "milestone",
+          progress: m.progress,
+          expected: Math.round(expectedProgress(raw, today)),
+          startsOn: m.startsOn,
+          dueOn: m.dueOn,
+          doneOn: m.doneOn,
+          daysLate: late,
+          moves: ((raw.history as { from: string; to: string; reason: string }[]) ?? []).map((h) => ({
+            from: h.from,
+            to: h.to,
+            reason: h.reason,
+          })),
+          reminders: selected.reminders
+            .filter((r) => r.subjectId === m.id)
+            .map((r) => ({ from: r.from, body: r.body, at: r.at })),
+        },
+      });
+    }
+    for (const b of selected.barriers) {
+      const id = `br:${b.id}`;
+      const fl = flagsOn(id);
+      const stepIn = fl.find((f) => f.rule === "M4");
+      work.push({
+        id,
+        kind: "barrier",
+        title: b.title,
+        unitName: b.ownerName,
+        who: stepIn ? stepIn.stepInNames : headsOf(b.ownerUnitId),
+        due: null,
+        state: "blocked",
+        rules: fl.map((f) => f.rule),
+        blockers: [],
+        analysis: {
+          kind: "barrier",
+          barrierKind: b.kind,
+          since: b.since,
+          days: daysBetween(b.since, today),
+          costIls: b.costIls,
+        },
+      });
+    }
+    for (const f of selected.flags.filter((x) => x.rule === "M3")) {
+      const k = ks.find((x) => x.id === f.subject.id);
+      const a = k && cs.find((c) => c.id === k.commitmentAId);
+      const b = k && cs.find((c) => c.id === k.commitmentBId);
+      work.push({
+        id: f.itemId,
+        kind: "conflict",
+        title: f.subject.title,
+        unitName: null,
+        who: f.stepInNames,
+        due: k?.overlapStart ?? null,
+        state: "waiting",
+        rules: ["M3"],
+        blockers: [],
+        href: f.insightId ? `/insights/${f.insightId}` : undefined,
+        analysis: {
+          kind: "conflict",
+          a: a?.title ?? "—",
+          b: b?.title ?? "—",
+          unitA: a ? unitName(a.ownerUnitId) : "—",
+          unitB: b ? unitName(b.ownerUnitId) : "—",
+          from: k?.overlapStart ?? "",
+          to: k?.overlapEnd ?? "",
+        },
+      });
+    }
+    const m5 = selected.flags.find((f) => f.rule === "M5");
+    if (m5)
+      work.push({
+        id: "budget",
+        kind: "budget",
+        title: selected.title,
+        unitName: selected.ownerName,
+        who: m5.stepInNames,
+        due: selected.endsOn,
+        state: "at_risk",
+        rules: ["M5"],
+        blockers: [],
+        analysis: {
+          kind: "budget",
+          budget: selected.budget,
+          spent: selected.spent,
+          projected: selected.projectedSpend,
+          progress: selected.progress,
+        },
+      });
+    // The actions answering the initiative's linked insights (Phase 2–4 lifecycle).
+    if (selected.insightIds.length) {
+      const [acts, ins] = await Promise.all([
+        db
+          .select()
+          .from(action)
+          .where(and(eq(action.orgId, orgId), inArray(action.insightId, selected.insightIds))),
+        db
+          .select({ id: insight.id, title: insight.title, what: insight.whatHappened, why: insight.whyItMatters })
+          .from(insight)
+          .where(inArray(insight.id, selected.insightIds)),
+      ]);
+      const live = acts.filter((a) => a.status !== "cancelled" && a.status !== "rejected");
+      const flows = await actionWorkflows(db, orgId, actor, live);
+      for (const a of live) {
+        const w = flows.get(a.id)!;
+        const i = ins.find((x) => x.id === a.insightId)!;
+        const overdue = !!a.dueAt && a.dueAt.getTime() < now.getTime() && w.step !== "done";
+        work.push({
+          id: `ac:${a.id}`,
+          kind: "action",
+          title: a.title,
+          unitName: w.owner.unit,
+          who: w.step === "decide" || w.step === "approve" ? w.waitingOn : [w.owner.name],
+          due: a.dueAt ? a.dueAt.toISOString().slice(0, 10) : null,
+          state:
+            w.step === "done"
+              ? "done"
+              : w.step === "failed"
+                ? "late"
+                : w.step === "decide" || w.step === "approve"
+                  ? "waiting"
+                  : overdue
+                    ? "late"
+                    : "in_progress",
+          rules: [],
+          blockers: [],
+          href: `/insights/${a.insightId}#action-${a.id}`,
+          insightId: a.insightId,
+          analysis: {
+            kind: "action",
+            step: w.step,
+            owner: w.owner.name,
+            ownerUnit: w.owner.unit,
+            waitingOn: w.waitingOn,
+            insightTitle: i.title,
+            what: i.what,
+            why: i.why,
+            recommendation: w.recommendation,
+            cost: Number(a.estimatedCost),
+            impact: Number(a.expectedImpactIls ?? 0),
+          },
+        });
+      }
+    }
+    for (const w of work)
+      w.yours = dedup.filter((y) => y.itemId === w.id || (w.insightId && y.itemId === `ins:${w.insightId}`));
+  }
+  const ORDER = { late: 0, blocked: 1, at_risk: 2, waiting: 3, in_progress: 4, done: 5 } as const;
+  work.sort((a, b) => ORDER[a.state] - ORDER[b.state] || (a.due ?? "9999").localeCompare(b.due ?? "9999"));
 
   const all = items.flatMap((i) => i.milestones);
   return {
     today,
     items,
     selected,
+    work,
     yours: dedup,
     groupOnTime: onTimeRate(all.map((m) => ({ dueOn: m.dueOn, doneOn: m.doneOn }))),
     money: {

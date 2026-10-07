@@ -1,6 +1,7 @@
 /** A workstream tab (Risks or Opportunities): every item in scope, ranked, filterable by band (Eran, 2026-10-04). */
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { demoNow } from "@/application/facade";
 import { api } from "@/app/_lib/api";
 import type { Actor } from "@/domain/types";
 import { laneHref } from "./dashboard";
@@ -9,6 +10,17 @@ import { ils, MoneyHeader } from "./money-header";
 import { ValueMapCard } from "./value-map";
 import { Band, Pill, SectionTitle } from "./ui";
 import { getT } from "../_lib/locale";
+
+/** What each band means (priority-v2 bands; opportunity bands of ADR-006). */
+const BAND_WORD: Record<string, string> = {
+  P1: "critical",
+  P2: "high",
+  P3: "medium",
+  P4: "low",
+  O1: "pursue now",
+  O2: "plan",
+  O3: "watch",
+};
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -131,6 +143,9 @@ export async function WorkstreamPage({
       </div>
       {figures && <MoneyHeader label={t("Money")} figures={figures} />}
       <nav aria-label={t("Filter by band")} className="flex flex-wrap items-center gap-2">
+        <span className="me-1 text-xs text-muted">
+          {ws === "risk" ? t("Show by priority:") : t("Show by value band:")}
+        </span>
         <Link
           href={laneHref(ws, unit)}
           className={`rounded-lg border px-3 py-1 text-sm no-underline ${!band ? "border-accent text-accent" : "border-line text-muted hover:text-ink"}`}
@@ -145,12 +160,12 @@ export async function WorkstreamPage({
               href={laneHref(ws, unit, b)}
               className={`flex items-center gap-2 rounded-lg border px-3 py-1 text-sm no-underline ${band === b ? "border-accent text-ink" : "border-line text-muted hover:text-ink"}`}
             >
-              <Band band={b} /> {n}
+              <Band band={b} /> <span>{t(BAND_WORD[b])}</span> <span className="num text-muted">{n}</span>
             </Link>
           );
         })}
       </nav>
-      <ValueMapCard points={points} t={t} ws={ws} />
+      <ValueMapCard points={points} t={t} ws={ws} now={await demoNow()} />
       {shown.length === 0 ? (
         <p className="text-sm text-muted">{band ? t("Nothing in {band} here.", { band }) : t("Nothing here.")}</p>
       ) : (

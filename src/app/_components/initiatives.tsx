@@ -4,7 +4,7 @@
  * button. Then the deviations (M1–M5), on-time delivery, barriers, and every initiative in a table. No data access.
  */
 import Link from "next/link";
-import type { InitiativesView, YourItem } from "@/application/facade";
+import type { InitiativesView, WorkItem, YourItem } from "@/application/facade";
 import type { T } from "@/i18n/t";
 import {
   completeMilestoneAction,
@@ -277,7 +277,7 @@ function Gantt({ i, today, t }: { i: Item; today: string; t: T }) {
         const end = m.doneOn && m.doneOn > m.dueOn ? m.doneOn : m.dueOn;
         const w = Math.max(3, x(end) - x(m.startsOn));
         return (
-          <g key={m.id}>
+          <a key={m.id} href={`/initiatives?i=${i.key}&item=ms:${m.id}#item`}>
             <title>
               {`${m.ownerName} · ${m.title}: ${m.startsOn.slice(5)} → ${m.dueOn.slice(5)} · ${m.progress}% · ${t(STATE_WORD[m.state])}${m.moves ? ` · ${t("moved {n}×", { n: m.moves })}` : ""}`}
             </title>
@@ -301,7 +301,7 @@ function Gantt({ i, today, t }: { i: Item; today: string; t: T }) {
               d={`M${x(m.dueOn)},${y + 2} l6,7 l-6,7 l-6,-7z`}
               fill={m.state === "late" ? HEX.bad : m.doneOn ? HEX.good : "#e6edf7"}
             />
-          </g>
+          </a>
         );
       })}
       <line
@@ -460,7 +460,10 @@ function YourItemRow({ y, i, v, t }: { y: YourItem; i: Item; v: V; t: T }) {
   }
 }
 
-function YourItems({ v, i, t, name }: { v: V; i: Item; t: T; name: string }) {
+const itemHref = (key: string, itemId: string | undefined, f?: string) =>
+  `/initiatives?i=${key}${f ? `&f=${f}` : ""}${itemId ? `&item=${encodeURIComponent(itemId)}#item` : ""}`;
+
+function YourItems({ v, i, t, name, f }: { v: V; i: Item; t: T; name: string; f?: string }) {
   return (
     <Card className="min-w-0 border-accent/40 bg-accent/5" data-testid="your-items">
       <Title aside={name}>{t("Your action items")}</Title>
@@ -471,6 +474,18 @@ function YourItems({ v, i, t, name }: { v: V; i: Item; t: T; name: string }) {
           {v.yours.map((y) => (
             <li key={y.key} className="border-b border-line pb-3 last:border-0 last:pb-0" data-testid="your-item">
               <YourItemRow y={y} i={i} v={v} t={t} />
+              {y.itemId && v.work.some((w) => w.id === y.itemId || `ins:${w.insightId}` === y.itemId) && (
+                <Link
+                  href={itemHref(
+                    i.key,
+                    v.work.find((w) => w.id === y.itemId || `ins:${w.insightId}` === y.itemId)!.id,
+                    f,
+                  )}
+                  className="mt-1 inline-block text-[11px] text-accent"
+                >
+                  {t("See the analysis →")}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
@@ -479,9 +494,329 @@ function YourItems({ v, i, t, name }: { v: V; i: Item; t: T; name: string }) {
   );
 }
 
+// ── What needs to happen (work items) and the item card (E3c) ───────────────────
+
+const WORK_HEX: Record<WorkItem["state"], string> = {
+  late: HEX.bad,
+  blocked: HEX.bad,
+  at_risk: HEX.watch,
+  waiting: HEX.watch,
+  in_progress: HEX.accent,
+  done: HEX.good,
+};
+const WORK_WORD: Record<WorkItem["state"], string> = {
+  late: "late",
+  blocked: "blocked",
+  at_risk: "at risk",
+  waiting: "waiting for a decision",
+  in_progress: "in progress",
+  done: "done",
+};
+const KIND_WORD: Record<WorkItem["kind"], string> = {
+  milestone: "milestone",
+  barrier: "barrier",
+  action: "action",
+  conflict: "conflict",
+  budget: "budget",
+};
+
+/** Filters on the status tiles (Eran 2026-10-07: "the status of the items should be clickable"). */
+export const WORK_FILTERS: Record<string, (w: WorkItem) => boolean> = {
+  attention: (w) => w.state === "late" || w.state === "blocked" || w.state === "at_risk",
+  waiting: (w) => w.state === "waiting",
+  progress: (w) => w.state === "in_progress",
+  done: (w) => w.state === "done",
+  you: (w) => (w.yours?.length ?? 0) > 0,
+};
+
+function nextStep(t: T, w: WorkItem): string {
+  const a = w.analysis;
+  switch (a.kind) {
+    case "milestone":
+      return w.state === "done"
+        ? t("Delivered")
+        : w.state === "late"
+          ? t("Agree a new date or add capacity")
+          : w.state === "blocked"
+            ? t("Clear the barrier first")
+            : w.state === "at_risk"
+              ? t("Send a recovery plan")
+              : t("On plan");
+    case "barrier":
+      return a.barrierKind === "decision" ? t("Take the decision") : t("Remove the barrier");
+    case "conflict":
+      return t("Decide which plan goes ahead");
+    case "budget":
+      return t("Re-forecast and bring spend back within budget");
+    case "action":
+      return a.step === "decide"
+        ? t("Decide on the recommendation")
+        : a.step === "approve"
+          ? t("Approve or decline")
+          : a.step === "ready"
+            ? t("Run it")
+            : a.step === "executing"
+              ? t("Watch the outcome")
+              : a.step === "failed"
+                ? t("Retry or cancel")
+                : t("Done");
+  }
+}
+
+function recommendation(t: T, w: WorkItem): string {
+  const a = w.analysis;
+  const unit = w.unitName ?? "";
+  switch (a.kind) {
+    case "milestone":
+      if (w.state === "done") return t("Delivered {date}.", { date: (a.doneOn ?? "").slice(5) });
+      if (w.state === "blocked")
+        return t("Blocked by: {list}. Clear the barrier first.", { list: w.blockers.join(" · ") });
+      if (w.state === "late")
+        return t(
+          "{unit} is {n} days late. Agree a new date with {unit} today, or add capacity; the sponsor can send a reminder from here.",
+          { unit, n: a.daysLate },
+        );
+      if (w.state === "at_risk")
+        return t("{unit} is behind plan ({p}% done, {e}% expected by today). Ask for a recovery plan before {date}.", {
+          unit,
+          p: a.progress,
+          e: a.expected,
+          date: a.dueOn.slice(5),
+        });
+      return t("On plan: {p}% done, {e}% expected by today.", { p: a.progress, e: a.expected });
+    case "barrier":
+      return a.barrierKind === "decision"
+        ? t("Take the decision. While it stays open the initiative is held up ({n} days so far).", { n: a.days })
+        : a.barrierKind === "resource"
+          ? t("Find the resource, or re-plan the milestones that depend on it.")
+          : a.barrierKind === "budget"
+            ? t("Approve the extra cost or cut scope to fit the budget.")
+            : a.barrierKind === "dependency"
+              ? t("Escalate to the unit it depends on and agree a date.")
+              : t("Track it and agree a fallback.");
+    case "conflict":
+      return t(
+        "Two plans collide from {from} to {to}. Decide which plan goes ahead; the trace shows both plans and VECTOR's recommendation.",
+        { from: a.from.slice(5), to: a.to.slice(5) },
+      );
+    case "budget":
+      return t(
+        "Spent {s} of {b}; at this pace it ends at {p}. Ask for a re-forecast and hold new spend until it is agreed.",
+        {
+          s: ils(a.spent),
+          b: ils(a.budget),
+          p: ils(a.projected),
+        },
+      );
+    case "action":
+      return a.recommendation ?? t("No recommendation recorded.");
+  }
+}
+
+function WorkList({ v, i, t, f, item }: { v: V; i: Item; t: T; f?: string; item?: string }) {
+  const rows = f && WORK_FILTERS[f] ? v.work.filter(WORK_FILTERS[f]) : v.work;
+  return (
+    <Card className="min-w-0 overflow-x-auto" data-testid="work-list">
+      <Title
+        aside={
+          f ? (
+            <Link href={`/initiatives?i=${i.key}`} className="text-accent">
+              {t("Show all ({n})", { n: v.work.length })}
+            </Link>
+          ) : (
+            t("click an item for its analysis and recommendation")
+          )
+        }
+      >
+        {t("What needs to happen")}
+      </Title>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted">{t("Nothing here.")}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead className="text-xs text-muted">
+            <tr>
+              <th className="py-1 text-start font-normal">{t("What")}</th>
+              <th className="py-1 text-start font-normal">{t("Who acts")}</th>
+              <th className="py-1 text-start font-normal">{t("Due")}</th>
+              <th className="py-1 text-start font-normal">{t("Next step")}</th>
+              <th className="py-1 text-start font-normal">{t("Blocked by")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((w) => (
+              <tr
+                key={w.id}
+                className={`border-t border-line align-top ${item === w.id ? "bg-accent/5" : ""}`}
+                data-testid="work-row"
+              >
+                <td className="py-2 pe-3">
+                  <span className="flex items-start gap-2">
+                    <span
+                      aria-hidden
+                      className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ background: WORK_HEX[w.state] }}
+                    />
+                    <span className="min-w-0">
+                      <Link
+                        href={itemHref(i.key, w.id, f)}
+                        className="font-semibold text-ink no-underline hover:underline"
+                      >
+                        {w.title}
+                      </Link>
+                      <span className="block text-xs text-muted">
+                        {t(KIND_WORD[w.kind])} ·{" "}
+                        <span style={{ color: WORK_HEX[w.state] }}>{t(WORK_WORD[w.state])}</span>
+                        {w.rules.length > 0 && ` · ${w.rules.join(" ")}`}
+                      </span>
+                    </span>
+                  </span>
+                </td>
+                <td className="py-2 pe-3 text-xs">
+                  <span className="block text-ink">{w.who.join(", ") || "—"}</span>
+                  {w.unitName && <span className="text-muted">{w.unitName}</span>}
+                  {(w.yours?.length ?? 0) > 0 && <span className="block font-semibold text-accent">{t("you")}</span>}
+                </td>
+                <td className={`num py-2 pe-3 text-xs ${w.state === "late" ? "text-p1" : "text-muted"}`}>
+                  {w.due ? w.due.slice(5) : "—"}
+                </td>
+                <td className="py-2 pe-3 text-xs">{nextStep(t, w)}</td>
+                <td className="py-2 text-xs text-p1">
+                  {w.blockers.length ? w.blockers.join(" · ") : <span className="text-muted">—</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Card>
+  );
+}
+
+function ItemCard({ v, i, t, w, f }: { v: V; i: Item; t: T; w: WorkItem; f?: string }) {
+  const a = w.analysis;
+  const fact = (label: string, value: React.ReactNode) => (
+    <div className="flex justify-between gap-3 text-xs">
+      <span className="text-muted">{label}</span>
+      <span className="num text-end text-ink">{value}</span>
+    </div>
+  );
+  return (
+    <Card className="min-w-0 scroll-mt-20 border-accent/60" data-testid="item-card" id="item">
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <span className="text-[11px] uppercase tracking-[0.08em] text-muted">
+            {t(KIND_WORD[w.kind])} · <span style={{ color: WORK_HEX[w.state] }}>{t(WORK_WORD[w.state])}</span>
+            {w.rules.length > 0 && ` · ${w.rules.join(" ")}`}
+          </span>
+          <h2 className="text-base font-semibold leading-snug">{w.title}</h2>
+        </div>
+        <Link
+          href={`/initiatives?i=${i.key}${f ? `&f=${f}` : ""}`}
+          className="text-xs text-muted no-underline"
+          aria-label={t("Close")}
+        >
+          ✕
+        </Link>
+      </div>
+      <div className="mb-3 flex flex-col gap-1">
+        {fact(t("Who acts"), w.who.join(", ") || "—")}
+        {w.unitName && fact(t("Unit"), w.unitName)}
+        {w.due && fact(t("Due"), w.due.slice(5))}
+        {fact(t("Next step"), nextStep(t, w))}
+      </div>
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{t("Analysis")}</h3>
+      <div className="mb-3 mt-1 flex flex-col gap-1">
+        {a.kind === "milestone" && (
+          <>
+            {fact(t("Progress"), `${a.progress}% · ${t("expected {e}%", { e: a.expected })}`)}
+            {fact(t("Window"), `${a.startsOn.slice(5)} → ${a.dueOn.slice(5)}`)}
+            {a.daysLate > 0 && fact(t("Late by"), t("{n} days", { n: a.daysLate }))}
+            {a.moves.map((m, k) => (
+              <p key={k} className="text-xs text-muted">
+                {t("Moved {from} → {to}: {reason}", { from: m.from.slice(5), to: m.to.slice(5), reason: m.reason })}
+              </p>
+            ))}
+            {a.reminders.map((r, k) => (
+              <p key={k} className="text-xs text-muted">
+                {t("Reminder from {name}", { name: r.from })}: {r.body}
+              </p>
+            ))}
+          </>
+        )}
+        {a.kind === "barrier" && (
+          <>
+            {fact(t("Kind"), t(a.barrierKind))}
+            {fact(t("Open for"), t("{n} days", { n: a.days }))}
+            {a.costIls > 0 && fact(t("Cost"), ils(a.costIls))}
+          </>
+        )}
+        {a.kind === "conflict" && (
+          <>
+            <p className="text-xs">
+              {a.a} <span className="text-muted">({a.unitA})</span>
+            </p>
+            <p className="text-xs text-muted">↔</p>
+            <p className="text-xs">
+              {a.b} <span className="text-muted">({a.unitB})</span>
+            </p>
+            {fact(t("Overlap"), `${a.from.slice(5)} → ${a.to.slice(5)}`)}
+          </>
+        )}
+        {a.kind === "budget" && (
+          <>
+            {fact(t("Budget"), ils(a.budget))}
+            {fact(t("Spent"), ils(a.spent))}
+            {fact(t("Projected at the end"), ils(a.projected))}
+            {fact(t("Work done"), `${a.progress}%`)}
+          </>
+        )}
+        {a.kind === "action" && (
+          <>
+            <p className="text-xs text-muted">{a.insightTitle}</p>
+            <p className="text-xs">{a.what}</p>
+            <p className="text-xs text-muted">{a.why}</p>
+            {fact(t("Owner"), `${a.owner} · ${a.ownerUnit}`)}
+            {a.waitingOn.length > 0 && fact(t("Waiting on"), a.waitingOn.join(", "))}
+            {fact(t("Expected impact by quarter end"), ils(a.impact))}
+            {fact(t("Cost"), ils(a.cost))}
+          </>
+        )}
+      </div>
+      <div className="mb-3 rounded-lg border border-accent/40 bg-accent/5 p-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-accent">{t("Recommendation")}</h3>
+        <p className="mt-1 text-sm" data-testid="item-recommendation">
+          {recommendation(t, w)}
+        </p>
+      </div>
+      {w.blockers.length > 0 && (
+        <p className="mb-3 text-xs text-p1">{t("Blocked by: {list}", { list: w.blockers.join(" · ") })}</p>
+      )}
+      {(w.yours ?? []).length > 0 ? (
+        <ul className="flex flex-col gap-3">
+          {w.yours!.map((y) => (
+            <li key={y.key}>
+              <YourItemRow y={y} i={i} v={v} t={t} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-xs text-muted">
+          {t("Nothing here waits on you; {who} acts.", { who: w.who.join(", ") || "—" })}
+        </p>
+      )}
+      {w.href && (
+        <Link href={w.href} className="mt-3 inline-block text-xs text-accent">
+          {t("Open the full trace →")}
+        </Link>
+      )}
+    </Card>
+  );
+}
+
 // ── Deviations, on time, barriers ─────────────────────────────────────────────
 
-function Deviations({ i, t }: { i: Item; t: T }) {
+function Deviations({ i, t, f }: { i: Item; t: T; f?: string }) {
   return (
     <Card className="min-w-0" data-testid="deviations">
       <Title aside={t("management needed")}>{t("Open deviations")}</Title>
@@ -489,20 +824,26 @@ function Deviations({ i, t }: { i: Item; t: T }) {
         <p className="text-sm text-muted">{t("None: no rule M1–M5 applies.")}</p>
       ) : (
         <ul className="flex flex-col gap-2">
-          {i.flags.map((f, k) => (
-            <li key={`${f.rule}${k}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 text-sm">
+          {i.flags.map((fl, k) => (
+            <li key={`${fl.rule}${k}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 text-sm">
               <span
                 aria-hidden
                 className="mt-1.5 h-2.5 w-2.5 rounded-full"
-                style={{ background: f.rule === "M2" || f.rule === "M3" ? HEX.watch : HEX.bad }}
+                style={{ background: fl.rule === "M2" || fl.rule === "M3" ? HEX.watch : HEX.bad }}
               />
               <span className="min-w-0">
-                <span className="block">{flagText(t, f.rule, f.facts, f.subject.title)}</span>
+                <Link
+                  href={itemHref(i.key, fl.itemId, f)}
+                  className="block text-ink no-underline hover:underline"
+                  data-testid="deviation-link"
+                >
+                  {flagText(t, fl.rule, fl.facts, fl.subject.title)}
+                </Link>
                 <span className="block text-xs text-muted">
-                  {t("step in: {who}", { who: `${t(STEP_IN_WORD[f.stepIn])} (${f.stepInNames.join(", ")})` })}
+                  {t("step in: {who}", { who: `${t(STEP_IN_WORD[fl.stepIn])} (${fl.stepInNames.join(", ")})` })}
                 </span>
               </span>
-              <Chip color={f.rule === "M2" || f.rule === "M3" ? HEX.watch : HEX.bad}>{f.rule}</Chip>
+              <Chip color={fl.rule === "M2" || fl.rule === "M3" ? HEX.watch : HEX.bad}>{fl.rule}</Chip>
             </li>
           ))}
         </ul>
@@ -687,19 +1028,32 @@ function Table({ v, t }: { v: V; t: T }) {
 
 // ── The page ───────────────────────────────────────────────────────────────────
 
-export function InitiativesPage({ v, t, name, canRaise }: { v: V; t: T; name: string; canRaise: boolean }) {
+export function InitiativesPage({
+  v,
+  t,
+  name,
+  canRaise,
+  f,
+  item,
+}: {
+  v: V;
+  t: T;
+  name: string;
+  canRaise: boolean;
+  f?: string;
+  item?: string;
+}) {
   const i = v.selected;
   if (!i) return null;
+  const count = (k: string) => v.work.filter(WORK_FILTERS[k]).length;
   const facts = [
-    {
-      n: i.milestones.filter((m) => m.state === "late" || m.state === "at_risk").length,
-      label: t("late or at risk"),
-      color: HEX.bad,
-    },
-    { n: i.milestones.filter((m) => m.state === "planned").length, label: t("in progress"), color: HEX.accent },
-    { n: i.milestones.filter((m) => m.state === "done").length, label: t("done"), color: HEX.good },
-    { n: i.barriers.length, label: t("open barriers"), color: HEX.watch },
+    { k: "attention", n: count("attention"), label: t("late, blocked or at risk"), color: HEX.bad },
+    { k: "waiting", n: count("waiting"), label: t("waiting for a decision"), color: HEX.watch },
+    { k: "progress", n: count("progress"), label: t("in progress"), color: HEX.accent },
+    { k: "done", n: count("done"), label: t("done"), color: HEX.good },
+    { k: "you", n: count("you"), label: t("wait on you"), color: "#e6edf7" },
   ];
+  const selectedItem = item ? v.work.find((w) => w.id === item) : undefined;
   return (
     <div className="flex flex-col gap-4">
       <Portfolio v={v} t={t} />
@@ -716,25 +1070,33 @@ export function InitiativesPage({ v, t, name, canRaise }: { v: V; t: T; name: st
               {i.endsOn && <span>· {t("ends {date}", { date: i.endsOn.slice(5) })}</span>}
             </div>
             <ProgressMap i={i} t={t} />
-            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {facts.map((f) => (
-                <div key={f.label} className="rounded-lg border border-line px-3 py-2">
-                  <span className="num block text-xl font-semibold" style={{ color: f.color }}>
-                    {f.n}
+            <nav aria-label={t("Filter the items")} className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {facts.map((x) => (
+                <Link
+                  key={x.k}
+                  href={f === x.k ? `/initiatives?i=${i.key}` : `/initiatives?i=${i.key}&f=${x.k}`}
+                  aria-current={f === x.k ? "true" : undefined}
+                  data-testid={`filter-${x.k}`}
+                  className={`rounded-lg border px-3 py-2 no-underline ${f === x.k ? "border-accent bg-accent/10" : "border-line hover:border-accent/60"}`}
+                >
+                  <span className="num block text-xl font-semibold" style={{ color: x.color }}>
+                    {x.n}
                   </span>
-                  <span className="text-xs text-muted">{f.label}</span>
-                </div>
+                  <span className="text-xs text-muted">{x.label}</span>
+                </Link>
               ))}
-            </div>
+            </nav>
           </Card>
+          <WorkList v={v} i={i} t={t} f={f} item={item} />
           <Card className="min-w-0">
             <Title aside={t("◆ = due date · red = late")}>{t("Milestones")}</Title>
             <Gantt i={i} today={v.today} t={t} />
           </Card>
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          <YourItems v={v} i={i} t={t} name={name} />
-          <Deviations i={i} t={t} />
+          {selectedItem && <ItemCard v={v} i={i} t={t} w={selectedItem} f={f} />}
+          <YourItems v={v} i={i} t={t} name={name} f={f} />
+          <Deviations i={i} t={t} f={f} />
           <OnTime i={i} v={v} t={t} />
           <Barriers i={i} t={t} canRaise={canRaise} />
         </div>
