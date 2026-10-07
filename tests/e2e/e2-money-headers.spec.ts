@@ -51,8 +51,18 @@ test("E3a: the value map on Opportunities and Risks — every bubble opens its a
     const bubbles = page.getByTestId("value-bubble");
     expect(await bubbles.count(), path).toBeGreaterThan(0);
     await expect(page.getByTestId("value-row").first()).toBeVisible();
+    // E3c: who needs to act, and the action plan says the next step and who it waits on.
+    await expect(page.getByTestId("who-acts")).toBeVisible();
+    await expect(
+      page
+        .getByTestId("action-plan")
+        .getByText(/waiting for (a decision|approval)|ready to run|executing/)
+        .first(),
+    ).toBeVisible();
   }
   await page.goto("/opportunities");
+  await expect(page.getByText("Show by value band:")).toBeVisible();
+  await expect(page.getByRole("link", { name: /O1\s*pursue now/ })).toBeVisible();
   const href = await page.getByTestId("value-bubble").first().getAttribute("href");
   expect(href).toMatch(/^\/insights\/[0-9a-f-]+#action-[0-9a-f-]+$/);
   await page.goto(href!);

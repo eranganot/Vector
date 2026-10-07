@@ -187,7 +187,7 @@ export const api = {
 export type { KpiStat, PerformanceView } from "./queries/performance";
 export type { ExecutiveHome, MoneyLine } from "./queries/executive";
 export type { ValuePoint } from "./queries/value-map";
-export type { InitiativesView, YourItem } from "./queries/initiatives";
+export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

@@ -12,7 +12,7 @@ const KEY = /^[A-Z0-9-]{2,40}$/;
 export default async function CrossDepartmentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ i?: string; done?: string; error?: string }>;
+  searchParams: Promise<{ i?: string; f?: string; item?: string; done?: string; error?: string }>;
 }) {
   const sp = await searchParams;
   const { actor, me } = await requireActor();
@@ -78,7 +78,14 @@ export default async function CrossDepartmentPage({
           ]}
         />
       )}
-      <InitiativesPage v={v} t={t} name={name} canRaise={can(actor, "executive") || can(actor, "department_manager")} />
+      <InitiativesPage
+        v={v}
+        t={t}
+        name={name}
+        canRaise={can(actor, "executive") || can(actor, "department_manager")}
+        f={sp.f && ["attention", "waiting", "progress", "done", "you"].includes(sp.f) ? sp.f : undefined}
+        item={sp.item && /^(ms|br|ac|cf):[0-9a-f-]{36}$|^budget$/.test(sp.item) ? sp.item : undefined}
+      />
     </>
   );
 }

@@ -132,6 +132,27 @@ Read model: `initiativesView` (`src/application/queries/initiatives.ts`). Tab: `
   anyone above them, or the sponsor; raising and reminding are open to the sponsor and managers in the initiative.
 - Migration 0011: `milestone.history`, `barrier.resolution`, `initiative_reminder`.
 
+### Revision E3c (Eran 2026-10-07 14:40: "what do we need to do now, who needs to do it, and where are the blockers")
+
+- **One answer for "where does an action stand"** (`src/application/queries/action-status.ts`): its owner (person and
+  unit), the step it is at (waiting for a decision, waiting for approval, ready to run, executing, done), the people
+  that step waits on (accountable deciders of the insight's unit, or the routed approvers), and whether the viewer is
+  one of them.
+- **Opportunities and Risks:** band filters say what they mean ("O1 pursue now · O2 plan · O3 watch"; "P1 critical …").
+  Beside the map, **Who needs to act**: counts (waiting for a decision, for approval, blocked, on you) and each person
+  with the decisions and approvals they hold. Below it, the **Action plan**: per action item what, owner, next step
+  and who it waits on, blockers (a dependency at risk or blocked, a conflict on its units), due date, net value and
+  risk, and one button (Decide, Approve or Open). Each item opens its analysis and recommendation on the insight page.
+- **Cross-department:** **What needs to happen** lists the selected initiative's work items — milestones, barriers,
+  conflicts, the budget (M5) and the actions on its linked insights — with who acts (unit head, deciders, approvers or
+  whoever must step in), due date, next step and what blocks it, problems first. Every item, deviation, "your action
+  item" and Gantt bar opens the **item card**: who acts, next step, the analysis (progress against the straight line,
+  days late, moves and reminders; barrier age and cost; the two colliding plans; spent and projected; the insight's
+  story for an action), a rule-based recommendation, and the viewer's buttons. The status tiles (late, blocked or at
+  risk · waiting for a decision · in progress · done · waiting on you) filter the items; a second click clears.
+- A milestone whose unit owns an open barrier reads **blocked** in the items list.
+- The top bar and the sidebar stay on screen while the page scrolls (all pages).
+
 ## 4. Visibility
 
 The CEO, CFO and COO see all initiatives. Every other C-suite member sees the initiatives their department

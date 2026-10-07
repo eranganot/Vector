@@ -32,6 +32,44 @@ test("Dana sees the three initiatives that need management first, and what waits
   await expect(page.getByTestId("deviations").getByText("M4")).toBeVisible();
 });
 
+test("E3c: status tiles filter the items; an item, a deviation or a Gantt bar opens its card with analysis and recommendation", async ({
+  page,
+}) => {
+  await as(page, "Dana Levi");
+  await page.goto("/initiatives?i=I-NORTH-DC");
+  const rows = page.getByTestId("work-row");
+  const all = await rows.count();
+  await page.getByTestId("filter-done").click();
+  await expect(page).toHaveURL(/f=done/);
+  const done = await rows.count();
+  expect(done).toBeGreaterThan(0);
+  expect(done).toBeLessThan(all);
+  await expect(rows.filter({ hasText: "late" })).toHaveCount(0);
+  await page.getByTestId("filter-done").click(); // again: clears the filter
+  await expect(rows).toHaveCount(all);
+
+  await rows.filter({ hasText: "Temporary DC staff hired" }).getByRole("link").first().click();
+  const card = page.getByTestId("item-card");
+  await expect(card).toBeVisible();
+  await expect(card.getByText("Analysis")).toBeVisible();
+  await expect(card.getByTestId("item-recommendation")).not.toBeEmpty();
+
+  await page.getByTestId("deviation-link").filter({ hasText: "Decision between units" }).click();
+  await expect(card.getByRole("heading", { name: /Overtime budget waits/ })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Resolve" })).toBeVisible();
+});
+
+test("E3c: the top bar and the sidebar stay on screen while the page scrolls", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/initiatives");
+  await page.mouse.wheel(0, 2500);
+  await page.waitForTimeout(300);
+  const header = await page.locator("header").first().boundingBox();
+  const nav = await page.getByRole("navigation", { name: "Main", exact: true }).boundingBox();
+  expect(header!.y).toBeLessThanOrEqual(1);
+  expect(nav!.y).toBeLessThan(200);
+});
+
 test("Hila (HR) sees only the initiatives HR takes part in", async ({ page }) => {
   await as(page, "Hila Dahan");
   await page.goto("/initiatives");

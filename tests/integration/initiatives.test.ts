@@ -59,6 +59,29 @@ describe("Cross-department read model (E3b)", () => {
     expect(v.money.flagged).toBe(3);
   });
 
+  it("E3c: lists what has to happen, who acts, and what blocks it — with Dana on the hook where she is", async () => {
+    const v = await view("dana", "I-NORTH-DC");
+    const byTitle = (t: string) => v.work.find((w) => w.title === t)!;
+    expect(byTitle("Temporary DC staff hired")).toMatchObject({
+      kind: "milestone",
+      state: "blocked",
+      who: ["Hila Dahan"],
+      blockers: ["Temporary staff 4 days late"],
+    });
+    const decision = byTitle("Overtime budget waits for an exception to the spend freeze");
+    expect(decision.who.sort()).toEqual(["Dana Levi", "Oren Halevi"]);
+    expect(decision.yours?.map((y) => y.kind)).toEqual(["resolve"]);
+    const conflict = v.work.find((w) => w.kind === "conflict")!;
+    expect(conflict.who).toEqual(["Dana Levi"]);
+    expect(conflict.href).toMatch(/^\/insights\//);
+    const acts = v.work.filter((w) => w.kind === "action");
+    expect(acts.length).toBeGreaterThan(0);
+    for (const w of acts) expect(w.who.length, w.title).toBeGreaterThan(0);
+    // Problems first: nothing done sorts above something late, blocked or waiting.
+    const firstDone = v.work.findIndex((w) => w.state === "done");
+    expect(v.work.slice(firstDone).every((w) => w.state === "done")).toBe(true);
+  });
+
   it("ADR-008: the CFO and COO see all; Hila (HR) sees only what HR takes part in", async () => {
     for (const k of ["michal", "oren"]) expect((await view(k)).items, k).toHaveLength(8);
     const hila = await view("hila");

@@ -4,7 +4,7 @@ _Last updated: 2026-10-07 (E3b)_
 
 ## Current phase
 
-**Plan v2, stage E3 (opportunities & cross-department): built and verified on Dev 2026-10-07; awaiting Eran's E3 gate** (docs/phases/STAGE_E3.md). E2 was signed off by Eran 2026-10-07 (G-E2),
+**Plan v2, stage E3 (opportunities & cross-department): revised after Eran's review (E3c); awaiting his E3 gate** (docs/phases/STAGE_E3.md). Rule readings approved (G-E3a). E2 was signed off by Eran 2026-10-07 (G-E2),
 with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
 - E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
@@ -30,7 +30,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E3 on Dev (STAGE_E3.md); on sign-off, E4 (Action Center).
+1. Eran reviews E3 with the E3c revision on Dev; on sign-off, E4 (Action Center).
 
 ## Reproducible commands
 
