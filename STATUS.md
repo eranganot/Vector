@@ -42,8 +42,20 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-07 | E3b: Cross-department tab — initiative-rules-v1 (milestone state, status, M1–M5, who steps in), portfolio rings, progress map, your action items with one button each, deviations, Gantt, on-time delivery, barriers, all-initiatives table; audited commands (milestone complete/move, barrier raise/resolve, reminders; migration 0011, `initiative.update`); EN/HE; e2e                                                                                                            | #43      |
 | 2026-10-07 | E3 verified on Dev (ab6ebf1): smoke 17/17, e2e 38/38 against Dev, demo reset after; gate brief docs/phases/STAGE_E3.md                                                                                                                                                                                                                                                                                                                                                                | #44      |
 | 2026-10-07 | E3 rule readings approved (G-E3a). E3c (Eran's review): action workflow (owner, step, who it waits on, viewer), Who needs to act and the Action plan on Opportunities/Risks, labelled band filters; Cross-department work items with who/due/next step/blockers, item card with analysis and recommendation, clickable status filters, deviations and Gantt bars; sticky top bar and sidebar; EN/HE                                                                                   | #45      |
+| 2026-10-07 | E3c verified on Dev (12a6ba6): smoke 17/17, e2e 40/40 against Dev, demo reset after; gate brief updated                                                                                                                                                                                                                                                                                                                                                                               | #46      |
 
 ## Root-cause records
+
+### 2026-10-07 · PR #45 was merged before its CI `verify` run finished (process lapse, no broken code)
+
+- **What happened:** the merge step ran while `verify` on f966d19 was still in progress. CI later passed on both the
+  PR head and the merge commit (12a6ba6), and Dev smoke and e2e (40/40) passed, so nothing broken shipped.
+- **Root cause (proven from the command output):** the wait loop gave up after 55 × 10 s (about 9 minutes) and the
+  script went on to merge, because it only stopped on a reported `failure`, not on "still running". `verify` now
+  takes longer than 9 minutes since the e2e suite grew to 40 tests.
+- **Ruled out:** a CI failure (both runs green), branch protection (not configured, so GitHub accepted the merge).
+- **Fix:** the wait script now exits non-zero unless every check run completed with success, waits up to 20 minutes,
+  and the merge only runs on exit 0.
 
 ### 2026-10-07 · CI `verify` failed on PR #40 at d6c8d44 (`format:check`, STATUS.md)
 

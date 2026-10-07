@@ -9,6 +9,8 @@ with store labor budgeted at run-rate (G-E2a). Prod (`demo` e8ff6ab) stays on Ph
 
 - E3a #42: economics-v1 and the value map on Opportunities and Risks; seed p5-v2 (labor budget).
 - E3b #43: the Cross-department tab (initiative-rules-v1, your action items, audited commands; migration 0011).
+- E3c #45: Eran's review — action plan and who acts, work items and item cards, clickable filters, fixed bars.
+  Dev 12a6ba6: smoke 17/17, e2e 40/40 against Dev, demo reset after.
 - Dev ab6ebf1: migrations 12/12, seed p5-v2, smoke 17/17, e2e 38/38 against Dev, then the Dev demo was reset.
 
 ## Objective (E0, done)
