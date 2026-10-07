@@ -654,6 +654,10 @@ export const milestone = pgTable("milestone", {
   doneOn: date("done_on"),
   /** Share of the owning department's part that is done (0–100), as reported by the owner. */
   progress: integer("progress").notNull().default(0),
+  /** Date moves (E3): [{from, to, by, at, reason}], like commitment renegotiations. */
+  history: jsonb("history")
+    .notNull()
+    .default(sql`'[]'::jsonb`),
 });
 
 export const barrier = pgTable("barrier", {
@@ -670,4 +674,30 @@ export const barrier = pgTable("barrier", {
   costIls: numeric("cost_ils", { mode: "number" }).notNull().default(0),
   since: date("since").notNull(),
   resolvedOn: date("resolved_on"),
+  /** How it was resolved (E3), in the resolver's words. */
+  resolution: text("resolution"),
 });
+
+/** A reminder about an initiative (E3): the sponsor or management nudges the unit that owns a late item. */
+export const initiativeReminder = pgTable(
+  "initiative_reminder",
+  {
+    id: id(),
+    orgId: orgId(),
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiative.id),
+    /** milestone | barrier | budget */
+    subjectKind: text("subject_kind").notNull(),
+    subjectId: uuid("subject_id"),
+    toUnitId: uuid("to_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id),
+    body: text("body").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("initiative_reminder_initiative_idx").on(t.initiativeId)],
+);

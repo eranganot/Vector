@@ -78,6 +78,13 @@
       "when": 1791320955908,
       "tag": "0010_read_model_day_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791352430113,
+      "tag": "0011_initiative_updates",
+      "breakpoints": true
     }
   ]
 }

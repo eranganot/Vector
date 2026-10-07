@@ -43,6 +43,7 @@ const MATRIX: [Capability, string][] = [
   ["action.cancel", "EDR"],
   ["outcome.review", "EDR"],
   ["initiative.record", "ED"],
+  ["initiative.update", "ED"],
   ["audit.read", "AEDR"],
   ["config.priority_weights.propose", "AE"],
   ["config.priority_weights.approve", "E"],

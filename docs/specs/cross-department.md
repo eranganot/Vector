@@ -107,6 +107,31 @@ barriers and dependencies drawn on it. Changes to an initiative are commands (`i
 `milestone.complete`, `milestone.move`, `barrier.raise`, `barrier.resolve`), authorized and audited like
 commitments. Moving a milestone needs a reason, and the level above may move it too, as in G4-Q Q3.
 
+### As built (E3b, 2026-10-07)
+
+Rules: `src/domain/initiatives.ts` (initiative-rules-v1, unit-tested, and a seed test that holds the §5 stories).
+Read model: `initiativesView` (`src/application/queries/initiatives.ts`). Tab: `/initiatives`.
+
+- **Milestone state:** done · late (past due) · at risk when its reported progress is more than 20 points behind
+  the straight line from start to due · planned otherwise.
+- **Blocked** means an open barrier for more than 5 days (M1 uses the same threshold). The POS upgrade's open
+  install-crew barrier (12 days) therefore makes it blocked and M1 as well as M5.
+- **M3** counts an open conflict when one of its two plans is linked to the initiative and both plans' owner units
+  take part in it. The common manager is found with G4-Q Q1 (the CEO for two departments).
+- **M4** "trades off between units" means the decision barrier is owned by another unit than the initiative's owner.
+- **M5** projects spend at the end as spent ÷ the share of the work done (mean milestone progress). A straight
+  calendar projection flagged healthy initiatives that front-load spend.
+- **Who steps in** resolves to people: sponsor; CEO and COO by title; CFO and sponsor; the common manager's
+  executives or department managers.
+- **Your action items** (top right): approvals and decisions on the initiative's linked insights; conflicts to
+  settle; decisions to take (resolve the barrier, with what was decided); reminders to send (sponsor, M1/M2; CFO or
+  sponsor, M5 re-forecast); reminders received; and the viewer's own open milestones (mark done, move with a reason).
+- **Commands** (`initiative.update`: executive, department manager; audited, refusals too): `milestone.complete`,
+  `milestone.move` (reason required, history kept), `barrier.raise`, `barrier.resolve` (resolution required),
+  `initiative.remind` (inside VECTOR in the demo, FB-7). A milestone or barrier changes by its owner unit's managers,
+  anyone above them, or the sponsor; raising and reminding are open to the sponsor and managers in the initiative.
+- Migration 0011: `milestone.history`, `barrier.resolution`, `initiative_reminder`.
+
 ## 4. Visibility
 
 The CEO, CFO and COO see all initiatives. Every other C-suite member sees the initiatives their department
