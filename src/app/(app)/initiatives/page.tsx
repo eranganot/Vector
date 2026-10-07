@@ -3,7 +3,7 @@ import { api, localized } from "@/app/_lib/api";
 import { InitiativesPage } from "../../_components/initiatives";
 import { ils, MoneyHeader } from "../../_components/money-header";
 import { Notice } from "../../_components/ui";
-import { getT } from "../../_lib/locale";
+import { getLocale, getT } from "../../_lib/locale";
 import { can, requireActor } from "../../_lib/session";
 
 const KEY = /^[A-Z0-9-]{2,40}$/;
@@ -12,7 +12,15 @@ const KEY = /^[A-Z0-9-]{2,40}$/;
 export default async function CrossDepartmentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ i?: string; f?: string; item?: string; done?: string; error?: string }>;
+  searchParams: Promise<{
+    i?: string;
+    f?: string;
+    item?: string;
+    done?: string;
+    error?: string;
+    wf?: string;
+    wd?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const { actor, me } = await requireActor();
@@ -28,6 +36,12 @@ export default async function CrossDepartmentPage({
     reminder_sent: t("Reminder sent inside VECTOR."),
   };
   const name = (await localized(me)).name;
+  // What-if (E4d): one of the flow's commitments slips 3, 7 or 14 days.
+  const wd = Number(sp.wd);
+  const whatIf =
+    sp.wf && /^[0-9a-f-]{36}$/i.test(sp.wf) && [3, 7, 14].includes(wd) ? { nodeId: sp.wf, days: wd } : undefined;
+  const flow = v.selected ? await api.dependencyFlow(actor, v.selected.commitmentIds, whatIf) : null;
+  const locale = await getLocale();
   return (
     <>
       <div className="flex flex-col gap-1">
@@ -80,6 +94,8 @@ export default async function CrossDepartmentPage({
       )}
       <InitiativesPage
         v={v}
+        flow={flow}
+        locale={locale}
         t={t}
         name={name}
         canRaise={can(actor, "executive") || can(actor, "department_manager")}

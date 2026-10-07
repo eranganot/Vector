@@ -4,6 +4,9 @@
  * button. Then the deviations (M1–M5), on-time delivery, barriers, and every initiative in a table. No data access.
  */
 import Link from "next/link";
+import type { DependencyFlow } from "@/application/facade";
+import type { Locale } from "@/i18n/locale";
+import { DependencyFlowCard } from "./dependency-flow";
 import type { InitiativesView, WorkItem, YourItem } from "@/application/facade";
 import type { T } from "@/i18n/t";
 import {
@@ -1030,6 +1033,8 @@ function Table({ v, t }: { v: V; t: T }) {
 
 export function InitiativesPage({
   v,
+  flow,
+  locale,
   t,
   name,
   canRaise,
@@ -1037,6 +1042,8 @@ export function InitiativesPage({
   item,
 }: {
   v: V;
+  flow: DependencyFlow | null;
+  locale: Locale;
   t: T;
   name: string;
   canRaise: boolean;
@@ -1087,6 +1094,7 @@ export function InitiativesPage({
               ))}
             </nav>
           </Card>
+          {flow && <DependencyFlowCard flow={flow} t={t} locale={locale} base={`/initiatives?i=${i.key}`} />}
           <WorkList v={v} i={i} t={t} f={f} item={item} />
           <Card className="min-w-0">
             <Title aside={t("◆ = due date · red = late")}>{t("Milestones")}</Title>

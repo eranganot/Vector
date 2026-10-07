@@ -5,7 +5,8 @@
  * reflect it.
  */
 import Link from "next/link";
-import type { ActionCenterView } from "@/application/facade";
+import type { ActionCenterView, EventPlan as EventPlanView } from "@/application/facade";
+import { EventPlan } from "./event-plan";
 import type { Locale } from "@/i18n/locale";
 import type { T } from "@/i18n/t";
 import { approveAndSendAction, declineInCenterAction } from "../actions";
@@ -81,11 +82,13 @@ const hoursText = (t: T, h: number | null) =>
 
 export async function ActionCenterScreen({
   v,
+  event,
   locale,
   done,
   error,
 }: {
   v: ActionCenterView;
+  event: EventPlanView | null;
   locale: Locale;
   done?: string;
   error?: string;
@@ -153,7 +156,7 @@ export async function ActionCenterScreen({
           </Card>
         )}
       </div>
-      {v.event && <EventPlan e={v.event} t={t} locale={locale} />}
+      {event && <EventPlan e={event} t={t} locale={locale} />}
       {v.sent.length > 0 && (
         <Card data-testid="recent-messages">
           <SectionTitle aside={<span className="text-xs text-muted">{t("delivered in VECTOR only")}</span>}>
@@ -532,54 +535,6 @@ function SelectedPanel({ s, t, locale }: { s: Selected; t: T; locale: Locale }) 
           ))}
         </ul>
       </details>
-    </Card>
-  );
-}
-
-function EventPlan({ e, t, locale }: { e: NonNullable<ActionCenterView["event"]>; t: T; locale: Locale }) {
-  return (
-    <Card className="flex flex-col gap-3" data-testid="event-plan">
-      <SectionTitle
-        aside={
-          <Link href="/commitments" className="text-xs text-accent">
-            {t("all commitments →")}
-          </Link>
-        }
-      >
-        {t("From event to action plan")}
-      </SectionTitle>
-      <p className="text-sm">
-        <b>{e.source}</b>{" "}
-        <span className="text-muted">
-          {t("{n} tasks with owners and dates", { n: e.tasks.length })}
-          {e.conflicts ? ` · ${t("{n} conflicts detected", { n: e.conflicts })}` : ""}
-        </span>
-      </p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-xs text-muted">
-            <tr>
-              <th className="py-1 pe-3 text-start font-normal">{t("Task")}</th>
-              <th className="py-1 pe-3 text-start font-normal">{t("Owner")}</th>
-              <th className="whitespace-nowrap py-1 pe-3 text-start font-normal">{t("Due")}</th>
-              <th className="py-1 text-start font-normal">{t("Status")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {e.tasks.map((k, i) => (
-              <tr key={i} className="border-t border-line align-top">
-                <td className="py-2 pe-3">{k.title}</td>
-                <td className="py-2 pe-3 text-xs">
-                  <span className="block">{k.owner}</span>
-                  <span className="text-muted">{k.unitName}</span>
-                </td>
-                <td className="whitespace-nowrap py-2 pe-3 text-xs">{shortDay(k.due, locale)}</td>
-                <td className="py-2 text-xs">{t(k.status.replace("_", " "))}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </Card>
   );
 }

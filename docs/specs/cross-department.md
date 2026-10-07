@@ -179,3 +179,21 @@ At the story day, North DC recovery is M1 + M3, POS upgrade is M5, and holiday r
   rules use hand-computed fixtures.
 - An integration test checks visibility per C-suite persona (ADR-008 matrix).
 - e2e: Dana sees 3 flagged initiatives first; Hila (HR) sees only the initiatives HR participates in.
+
+## 7. How a delay travels (`knock-on-v1`, E4d, Eran's review 2026-10-07)
+
+Eran: "show how an action, or a delay in taking one, in one department affects the other departments down the road —
+money, time — as part of the project flow."
+
+- **Graph:** the initiative's commitments, extended both ways along dependencies (what they wait on, and everything
+  down the line), drawn left to right by depth (right to left in Hebrew). An arrow means "needs it by"; units at the
+  end of the line that need the same thing by the same date are one box (the five regions).
+- **Rules** (`src/domain/knock-on.ts`, pure, unit-tested):
+  - a commitment is ready when done; if open, on its due date; if overdue, today at the earliest;
+  - input arriving after an arrow's need-by date pushes the downstream commitment by the same number of days;
+  - each late arrow costs its ₪ a week × days late ÷ 7; a commitment nothing waits on costs its own ₪ a week the same
+    way (no double counting).
+- **What if it slips?** +3 / +7 / +14 days on any open commitment (`?wf=<id>&wd=<days>`) recolours the graph and says
+  who gets it late, by how many days and for how much more ₪, with a table of who is hit.
+- **Visibility:** only commitments the viewer may see are drawn (Hila sees HR's part of the holiday chain only).
+- **Also used by** the Action Center's "From event to action plan" (action-center.md §6).
