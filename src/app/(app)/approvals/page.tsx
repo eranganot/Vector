@@ -4,7 +4,8 @@ import { api } from "@/app/_lib/api";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { approveAction } from "../../actions";
 import { Band, Card, Notice, Pill, SectionTitle } from "../../_components/ui";
-import { getT } from "../../_lib/locale";
+import { getLocale, getT } from "../../_lib/locale";
+import { shortDay } from "../../_components/format";
 import { requireActor } from "../../_lib/session";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -21,12 +22,14 @@ export default async function ApprovalsPage({
   const { error, done } = await searchParams;
   const { actor } = await requireActor();
   const t = await getT();
-  const [items, decisions, mine, now, history] = await Promise.all([
+  const [items, decisions, mine, now, history, messages, locale] = await Promise.all([
     api.myApprovals(actor),
     api.myDecisions(actor),
     api.myActions(actor),
     demoNow(),
     api.approvalHistory(actor),
+    api.messagesForMe(actor),
+    getLocale(),
   ]);
   const ACTION_STATE: Record<string, string> = {
     proposed: t("Waiting for the decision"),
@@ -53,6 +56,28 @@ export default async function ApprovalsPage({
             : t("{n} of your actions in flight", { n: mine.length })}
         </p>
       </div>
+      {messages.length > 0 && (
+        <section className="flex flex-col gap-3" data-testid="messages-for-you">
+          <SectionTitle aside={<span className="text-xs text-muted">{t("delivered in VECTOR only")}</span>}>
+            {t("Messages for you · {n}", { n: messages.length })}
+          </SectionTitle>
+          {messages.map((m) => (
+            <Card key={m.id} className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                <span>
+                  {m.copy ? t("{name} copied you", { name: m.from }) : t("from {name}", { name: m.from })} ·{" "}
+                  {shortDay(m.sentAt, locale)}
+                </span>
+                <Link href={`/insights/${m.insightId}`} className="ms-auto text-accent">
+                  {t("full analysis →")}
+                </Link>
+              </div>
+              <b>{m.subject}</b>
+              <p className="whitespace-pre-line text-sm text-muted">{m.body}</p>
+            </Card>
+          ))}
+        </section>
+      )}
       <section className="flex flex-col gap-3">
         <SectionTitle aside={<span className="text-xs text-muted">{t("VECTOR recommends; you decide")}</span>}>
           {t("Decisions to make · {n}", { n: decisions.length })}

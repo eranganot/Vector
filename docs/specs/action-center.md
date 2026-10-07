@@ -1,6 +1,6 @@
 # Action Center (E4)
 
-Status: **Proposed (E0, 2026-10-06).** Implements FB item #9, FB-8 (internal sending in the demo; real channels in
+Status: **Built in E4 (2026-10-07); see §6 "As built" for where it differs from this proposal.** Proposed in E0 (2026-10-06). Implements FB item #9, FB-8 (internal sending in the demo; real channels in
 production) and FB-12 (Waiting on you stays its own tab, and the same items also appear here).
 
 ## 1. Purpose
@@ -78,3 +78,37 @@ Every state change of a message is audited (`message.drafted`, `message.edited` 
   the message and approves it, Noa sees it in Waiting on you and in her Inbox, and the audit trail shows every step.
 - A case where policy requires another approver (AP-3 ≥ ₪50k): the message is not sent until that approver approves.
 - No network call to any external channel in Dev or Prod (unit test on the adapter registry, plus smoke).
+
+## 6. As built (E4, 2026-10-07)
+
+- **Route** `/action-center` (`?item=<insight id>` selects an item). Navigation: C-suite after Home and Waiting on you;
+  managers next to Waiting on you. Home "Today's priorities" (Decide / Approve / Act) and the Action plan buttons on
+  Opportunities and Risks open the item here.
+- **Queue** (`src/application/queries/action-center.ts`): open recommendations and actions whose approval is routed to
+  you, plus conflicts you are the common manager of; score = ₪ a week × urgency (×1.5 within 72 h, ×1.2 within a week)
+  × level (×1.5 when you are accountable or the approval is yours). One button: Approve and send, Approve, Resolve or
+  Open.
+- **Selected item:** facts, VECTOR's recommendation, who is involved (one node per department with its part and
+  status), steps with cost, impact, due and the live approval route, "When you approve, VECTOR will…", with whom
+  (To, editable, and Cc, each with the reason), the suggested message (`action-suggest-v1`, editable, in the reader's
+  language), Approve and send, Decline with a reason, the item's messages and its history.
+- **With whom:** To is the owner of the first step (the proposal said the head of the owning unit; the step owner is
+  the one who acts), falling back to that head. Cc: other step owners, heads of affected departments, the sponsor of
+  a linked initiative.
+- **Approve and send** (`src/application/commands/messages.ts`): decides an open recommendation (existing
+  `decision.decide`), grants on the same click any approval routed to the sender (existing approval command; AZ-2 still
+  applies), stores the message as `approved` (the proposal's `approved_pending`), and sends it once no action of the
+  decision waits for approval: after the decision, after each grant, and on the demo clock. If every action is
+  cancelled or rejected, the message is cancelled. Audit: `message.drafted`, `message.edited` (hash), `message.approved`,
+  `message.sent`, `message.cancelled`. Decline is the existing `decision.declined` with its reason.
+- **Channels:** only the in-app adapter is registered; any other channel is refused unless `CHANNELS_LIVE=on`
+  (unit-tested). Delivered messages appear under "Messages for you" in Waiting on you. There is no separate Inbox yet
+  (the mail agent is E7).
+- **From event to action plan:** the latest meeting or plan in scope that created two or more commitments, with its
+  tasks, owners, dates, status and the conflicts it caused.
+- **Not built in E4:** "Edit action" from the panel (amending stays on the insight's trace).
+- **Acceptance as run:** the integration test covers the North stock-out (Noa suggested; Dana's own AP-3 staffing
+  approval granted on the same click; the message held until the AP-4/AP-5 transfer approval, then delivered in-app;
+  the audit sequence) and Hebrew. The e2e (EN and HE) runs the same story on the competitor-closing opportunity
+  (Ronit suggested, Dana edits and approves, held until Maya's AP-3 approval, then Ronit sees it), because the
+  Phase 4 e2e amends and approves the stock-out's staffing action in the same run.

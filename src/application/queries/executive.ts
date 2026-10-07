@@ -711,7 +711,8 @@ export async function executiveHome(db: DbOrTx, orgId: string, actor: Actor, opt
           hoursLeft: r.hoursLeft === null ? null : Math.round(r.hoursLeft),
           score: Math.round(r.ils * urgency(r.hoursLeft) * level),
           button,
-          href: button === "approve" ? "/approvals" : `/insights/${r.id}`,
+          // Deciding, approving and making an action happen in the Action Center (E4); reading stays on the trace.
+          href: button === "open" ? `/insights/${r.id}` : `/action-center?item=${r.id}`,
         };
       }),
     ...financials

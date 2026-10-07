@@ -43,6 +43,8 @@ import {
 import { executiveHome } from "./queries/executive";
 import { workstreamMoney } from "./queries/money";
 import { initiativesView } from "./queries/initiatives";
+import { actionCenter, messagesForMe } from "./queries/action-center";
+import { approveAndSend, declineInCenter, releaseMessages, type ApproveAndSendInput } from "./commands/messages";
 import {
   completeMilestone,
   moveMilestone,
@@ -108,6 +110,9 @@ export const api = {
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
   executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
   valueMap: async (a: Actor, insightIds: string[]) => valueMap(db(), await activeOrgId(db()), a, insightIds),
+  actionCenter: async (a: Actor, insightId: string | undefined, locale: "en" | "he") =>
+    actionCenter(db(), await activeOrgId(db()), a, { insightId, locale }),
+  messagesForMe: async (a: Actor) => messagesForMe(db(), await activeOrgId(db()), a),
   initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
   completeMilestone: async (a: Actor, milestoneId: string) => completeMilestone(await ctx(), a, milestoneId),
   moveMilestone: async (a: Actor, milestoneId: string, dueOn: string, reason: string) =>
@@ -139,8 +144,21 @@ export const api = {
     const c = await ctx();
     await grantApproval(c, a, actionId, rationale);
     await executeReadyActions(c);
+    await releaseMessages(c); // E4: a message waiting for this approval goes out now
   },
-  deny: async (a: Actor, actionId: string, rationale: string) => denyApproval(await ctx(), a, actionId, rationale),
+  deny: async (a: Actor, actionId: string, rationale: string) => {
+    const c = await ctx();
+    await denyApproval(c, a, actionId, rationale);
+    await releaseMessages(c);
+  },
+  approveAndSend: async (a: Actor, insightId: string, input: ApproveAndSendInput) => {
+    const c = await ctx();
+    const id = await approveAndSend(c, a, insightId, input);
+    await executeReadyActions(c);
+    return id;
+  },
+  declineInCenter: async (a: Actor, insightId: string, rationale: string) =>
+    declineInCenter(await ctx(), a, insightId, rationale),
   review: async (a: Actor, outcomeId: string, lesson: string) => reviewOutcome(await ctx(), a, outcomeId, { lesson }),
   commitments: async (a: Actor, unitId?: string) => commitmentsView(db(), await activeOrgId(db()), a, unitId),
   commitmentsForInsight: async (a: Actor, insightId: string) =>
@@ -188,6 +206,7 @@ export type { KpiStat, PerformanceView } from "./queries/performance";
 export type { ExecutiveHome, MoneyLine } from "./queries/executive";
 export type { ValuePoint } from "./queries/value-map";
 export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives";
+export type { ActionCenterView, QueueItem } from "./queries/action-center";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

@@ -9,7 +9,7 @@ import { Breadcrumb, InsightCard } from "./unit";
 import { ils, MoneyHeader } from "./money-header";
 import { ValueMapCard } from "./value-map";
 import { Band, Pill, SectionTitle } from "./ui";
-import { getT } from "../_lib/locale";
+import { getLocale, getT } from "../_lib/locale";
 
 /** What each band means (priority-v2 bands; opportunity bands of ADR-006). */
 const BAND_WORD: Record<string, string> = {
@@ -165,7 +165,7 @@ export async function WorkstreamPage({
           );
         })}
       </nav>
-      <ValueMapCard points={points} t={t} ws={ws} now={await demoNow()} />
+      <ValueMapCard points={points} t={t} ws={ws} now={await demoNow()} locale={await getLocale()} />
       {shown.length === 0 ? (
         <p className="text-sm text-muted">{band ? t("Nothing in {band} here.", { band }) : t("Nothing here.")}</p>
       ) : (

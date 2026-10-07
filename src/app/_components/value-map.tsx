@@ -4,6 +4,8 @@
  * more than it costs this quarter. Beside it, the action items ranked by net value. No data access here.
  */
 import Link from "next/link";
+import type { Locale } from "@/i18n/locale";
+import { shortDay } from "./format";
 import type { ValuePoint } from "@/application/facade";
 import type { T } from "@/i18n/t";
 import { ils } from "./money-header";
@@ -196,7 +198,7 @@ function WhoActs({ points, t }: { points: ValuePoint[]; t: T }) {
 }
 
 /** The action plan: every action item with what, who, its next step and who that waits on, blockers, due and value. */
-function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date }) {
+function ActionPlan({ points, t, now, locale }: { points: ValuePoint[]; t: T; now: Date; locale: Locale }) {
   return (
     <Card className="min-w-0 overflow-x-auto" data-testid="action-plan">
       <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -210,8 +212,8 @@ function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date 
             <th className="py-1 text-start font-normal">{t("Owner")}</th>
             <th className="py-1 text-start font-normal">{t("Next step · waiting on")}</th>
             <th className="py-1 text-start font-normal">{t("Blockers")}</th>
-            <th className="py-1 text-start font-normal">{t("Due")}</th>
-            <th className="py-1 text-end font-normal">{t("Net")}</th>
+            <th className="whitespace-nowrap py-1 pe-3 text-start font-normal">{t("Due")}</th>
+            <th className="whitespace-nowrap py-1 pe-3 text-end font-normal">{t("Net")}</th>
             <th />
           </tr>
         </thead>
@@ -234,7 +236,7 @@ function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date 
                 </td>
                 <td className="py-2 pe-3 text-xs">
                   <span className="block text-ink">{p.workflow.owner.name}</span>
-                  <span className="text-muted">{p.workflow.owner.unit}</span>
+                  <span className="text-muted">{p.workflow.owner.unitName}</span>
                 </td>
                 <td className="py-2 pe-3 text-xs">
                   <span className="block font-semibold" style={{ color: st.tone }}>
@@ -263,13 +265,24 @@ function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date 
                     </ul>
                   )}
                 </td>
-                <td className={`num py-2 pe-3 text-xs ${overdue ? "text-p1" : "text-muted"}`}>
-                  {p.dueAt ? p.dueAt.toISOString().slice(5, 10) : "—"}
-                  {overdue && <span className="block">{t("overdue")}</span>}
+                <td
+                  className={`whitespace-nowrap py-2 pe-3 text-xs ${overdue ? "text-p1" : "text-muted"}`}
+                  data-testid="plan-due"
+                >
+                  <span className="block font-semibold text-ink">{p.dueAt ? shortDay(p.dueAt, locale) : "—"}</span>
+                  {overdue ? (
+                    <span className="block">{t("overdue")}</span>
+                  ) : p.daysToValue !== null ? (
+                    <span className="block">{t("in {n} d", { n: p.daysToValue })}</span>
+                  ) : null}
                 </td>
-                <td className="py-2 pe-3 text-end text-xs">
-                  <span className={`num block font-semibold ${p.net >= 0 ? "text-good" : "text-p1"}`}>
-                    {ils(p.net)}
+                <td className="whitespace-nowrap py-2 pe-3 text-end text-xs" data-testid="plan-net">
+                  <span
+                    className={`num block text-[14px] font-semibold ${p.net >= 0 ? "text-good" : "text-p1"}`}
+                    title={`${ils(p.impact)} − ${ils(p.cost)}`}
+                  >
+                    {p.net >= 0 ? "+" : "−"}
+                    {ils(Math.abs(p.net))}
                   </span>
                   <span className={`block ${LEVEL_TONE[p.risk.level]}`} title={riskHint(t, p)}>
                     {t("risk {level}", { level: t(LEVEL_WORD[p.risk.level]) })}
@@ -278,14 +291,14 @@ function ActionPlan({ points, t, now }: { points: ValuePoint[]; t: T; now: Date 
                 <td className="py-2 text-end">
                   {p.workflow.viewer === "approve" ? (
                     <Link
-                      href="/approvals"
+                      href={`/action-center?item=${p.insightId}`}
                       className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-ink no-underline"
                     >
                       {t("Approve")}
                     </Link>
                   ) : p.workflow.viewer === "decide" ? (
                     <Link
-                      href={p.href}
+                      href={`/action-center?item=${p.insightId}`}
                       className="rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-ink no-underline"
                     >
                       {t("Decide")}
@@ -313,11 +326,13 @@ export function ValueMapCard({
   t,
   ws,
   now,
+  locale,
 }: {
   points: ValuePoint[];
   t: T;
   ws: "risk" | "opportunity";
   now: Date;
+  locale: Locale;
 }) {
   if (points.length === 0) return null;
   const yLabel = ws === "risk" ? t("₪ protected by quarter end") : t("₪ gained by quarter end");
@@ -335,7 +350,7 @@ export function ValueMapCard({
         </Card>
         <WhoActs points={points} t={t} />
       </div>
-      <ActionPlan points={points} t={t} now={now} />
+      <ActionPlan points={points} t={t} now={now} locale={locale} />
     </>
   );
 }

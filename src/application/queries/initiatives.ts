@@ -243,12 +243,12 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
       .filter((d) => linked.has(d.commitmentId))
       .map(live)
       .filter((x) => !!x)
-      .map((x) => ({ unit: unitName(x!.d.downstreamUnitId), status: x!.st }));
+      .map((x) => ({ unitName: unitName(x!.d.downstreamUnitId), status: x!.st }));
     const waitingOn = deps
       .filter((d) => d.downstreamCommitmentId && linked.has(d.downstreamCommitmentId))
       .map(live)
       .filter((x) => !!x)
-      .map((x) => ({ unit: unitName(x!.c.ownerUnitId), status: x!.st }));
+      .map((x) => ({ unitName: unitName(x!.c.ownerUnitId), status: x!.st }));
     const milestones = i.milestones.map((m) => ({
       id: m.id,
       title: m.title,
@@ -552,7 +552,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
           id: `ac:${a.id}`,
           kind: "action",
           title: a.title,
-          unitName: w.owner.unit,
+          unitName: w.owner.unitName,
           who: w.step === "decide" || w.step === "approve" ? w.waitingOn : [w.owner.name],
           due: a.dueAt ? a.dueAt.toISOString().slice(0, 10) : null,
           state:
@@ -573,7 +573,7 @@ export async function initiativesView(db: DbOrTx, orgId: string, actor: Actor, o
             kind: "action",
             step: w.step,
             owner: w.owner.name,
-            ownerUnit: w.owner.unit,
+            ownerUnit: w.owner.unitName,
             waitingOn: w.waitingOn,
             insightTitle: i.title,
             what: i.what,

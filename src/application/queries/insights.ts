@@ -20,6 +20,7 @@ import {
   signal,
   task,
   outboxMessage,
+  outboundMessage,
   roleAssignment,
   user,
 } from "@/infra/db/schema";
@@ -164,6 +165,7 @@ export async function auditTrailForInsight(db: DbOrTx, orgId: string, insightId:
           union select ${action.id} from ${action} where ${action.insightId} = ${insightId}
           union select ${approval.id} from ${approval} join ${action} on ${approval.actionId} = ${action.id} where ${action.insightId} = ${insightId}
           union select ${outcome.id} from ${outcome} where ${outcome.insightId} = ${insightId}
+          union select ${outboundMessage.id} from ${outboundMessage} where ${outboundMessage.insightId} = ${insightId}
         )`,
       ),
     )

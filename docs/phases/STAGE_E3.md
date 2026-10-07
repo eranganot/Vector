@@ -1,8 +1,7 @@
 # Stage E3: opportunities and cross-department (plan v2)
 
-Status: **Revised after Eran's review (E3c) and verified on Dev 2026-10-07; awaiting Eran's E3 gate.** Rule readings
-approved (G-E3a). Prod stays on Phase 4 until he asks for a
-promotion.
+Status: **Accepted by Eran 2026-10-07 (G-E3)**, with one comment (due-date and ₪ formatting) to fix in E4. Prod
+promotion is a separate step.
 
 ## What shipped
 

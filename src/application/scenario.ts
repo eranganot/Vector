@@ -23,6 +23,7 @@ import { executeReadyActions, runClockJobs } from "./commands/lifecycle";
 import { createContext, type AppContext } from "./context";
 import type { Db } from "./db";
 import { seedCatalog } from "./catalog";
+import { releaseMessages } from "./commands/messages";
 import { runDetector } from "./detector";
 
 const dayOf = (d: Date) => d.toISOString().slice(0, 10);
@@ -130,6 +131,7 @@ export async function advanceClock(db: Db, actor: Actor, hours: number) {
   const after = await createContext(db, { orgId: ctx.orgId, requestId: ctx.requestId });
   const clock = await runClockJobs(after);
   await executeReadyActions(after);
+  await releaseMessages(after);
   const outcomes = await evaluateDueOutcomes(after);
   const detections = dayOf(from) !== dayOf(to) ? await runDetector(after) : [];
   const commitments = await runCommitmentMonitor(after);

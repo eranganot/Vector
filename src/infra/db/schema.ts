@@ -678,6 +678,45 @@ export const barrier = pgTable("barrier", {
   resolution: text("resolution"),
 });
 
+/**
+ * A message the Action Center sends when someone approves an action (plan v2, E4; action-center.md §4). In the demo
+ * every message is internal (in_app): it reaches the recipients' Waiting on you; nothing leaves VECTOR (FB-8).
+ */
+export const outboundMessage = pgTable(
+  "outbound_message",
+  {
+    id: id(),
+    orgId: orgId(),
+    insightId: uuid("insight_id")
+      .notNull()
+      .references(() => insight.id),
+    decisionId: uuid("decision_id")
+      .notNull()
+      .references(() => decision.id),
+    channel: text("channel").notNull(), // in_app | email | slack | sms | whatsapp
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id),
+    toUserIds: text("to_user_ids").array().notNull(),
+    ccUserIds: text("cc_user_ids").array().notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    language: text("language").notNull(),
+    templateId: text("template_id").notNull(),
+    edited: boolean("edited").notNull().default(false),
+    /** approved → sent (or cancelled / failed). Approved messages wait until every action's approval is granted. */
+    status: text("status").notNull(),
+    approvedBy: text("approved_by"),
+    approvedAt: ts("approved_at"),
+    sentAt: ts("sent_at"),
+    adapter: text("adapter"),
+    simulated: boolean("simulated").notNull().default(true),
+    visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("outbound_message_insight_idx").on(t.insightId)],
+);
+
 /** A reminder about an initiative (E3): the sponsor or management nudges the unit that owns a late item. */
 export const initiativeReminder = pgTable(
   "initiative_reminder",
