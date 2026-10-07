@@ -1,6 +1,6 @@
 # Stage E4: Action Center (plan v2)
 
-Status: **Built and verified on Dev (4dc66f0); awaiting Eran's E4 gate.** Prod promotion is a separate step.
+Status: **Built, revised after your review (E4d), verified on Dev (8dbf734); awaiting your E4 gate.** Prod promotion is a separate step.
 
 ## What shipped
 
@@ -48,6 +48,7 @@ Status: **Built and verified on Dev (4dc66f0); awaiting Eran's E4 gate.** Prod p
 - Local: format, lint, typecheck, unit 568, integration 119, e2e 43/43, smoke 18/18.
 - CI green on the PR and on `main` (4dc66f0) before and after the merge.
 - Dev 4dc66f0: health ok, migrations 13/13, smoke 18/18 (phase 8 added), e2e 43/43 against Dev, demo reset after.
+- E4d on Dev 8dbf734: smoke 18/18, e2e 46/46 against Dev, demo reset after.
 
 ## Differences from the proposal (docs/specs/action-center.md §6)
 
