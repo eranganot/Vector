@@ -5,7 +5,7 @@ import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { approveAction } from "../../actions";
 import { Band, Card, Notice, Pill, SectionTitle } from "../../_components/ui";
 import { getLocale, getT } from "../../_lib/locale";
-import { shortDay } from "../../_components/format";
+import { shortDay, dayTime } from "../../_components/format";
 import { requireActor } from "../../_lib/session";
 
 const ROLE_LABEL: Record<string, string> = {
@@ -153,7 +153,7 @@ export default async function ApprovalsPage({
               {action.dueAt ? (
                 <>
                   {" "}
-                  · {t("due")} <span className="num">{action.dueAt.toISOString().slice(5, 16).replace("T", " ")}</span>
+                  · {t("due")} <span className="num">{dayTime(t, action.dueAt)}</span>
                 </>
               ) : (
                 ""
@@ -242,7 +242,7 @@ export default async function ApprovalsPage({
                   {h.decidedAt && (
                     <>
                       {" "}
-                      · <span className="num">{h.decidedAt.toISOString().slice(5, 16).replace("T", " ")}</span>
+                      · <span className="num">{dayTime(t, h.decidedAt)}</span>
                     </>
                   )}
                   {h.rationale ? ` · “${h.rationale}”` : ""} ·{" "}

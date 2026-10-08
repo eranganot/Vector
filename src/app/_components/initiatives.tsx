@@ -4,6 +4,7 @@
  * button. Then the deviations (M1–M5), on-time delivery, barriers, and every initiative in a table. No data access.
  */
 import Link from "next/link";
+import { day } from "./format";
 import type { DependencyFlow } from "@/application/facade";
 import type { Locale } from "@/i18n/locale";
 import { DependencyFlowCard } from "./dependency-flow";
@@ -53,7 +54,7 @@ export function flagText(t: T, rule: Flag["rule"], facts: Flag["facts"], subject
     case "M2":
       return facts.days
         ? t("{title}: {n} days late", { title: subject, n: facts.days })
-        : t("{title}: at risk, due {date}", { title: subject, date: (facts.due ?? "").slice(5) });
+        : t("{title}: at risk, due {date}", { title: subject, date: day(t, facts.due) });
     case "M3":
       return t("Open conflict: {title}", { title: subject });
     case "M4":
@@ -158,89 +159,151 @@ function Portfolio({ v, t }: { v: V; t: T }) {
 
 // ── Progress map ───────────────────────────────────────────────────────────────
 
+/**
+ * Who does what, in what order (E4e, Eran: "what do the lines represent? who should start? where are the blockers?").
+ * Departments in the order they start their part; an arrow hands the work to the next. Red: the next department waits
+ * because this one is late or blocked. The sentence on top says who must act now.
+ */
 function ProgressMap({ i, t }: { i: Item; t: T }) {
   const depts = i.participants
     .map((p) => {
       const ms = i.milestones.filter((m) => m.ownerUnitId === p.id);
-      const current = ms.filter((m) => !m.doneOn).sort((a, b) => a.dueOn.localeCompare(b.dueOn))[0] ?? ms.at(-1);
+      const open = ms.filter((m) => !m.doneOn).sort((a, b) => a.dueOn.localeCompare(b.dueOn));
+      const current = open[0] ?? ms.at(-1);
       const progress = ms.length ? ms.reduce((a, m) => a + m.progress, 0) / ms.length : 0;
-      const blocked = i.barriers.some((b) => b.ownerUnitId === p.id);
-      const state = !ms.length ? "none" : blocked ? "late" : (current?.state ?? "done");
-      return { ...p, ms, current, progress, state, start: ms.map((m) => m.startsOn).sort()[0] ?? "9999" };
+      const barriers = i.barriers.filter((b) => b.ownerUnitId === p.id);
+      const state = !ms.length
+        ? "none"
+        : barriers.length
+          ? "late"
+          : open.length
+            ? (current?.state ?? "planned")
+            : "done";
+      return {
+        ...p,
+        ms,
+        current,
+        progress,
+        state,
+        barriers,
+        blocked: barriers.length > 0,
+        start: ms.map((m) => m.startsOn).sort()[0] ?? "9999",
+      };
     })
     .filter((d) => d.ms.length > 0)
     .sort((a, b) => a.start.localeCompare(b.start));
-  const W = 640;
-  const H = 190;
-  const n = Math.max(1, depts.length);
-  const x = (k: number) => (W / n) * (k + 0.5);
-  const cy = 62;
+  const holdsUp = (k: number) => depts[k].state === "late" || depts[k].blocked;
+  const now =
+    depts.find((d) => d.blocked || d.state === "late") ??
+    depts.find((d) => d.state !== "done" && d.current && !d.current.doneOn);
+  const after = now ? depts.slice(depts.indexOf(now) + 1).filter((d) => d.state !== "done") : [];
+  const rtl = t.locale === "he";
+  const r = 22;
+  const c = 2 * Math.PI * r;
   return (
-    <svg
-      viewBox={`0 0 ${W} ${H}`}
-      className="w-full"
-      role="img"
-      aria-label={t("Progress map")}
-      data-testid="progress-map"
-    >
-      {depts.slice(1).map((d, k) => {
-        const waiting = d.state === "late" || d.state === "at_risk";
-        return (
-          <line
-            key={`l${d.id}`}
-            x1={x(k) + 34}
-            y1={cy}
-            x2={x(k + 1) - 34}
-            y2={cy}
-            stroke={waiting ? HEX.bad : HEX.accent}
-            strokeWidth="2.5"
-            strokeDasharray={waiting ? "6 5" : undefined}
-          >
-            <title>{waiting ? t("{name} is waiting or late", { name: d.name }) : t("on track")}</title>
-          </line>
-        );
-      })}
-      {depts.map((d, k) => {
-        const color = STATE_HEX[d.state] ?? HEX.muted;
-        const r = 28;
-        const c = 2 * Math.PI * r;
-        return (
-          <g key={d.id}>
-            <title>
-              {`${d.name}: ${Math.round(d.progress)}% · ${d.current ? `${d.current.title} (${t(STATE_WORD[d.current.state])}, ${d.current.dueOn.slice(5)})` : ""}`}
-            </title>
-            <circle cx={x(k)} cy={cy} r={r} fill="#0f1a2c" stroke={HEX.line} strokeWidth="6" />
-            <circle
-              cx={x(k)}
-              cy={cy}
-              r={r}
-              fill="none"
-              stroke={color}
-              strokeWidth="6"
-              strokeLinecap="round"
-              strokeDasharray={`${(d.progress / 100) * c} ${c}`}
-              transform={`rotate(-90 ${x(k)} ${cy})`}
-            />
-            <text x={x(k)} y={cy + 5} textAnchor="middle" fontSize="13" fontWeight="600" fill="#e6edf7">
-              {`${Math.round(d.progress)}%`}
-            </text>
-            <text x={x(k)} y={cy + r + 20} textAnchor="middle" fontSize="12" fill="#e6edf7">
-              {d.name.length > 18 ? `${d.name.slice(0, 17)}…` : d.name}
-            </text>
-            {d.current && (
-              <>
-                <text x={x(k)} y={cy + r + 36} textAnchor="middle" fontSize="10.5" fill="#8fa1bc">
-                  {d.current.title.length > 24 ? `${d.current.title.slice(0, 23)}…` : d.current.title}
-                </text>
-                <text x={x(k)} y={cy + r + 51} textAnchor="middle" fontSize="10.5" fill={STATE_HEX[d.current.state]}>
-                  {`${t(STATE_WORD[d.current.state])} · ${d.current.dueOn.slice(5)}`}
-                </text>
-              </>
-            )}
-          </g>
-        );
-      })}
-    </svg>
+    <div className="flex flex-col gap-3" data-testid="progress-map">
+      {now && (
+        <p
+          className="rounded-lg px-3 py-2 text-sm"
+          style={{ background: `${STATE_HEX[now.state] ?? HEX.accent}1a` }}
+          data-testid="relay-now"
+        >
+          <b>{t("Now: {unit} must act.", { unit: now.name })}</b>{" "}
+          {now.blocked
+            ? t("Blocked by {what} since {date}.", { what: now.barriers[0].title, date: day(t, now.barriers[0].since) })
+            : now.state === "late"
+              ? t("“{what}” is late (due {date}).", { what: now.current!.title, date: day(t, now.current!.dueOn) })
+              : t("Next: “{what}”, due {date}.", { what: now.current!.title, date: day(t, now.current!.dueOn) })}{" "}
+          {after.length > 0 && (
+            <span className="text-muted">{t("After it: {list}.", { list: after.map((d) => d.name).join(", ") })}</span>
+          )}
+        </p>
+      )}
+      <ol className="flex flex-wrap items-stretch gap-y-3">
+        {depts.map((d, k) => {
+          const color = STATE_HEX[d.state] ?? HEX.muted;
+          const waits = k > 0 && holdsUp(k - 1) && d.state !== "done";
+          return (
+            <li key={d.id} className="flex min-w-0 flex-1 basis-44 items-stretch" data-testid="relay-step">
+              {k > 0 && (
+                <span
+                  className="flex w-12 shrink-0 flex-col items-center justify-center text-center"
+                  data-testid="relay-arrow"
+                  data-late={holdsUp(k - 1) ? "true" : "false"}
+                  title={
+                    holdsUp(k - 1)
+                      ? t("{a} is late or blocked: {b} waits", { a: depts[k - 1].name, b: d.name })
+                      : t("hands over")
+                  }
+                >
+                  <span className="text-xl leading-none" style={{ color: holdsUp(k - 1) ? HEX.bad : HEX.muted }}>
+                    {rtl ? "←" : "→"}
+                  </span>
+                  <span className="text-[10px] leading-tight" style={{ color: holdsUp(k - 1) ? HEX.bad : HEX.muted }}>
+                    {holdsUp(k - 1) ? t("held up") : t("then")}
+                  </span>
+                </span>
+              )}
+              <div
+                className={`flex min-w-0 grow flex-col gap-1 rounded-lg border p-3 ${now?.id === d.id ? "border-2" : "border-line"}`}
+                style={now?.id === d.id ? { borderColor: color } : undefined}
+              >
+                <span className="text-[11px] uppercase tracking-[0.06em] text-muted">
+                  {t("Step {n} · starts {date}", { n: k + 1, date: day(t, d.start) })}
+                </span>
+                <span className="flex items-center gap-2">
+                  <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden className="shrink-0">
+                    <circle cx="26" cy="26" r={r} fill="#0f1a2c" stroke={HEX.line} strokeWidth="5" />
+                    <circle
+                      cx="26"
+                      cy="26"
+                      r={r}
+                      fill="none"
+                      stroke={color}
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(d.progress / 100) * c} ${c}`}
+                      transform="rotate(-90 26 26)"
+                    />
+                    <text x="26" y="30" textAnchor="middle" fontSize="11" fontWeight="600" fill="#e6edf7">
+                      {`${Math.round(d.progress)}%`}
+                    </text>
+                  </svg>
+                  <b className="min-w-0 text-sm leading-snug">{d.name}</b>
+                </span>
+                {d.current && (
+                  <>
+                    <span className="text-xs leading-snug">{d.current.title}</span>
+                    <span
+                      className="whitespace-nowrap text-xs font-semibold"
+                      style={{ color: STATE_HEX[d.current.state] }}
+                    >
+                      {d.state === "done"
+                        ? t("done")
+                        : `${t(STATE_WORD[d.current.state])} · ${t("due {date}", { date: day(t, d.current.dueOn) })}`}
+                    </span>
+                  </>
+                )}
+                {d.barriers.map((b) => (
+                  <span key={b.id} className="text-xs text-p1" data-testid="relay-blocker">
+                    {t("⛔ Blocked: {what}", { what: b.title })}
+                    {b.costIls > 0 ? ` · ${ils(b.costIls)}` : ""}
+                  </span>
+                ))}
+                {waits && (
+                  <span className="text-xs text-warn">{t("⏳ Waits on {unit}", { unit: depts[k - 1].name })}</span>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="text-xs text-muted">
+        {t(
+          "Order: when each department starts its part. Arrow: it hands its work to the next. Red: the next department is held up because this one is late or blocked.",
+        )}
+      </p>
+    </div>
   );
 }
 
@@ -282,7 +345,7 @@ function Gantt({ i, today, t }: { i: Item; today: string; t: T }) {
         return (
           <a key={m.id} href={`/initiatives?i=${i.key}&item=ms:${m.id}#item`}>
             <title>
-              {`${m.ownerName} · ${m.title}: ${m.startsOn.slice(5)} → ${m.dueOn.slice(5)} · ${m.progress}% · ${t(STATE_WORD[m.state])}${m.moves ? ` · ${t("moved {n}×", { n: m.moves })}` : ""}`}
+              {`${m.ownerName} · ${m.title}: ${day(t, m.startsOn)} → ${day(t, m.dueOn)} · ${m.progress}% · ${t(STATE_WORD[m.state])}${m.moves ? ` · ${t("moved {n}×", { n: m.moves })}` : ""}`}
             </title>
             <text x={0} y={y + 10} fontSize="11" fill="#e6edf7">
               {m.title.length > 26 ? `${m.title.slice(0, 25)}…` : m.title}
@@ -429,7 +492,7 @@ function YourItemRow({ y, i, v, t }: { y: YourItem; i: Item; v: V; t: T }) {
             <input type="hidden" name="milestoneId" value={y.milestoneId} />
             {line(
               y.title,
-              t("your milestone · due {date}", { date: y.detail.slice(5) }),
+              t("your milestone · due {date}", { date: day(t, y.detail) }),
               <button className={btnSecondary}>{t("Mark done")}</button>,
             )}
           </form>
@@ -571,7 +634,7 @@ function recommendation(t: T, w: WorkItem): string {
   const unit = w.unitName ?? "";
   switch (a.kind) {
     case "milestone":
-      if (w.state === "done") return t("Delivered {date}.", { date: (a.doneOn ?? "").slice(5) });
+      if (w.state === "done") return t("Delivered {date}.", { date: day(t, a.doneOn) });
       if (w.state === "blocked")
         return t("Blocked by: {list}. Clear the barrier first.", { list: w.blockers.join(" · ") });
       if (w.state === "late")
@@ -584,7 +647,7 @@ function recommendation(t: T, w: WorkItem): string {
           unit,
           p: a.progress,
           e: a.expected,
-          date: a.dueOn.slice(5),
+          date: day(t, a.dueOn),
         });
       return t("On plan: {p}% done, {e}% expected by today.", { p: a.progress, e: a.expected });
     case "barrier":
@@ -600,7 +663,7 @@ function recommendation(t: T, w: WorkItem): string {
     case "conflict":
       return t(
         "Two plans collide from {from} to {to}. Decide which plan goes ahead; the trace shows both plans and VECTOR's recommendation.",
-        { from: a.from.slice(5), to: a.to.slice(5) },
+        { from: day(t, a.from), to: day(t, a.to) },
       );
     case "budget":
       return t(
@@ -641,7 +704,7 @@ function WorkList({ v, i, t, f, item }: { v: V; i: Item; t: T; f?: string; item?
             <tr>
               <th className="py-1 text-start font-normal">{t("What")}</th>
               <th className="py-1 text-start font-normal">{t("Who acts")}</th>
-              <th className="py-1 text-start font-normal">{t("Due")}</th>
+              <th className="whitespace-nowrap py-1 pe-4 text-start font-normal">{t("Due")}</th>
               <th className="py-1 text-start font-normal">{t("Next step")}</th>
               <th className="py-1 text-start font-normal">{t("Blocked by")}</th>
             </tr>
@@ -680,8 +743,8 @@ function WorkList({ v, i, t, f, item }: { v: V; i: Item; t: T; f?: string; item?
                   {w.unitName && <span className="text-muted">{w.unitName}</span>}
                   {(w.yours?.length ?? 0) > 0 && <span className="block font-semibold text-accent">{t("you")}</span>}
                 </td>
-                <td className={`num py-2 pe-3 text-xs ${w.state === "late" ? "text-p1" : "text-muted"}`}>
-                  {w.due ? w.due.slice(5) : "—"}
+                <td className={`whitespace-nowrap py-2 pe-4 text-xs ${w.state === "late" ? "text-p1" : "text-muted"}`}>
+                  {w.due ? day(t, w.due) : "—"}
                 </td>
                 <td className="py-2 pe-3 text-xs">{nextStep(t, w)}</td>
                 <td className="py-2 text-xs text-p1">
@@ -725,7 +788,7 @@ function ItemCard({ v, i, t, w, f }: { v: V; i: Item; t: T; w: WorkItem; f?: str
       <div className="mb-3 flex flex-col gap-1">
         {fact(t("Who acts"), w.who.join(", ") || "—")}
         {w.unitName && fact(t("Unit"), w.unitName)}
-        {w.due && fact(t("Due"), w.due.slice(5))}
+        {w.due && fact(t("Due"), day(t, w.due))}
         {fact(t("Next step"), nextStep(t, w))}
       </div>
       <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">{t("Analysis")}</h3>
@@ -733,11 +796,11 @@ function ItemCard({ v, i, t, w, f }: { v: V; i: Item; t: T; w: WorkItem; f?: str
         {a.kind === "milestone" && (
           <>
             {fact(t("Progress"), `${a.progress}% · ${t("expected {e}%", { e: a.expected })}`)}
-            {fact(t("Window"), `${a.startsOn.slice(5)} → ${a.dueOn.slice(5)}`)}
+            {fact(t("Window"), `${day(t, a.startsOn)} → ${day(t, a.dueOn)}`)}
             {a.daysLate > 0 && fact(t("Late by"), t("{n} days", { n: a.daysLate }))}
             {a.moves.map((m, k) => (
               <p key={k} className="text-xs text-muted">
-                {t("Moved {from} → {to}: {reason}", { from: m.from.slice(5), to: m.to.slice(5), reason: m.reason })}
+                {t("Moved {from} → {to}: {reason}", { from: day(t, m.from), to: day(t, m.to), reason: m.reason })}
               </p>
             ))}
             {a.reminders.map((r, k) => (
@@ -763,7 +826,7 @@ function ItemCard({ v, i, t, w, f }: { v: V; i: Item; t: T; w: WorkItem; f?: str
             <p className="text-xs">
               {a.b} <span className="text-muted">({a.unitB})</span>
             </p>
-            {fact(t("Overlap"), `${a.from.slice(5)} → ${a.to.slice(5)}`)}
+            {fact(t("Overlap"), `${day(t, a.from)} → ${day(t, a.to)}`)}
           </>
         )}
         {a.kind === "budget" && (
@@ -888,7 +951,7 @@ function Barriers({ i, t, canRaise }: { i: Item; t: T; canRaise: boolean }) {
             <li key={b.id} className="min-w-0">
               <span className="block">{b.title}</span>
               <span className="block text-xs text-muted">
-                {t("{unit} · {kind} · since {date}", { unit: b.ownerName, kind: t(b.kind), date: b.since.slice(5) })}
+                {t("{unit} · {kind} · since {date}", { unit: b.ownerName, kind: t(b.kind), date: day(t, b.since) })}
                 {b.costIls ? ` · ${ils(b.costIls)}` : ""}
               </span>
             </li>
@@ -984,7 +1047,7 @@ function Table({ v, t }: { v: V; t: T }) {
                   <>
                     <span className="block text-ink">{i.next.title}</span>
                     <span style={{ color: STATE_HEX[i.next.state] }}>
-                      {`${i.next.dueOn.slice(5)} · ${t(STATE_WORD[i.next.state])}`}
+                      {`${day(t, i.next.dueOn)} · ${t(STATE_WORD[i.next.state])}`}
                     </span>
                   </>
                 ) : (
@@ -1074,7 +1137,7 @@ export function InitiativesPage({
               <span>
                 · {t("budget {b} · spent {s} · value {v}", { b: ils(i.budget), s: ils(i.spent), v: ils(i.value) })}
               </span>
-              {i.endsOn && <span>· {t("ends {date}", { date: i.endsOn.slice(5) })}</span>}
+              {i.endsOn && <span>· {t("ends {date}", { date: day(t, i.endsOn) })}</span>}
             </div>
             <ProgressMap i={i} t={t} />
             <nav aria-label={t("Filter the items")} className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">

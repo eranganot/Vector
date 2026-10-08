@@ -47,8 +47,22 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-07 | E4 verified on Dev (4dc66f0): migrations 13/13, smoke 18/18, e2e 43/43 against Dev, demo reset after; gate brief docs/phases/STAGE_E4.md                                                                                                                                                                                                                                                                                                                                              | #48      |
 | 2026-10-08 | E4d (Eran's E4 review): event → action plan rebuilt (what each task is, who waits, cost to do / at stake / each week it slips / lost so far, coloured status, next step); Cross-department "How a delay travels between departments" (knock-on-v1 dependency flow with what-if +3/+7/+14 d, days and ₪ per department); EN/HE; e2e                                                                                                                                                    | #49      |
 | 2026-10-08 | E4d verified on Dev (8dbf734): smoke 18/18, e2e 46/46 against Dev, demo reset after                                                                                                                                                                                                                                                                                                                                                                                                   | #50      |
+| 2026-10-08 | G-E4 recorded. E4e (Eran's review): dates shown as "27 Oct" across Cross-department, Waiting on you and charts; Hebrew table cells keep their padding (root cause below); the department map becomes an ordered relay (step, start date, who acts now, held-up arrows, blockers, legend); EN/HE; e2e                                                                                                                                                                                  | #51      |
 
 ## Root-cause records
+
+### 2026-10-08 · Hebrew: the due date touched the next-step text in the Cross-department list
+
+- **What happened:** in Hebrew, "10-27" ran into "להחליט על ההמלצה" with no space (Eran's screenshot).
+- **Root cause (proven by measuring the cell in the browser):** the cell had the `num` class, which sets
+  `direction: ltr`. In a right-to-left table that moved the cell's `padding-inline-end` (12px) to its right side, away
+  from the next column on its left: computed `direction: ltr`, `padding-right: 12px`, `padding-left: 0px`, gap 0.
+  The date itself was also the raw ISO month-day.
+- **Ruled out:** a missing column gap in the table markup (the English layout has the same classes and is fine); the
+  translation (the date was not translated text).
+- **Fix:** table cells with `num` keep the page's direction (`unicode-bidi: plaintext` keeps numbers in order); after
+  the fix the cell measures `direction: rtl`, `padding-left: 12px`. Dates go through one helper (`day(t, …)`: "27 Oct"
+  / "27 אוק׳"), the due column does not wrap, and an e2e checks the Hebrew cell.
 
 ### 2026-10-07 · Unit names in the Action plan "Owner" column stayed English in Hebrew
 

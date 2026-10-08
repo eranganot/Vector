@@ -1,5 +1,6 @@
 /** Shared presentational pieces (dark theme). No data access here. */
 import Link from "next/link";
+import { day } from "./format";
 import { getT } from "../_lib/locale";
 
 const BAND_STYLE: Record<string, string> = {
@@ -179,10 +180,10 @@ export async function LineChart({
             {t("dashed = {label}", { label })}
           </text>
           <text x="8" y={H - 6} fontSize="11" fill="#8fa1bc">
-            {days[0].day.slice(5)}
+            {day(t, days[0].day)}
           </text>
           <text x={W - 8} y={H - 6} fontSize="11" textAnchor="end" fill="#e6edf7">
-            {last.day.slice(5)}: {fmtKpi(last.actual, unit)} {t("vs")} {fmtKpi(last.expected, unit)}
+            {day(t, last.day)}: {fmtKpi(last.actual, unit)} {t("vs")} {fmtKpi(last.expected, unit)}
           </text>
         </>
       )}

@@ -1113,4 +1113,18 @@ export const HE_SCREENS: Record<string, string> = {
     "כל משימה היא התחייבות שניתנה בישיבה. VECTOR עוקב אחריה מול התאריך שלה ומול מה שמחלקות אחרות צריכות ממנה, ומתמחר את העיכוב.",
   "a week depends on the open tasks": "בשבוע תלויים במשימות הפתוחות",
   "lost so far to delays": "הפסד עד עכשיו בגלל עיכובים",
+  "Now: {unit} must act.": "עכשיו: {unit} צריכים לפעול.",
+  "Blocked by {what} since {date}.": "חסום בגלל {what} מאז {date}.",
+  "“{what}” is late (due {date}).": "„{what}” באיחור (יעד {date}).",
+  "Next: “{what}”, due {date}.": "הבא: „{what}”, יעד {date}.",
+  "After it: {list}.": "אחריהם: {list}.",
+  "{a} is late or blocked: {b} waits": "{a} באיחור או חסומים: {b} מחכים",
+  "hands over": "מעביר הלאה",
+  "held up": "מעוכב",
+  then: "ואז",
+  "Step {n} · starts {date}": "שלב {n} · מתחיל {date}",
+  "⛔ Blocked: {what}": "⛔ חסום: {what}",
+  "⏳ Waits on {unit}": "⏳ מחכה ל{unit}",
+  "Order: when each department starts its part. Arrow: it hands its work to the next. Red: the next department is held up because this one is late or blocked.":
+    "סדר: מתי כל מחלקה מתחילה את החלק שלה. חץ: היא מעבירה את העבודה לבאה. אדום: המחלקה הבאה מעוכבת כי זו באיחור או חסומה.",
 };

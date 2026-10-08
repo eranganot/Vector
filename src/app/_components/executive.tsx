@@ -4,6 +4,7 @@
  * lists with chips and one button each. Every chart mark carries its value as a hover title. No data access here.
  */
 import Link from "next/link";
+import { day } from "./format";
 import type { ExecutiveHome, MoneyLine } from "@/application/facade";
 import type { T } from "@/i18n/t";
 import { getLocale, getT } from "../_lib/locale";
@@ -517,10 +518,10 @@ function MonthChart({ v, t }: { v: V; t: T }) {
         </text>
       )}
       <text x={left} y={H - 8} fontSize="11" fill="#8fa1bc">
-        {days[0]?.day.slice(5)}
+        {day(t, days[0]?.day)}
       </text>
       <text x={W - right} y={H - 8} fontSize="11" fill="#8fa1bc" textAnchor="end">
-        {days[end]?.day.slice(5)}
+        {day(t, days[end]?.day)}
       </text>
     </svg>
   );
