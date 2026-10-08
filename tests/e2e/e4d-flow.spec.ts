@@ -60,3 +60,24 @@ test("Hebrew: the flow reads right to left", async ({ page, context }) => {
   await page.goto("/initiatives?i=I-HOLIDAY");
   await expect(page.getByTestId("dependency-flow").getByText("איך עיכוב עובר בין מחלקות")).toBeVisible();
 });
+
+test("E4e: the department map says who acts now, the order, and where the blockers are", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/initiatives?i=I-HOLIDAY");
+  const map = page.getByTestId("progress-map");
+  await expect(map.getByTestId("relay-now")).toContainText("Now: HR must act.");
+  await expect(map.getByTestId("relay-step").first()).toContainText("Step 1 · starts");
+  await expect(map.locator('[data-testid="relay-arrow"][data-late="true"]').first()).toContainText("held up");
+  await expect(map.getByTestId("relay-blocker").first()).toContainText("Blocked:");
+  await expect(map.getByText(/Order: when each department starts its part/)).toBeVisible();
+});
+
+test("E4e: in Hebrew the due date and the next step keep their space", async ({ page, context }) => {
+  await as(page, "Dana Levi");
+  await context.addCookies([{ name: "vector_lang", value: "he", url: page.url() }]);
+  await page.goto("/initiatives?i=I-HOLIDAY");
+  const due = page.getByTestId("work-row").first().locator("td").nth(2);
+  await expect(due).toHaveCSS("direction", "rtl");
+  await expect(due).toHaveCSS("padding-left", "16px");
+  await expect(due).toHaveText(/^\d{1,2} \S+$/);
+});

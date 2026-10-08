@@ -68,3 +68,11 @@ a {
   direction: ltr;
   unicode-bidi: isolate;
 }
+/* A table cell keeps the page's direction, so its padding and alignment follow the reader (Hebrew: right to left);
+   its own text still reads left to right when it starts with digits or Latin letters. Forcing ltr on a cell put its
+   padding on the wrong side in Hebrew: the due date touched the next column (E4e root cause, STATUS.md). */
+td.num,
+th.num {
+  direction: inherit;
+  unicode-bidi: plaintext;
+}
