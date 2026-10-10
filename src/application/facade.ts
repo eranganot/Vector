@@ -127,7 +127,8 @@ export const api = {
   dependencyFlow: async (a: Actor, commitmentIds: string[], whatIf?: { nodeId: string; days: number }) =>
     dependencyFlow(db(), await activeOrgId(db()), a, commitmentIds, whatIf),
   eventPlan: async (a: Actor) => eventPlan(db(), await activeOrgId(db()), a),
-  marketView: async (a: Actor, region?: MarketRegion) => marketView(db(), a, { region }),
+  marketView: async (a: Actor, region?: MarketRegion) =>
+    marketView(db(), a, { region, orgId: await activeOrgId(db()) }),
   reportScopes: async (a: Actor) => reportScopes(db(), await activeOrgId(db()), a),
   resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
     resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),

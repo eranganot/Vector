@@ -229,6 +229,44 @@ export function MarketScreen({ v, t }: { v: MarketView; t: T }) {
           },
         ]}
       />
+      {v.changed.length > 0 && (
+        <Card data-testid="market-changed">
+          <SectionTitle aside={<span className="text-xs text-muted">{t("rules market-v1 · how it hits us")}</span>}>
+            {t("What changed outside")}
+          </SectionTitle>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {v.changed.map((c) => (
+              <li
+                key={c.id}
+                className={`flex flex-col gap-1.5 rounded-lg border p-3 ${c.workstream === "opportunity" ? "border-good/40" : "border-warn/40"}`}
+                data-testid="market-change"
+              >
+                <div className="flex items-center gap-2 text-xs">
+                  <span
+                    className={`rounded px-1.5 py-0.5 font-mono font-semibold ${c.workstream === "opportunity" ? "bg-good/15 text-good" : "bg-warn/15 text-warn"}`}
+                  >
+                    {c.priorityBand}
+                  </span>
+                  <span className="text-muted">
+                    {c.workstream === "opportunity" ? t("Market opportunity") : t("Market risk")}
+                  </span>
+                  {c.impactIls !== null && (
+                    <span className="num ms-auto font-semibold">
+                      {c.workstream === "opportunity"
+                        ? t("{money}/week upside", { money: ils(c.impactIls) })
+                        : t("{money}/week at stake", { money: ils(c.impactIls) })}
+                    </span>
+                  )}
+                </div>
+                <Link href={`/insights/${c.id}`} className="text-sm font-semibold text-ink">
+                  {c.title}
+                </Link>
+                <p className="text-[13px] text-muted">{c.whyItMatters}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="min-w-0" data-testid="food-vs-ours">
           <SectionTitle aside={<span className="text-xs text-muted">{t("index, first month = 100")}</span>}>

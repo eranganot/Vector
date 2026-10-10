@@ -4,11 +4,12 @@ _Last updated: 2026-10-10 (E5a)_
 
 ## Current phase
 
-**Plan v2, stage E6 (market & competitors): starting.** E5 accepted by Eran 2026-10-10 (G-E5); saved layouts added
-(E5c, G-E5a). **Prod is on E5** (`demo` 3d68c7f: migrations 14, seed p5-v2; smoke 19/19, doctor clean).
+**Plan v2, stage E6 (market & competitors): built, awaiting Eran's review (G-E6).** E6a #56 (real data, basket
+index, the tab) and E6b #57 (market-v1 → insights, What changed outside, board-pack market block). **Prod is on E5**
+(`demo` 3d68c7f: migrations 14, seed p5-v2); E6 goes to Prod only on Eran's sign-off.
 
-- E5 #51–#55 shipped; Dev verified at e5e85d6 (e2e 52/52); decks opened in EN/HE.
-- Prod promotion: `main` 1da89d5 merged into `demo` (no force push; `demo` keeps its merge history).
+- E6a Dev verified at a76ef05 (smoke 20/20, e2e 55/55 on Dev, demo reset after).
+- Refresh market data: `pnpm market:fetch` from Claude's workspace, commit the new `data/market/snapshot-<day>.json`.
 
 ## Objective (E0, done)
 
@@ -23,13 +24,14 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 - Railway deprecates `railway.toml` in favour of `.railway/railway.ts`; `railway.toml` keeps working until 2026-12-01. Migrate before then; treat as an infrastructure change.
 - This cloud session cannot reach Railway's API and holds no Railway token: deploys are verified from outside (health SHA, migrations, seed version, smoke, persona sign-in, e2e on Dev).
-- Price-transparency portals of chains other than Shufersal are not yet verified (E6).
+- Market price files exist for one day (2026-10-10): MK1/MK4 and the per-chain basket lines need daily snapshots.
 - Audit explorer and commitment read models filter in the application layer (fine at demo scale).
 - `tests/integration/lifecycle.test.ts` "§5.2" depends on the tests before it in its file.
 
 ## Next recommended action
 
-1. E6: market & competitors (docs/specs/market-intelligence.md), real Israeli sources with source and date on every figure.
+1. Eran reviews E6 (G-E6, docs/phases/STAGE_E6.md); open question: a "price gap now" rule for the planted North dairy gap.
+2. After sign-off: promote Prod to E6; then E7 (mail agent).
 
 ## Reproducible commands
 

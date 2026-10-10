@@ -3,10 +3,10 @@
  * chains' price files, reported results) next to VECTOR Retail Group's own synthetic prices. Every figure carries its
  * source and date; estimates are labelled.
  */
-import { inArray } from "drizzle-orm";
+import { and, arrayOverlaps, desc, eq, inArray, like } from "drizzle-orm";
 import { BASKET_MODEL, CATEGORIES, CBS_FOR_CATEGORY, yoy, type Category } from "@/domain/market";
 import type { Actor } from "@/domain/types";
-import { competitor, competitorFigure, marketPoint, marketPriceFile, marketSeries } from "@/infra/db/schema";
+import { competitor, competitorFigure, insight, marketPoint, marketPriceFile, marketSeries } from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
 import { readScope } from "./insights";
 
@@ -22,7 +22,7 @@ const REGION_NAME: Record<MarketRegion, string> = {
 };
 const CHAIN_ORDER = ["vector", "shufersal", "rami_levy", "yohananof", "osher_ad", "tiv_taam"];
 
-export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: MarketRegion } = {}) {
+export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: MarketRegion; orgId?: string } = {}) {
   if (actor.kind !== "user" || readScope(actor).length === 0) return null;
   const region = opts.region ?? "ALL";
   const series = await db.select().from(marketSeries);
@@ -140,6 +140,37 @@ export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: Mark
       basket: indexOf(k, region, "all"),
     };
   });
+  // ── What changed outside: market-v1 insights in the viewer's scope (E6b) ──
+  const changed = opts.orgId
+    ? (
+        await db
+          .select({
+            id: insight.id,
+            workstream: insight.workstream,
+            title: insight.title,
+            whyItMatters: insight.whyItMatters,
+            priorityBand: insight.priorityBand,
+            flowStatus: insight.status,
+            createdAt: insight.createdAt,
+            measurements: insight.priorityBreakdown,
+          })
+          .from(insight)
+          .where(
+            and(
+              eq(insight.orgId, opts.orgId),
+              like(insight.generatedBy, "rule:market-v1@%"),
+              arrayOverlaps(insight.visibleUnitIds, readScope(actor)),
+            ),
+          )
+          .orderBy(desc(insight.priorityScore))
+      ).map(({ measurements, ...r }) => ({
+        ...r,
+        impactIls:
+          (measurements as { input?: { impactIls?: number; valueIls?: number } } | null)?.input?.impactIls ??
+          (measurements as { input?: { valueIls?: number } } | null)?.input?.valueIls ??
+          null,
+      }))
+    : [];
   const vectorIdx = indexOf("vector", region, "all");
   const leader = competitors.find((c) => c.key === "shufersal");
   return {
@@ -164,6 +195,7 @@ export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: Mark
     heatmap,
     history,
     competitors,
+    changed,
     sources: {
       cbs: {
         url: "https://api.cbs.gov.il/index/",

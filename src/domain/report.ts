@@ -12,7 +12,7 @@ export const PERIODS = ["4w", "8w", "13w"] as const;
 export type Period = (typeof PERIODS)[number];
 
 export type Section =
-  "headline" | "sales" | "finance" | "hr" | "projects" | "kpis" | "blockers" | "decisions" | "focus";
+  "headline" | "sales" | "finance" | "hr" | "projects" | "kpis" | "blockers" | "decisions" | "focus" | "market";
 
 export type MetricSpec = {
   /** English title; the screen translates it. */
@@ -42,7 +42,8 @@ export const METRICS = {
     section: "decisions",
     kinds: ["table"],
     periods: null,
-  },
+  } /** Plan v2 (E6b): basket price vs the chains (real price files; ours synthetic) and their reported results. */,
+  market_position: { title: "Market & competitors", section: "market", kinds: ["bars", "table"], periods: null },
 } as const satisfies Record<string, MetricSpec>;
 
 export type MetricId = keyof typeof METRICS;
@@ -84,6 +85,7 @@ export const TEMPLATES = {
       "health_by_region",
       "initiatives_status",
       "top_risks_opportunities",
+      "market_position",
       "decisions_needed",
       "kpis_on_target",
     ],
