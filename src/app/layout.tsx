@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import { dirOf } from "@/i18n/locale";
+import { productName } from "@/i18n/brand";
 import { getLocale } from "./_lib/locale";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "VECTOR",
-  description: "Organizational intelligence: signal, insight, decision, action, outcome.",
-};
+/** The tab title is the product's full name in the reader's language (FB-2). */
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return {
+    title: productName(locale),
+    description: `${productName(locale)}: signal, insight, decision, action, outcome.`,
+  };
+}
 
 /** Language and direction come from the viewer's choice (English LTR, Hebrew RTL; Eran, 2026-10-05). */
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

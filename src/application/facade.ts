@@ -40,6 +40,23 @@ import {
   listMyApprovals,
   listMyDecisions,
 } from "./queries/insights";
+import { executiveHome } from "./queries/executive";
+import { workstreamMoney } from "./queries/money";
+import { initiativesView } from "./queries/initiatives";
+import { actionCenter, messagesForMe } from "./queries/action-center";
+import { dependencyFlow, eventPlan } from "./queries/flow";
+import { getReport, listReports, reportScopes, resolveReport } from "./queries/report-data";
+import { generateReport, recordReportDownload, type GenerateReportInput } from "./commands/reports";
+import type { Layout } from "@/domain/report";
+import { approveAndSend, declineInCenter, releaseMessages, type ApproveAndSendInput } from "./commands/messages";
+import {
+  completeMilestone,
+  moveMilestone,
+  raiseBarrier,
+  resolveBarrier,
+  sendInitiativeReminder,
+} from "./commands/initiatives";
+import { valueMap } from "./queries/value-map";
 import { commandCenter, orgTree, performanceView } from "./queries/performance";
 import { advanceClock, resetDemo } from "./scenario";
 import { getDb } from "@/infra/db/client";
@@ -77,7 +94,7 @@ export async function seededPeople() {
 
 export async function profile(userId: string) {
   const [u] = await db()
-    .select({ id: user.id, name: user.name, title: user.title, email: user.email })
+    .select({ id: user.id, name: user.name, title: user.title, email: user.email, isCSuite: user.isCSuite })
     .from(user)
     .where(eq(user.id, userId));
   return u;
@@ -95,6 +112,40 @@ export const api = {
   performance: async (a: Actor) => performanceView(db(), await activeOrgId(db()), a),
   unit: async (a: Actor, unitId: string) => performanceView(db(), await activeOrgId(db()), a, unitId),
   commandCenter: async (a: Actor) => commandCenter(db(), await activeOrgId(db()), a),
+  executiveHome: async (a: Actor, unitId?: string) => executiveHome(db(), await activeOrgId(db()), a, { unitId }),
+  valueMap: async (a: Actor, insightIds: string[]) => valueMap(db(), await activeOrgId(db()), a, insightIds),
+  actionCenter: async (a: Actor, insightId: string | undefined, locale: "en" | "he") =>
+    actionCenter(db(), await activeOrgId(db()), a, { insightId, locale }),
+  messagesForMe: async (a: Actor) => messagesForMe(db(), await activeOrgId(db()), a),
+  dependencyFlow: async (a: Actor, commitmentIds: string[], whatIf?: { nodeId: string; days: number }) =>
+    dependencyFlow(db(), await activeOrgId(db()), a, commitmentIds, whatIf),
+  eventPlan: async (a: Actor) => eventPlan(db(), await activeOrgId(db()), a),
+  reportScopes: async (a: Actor) => reportScopes(db(), await activeOrgId(db()), a),
+  resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
+    resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),
+  generateReport: async (a: Actor, input: GenerateReportInput) => generateReport(await ctx(), a, input),
+  recordReportDownload: async (a: Actor, id: string, format: "pptx" | "pdf") =>
+    recordReportDownload(await ctx(), a, id, format),
+  listReports: async (a: Actor) => listReports(db(), await activeOrgId(db()), a),
+  getReport: async (a: Actor, id: string) => getReport(db(), await activeOrgId(db()), a, id),
+  initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
+  completeMilestone: async (a: Actor, milestoneId: string) => completeMilestone(await ctx(), a, milestoneId),
+  moveMilestone: async (a: Actor, milestoneId: string, dueOn: string, reason: string) =>
+    moveMilestone(await ctx(), a, milestoneId, dueOn, reason),
+  raiseBarrier: async (
+    a: Actor,
+    initiativeId: string,
+    input: { title: string; kind: string; ownerUnitId: string; costIls?: number },
+  ) => raiseBarrier(await ctx(), a, initiativeId, input),
+  resolveBarrier: async (a: Actor, barrierId: string, resolution: string) =>
+    resolveBarrier(await ctx(), a, barrierId, resolution),
+  sendInitiativeReminder: async (
+    a: Actor,
+    initiativeId: string,
+    input: { toUnitId: string; subjectKind: "milestone" | "barrier" | "budget"; subjectId?: string; body: string },
+  ) => sendInitiativeReminder(await ctx(), a, initiativeId, input),
+  workstreamMoney: async (a: Actor, insightIds: string[]) =>
+    workstreamMoney(db(), await activeOrgId(db()), a, insightIds),
   orgTree: async (a: Actor) => orgTree(db(), await activeOrgId(db()), a),
   verifyChain: async () => verifyAuditChain(db(), await activeOrgId(db())),
   acceptDecision: async (a: Actor, decisionId: string, rationale?: string) => {
@@ -108,8 +159,21 @@ export const api = {
     const c = await ctx();
     await grantApproval(c, a, actionId, rationale);
     await executeReadyActions(c);
+    await releaseMessages(c); // E4: a message waiting for this approval goes out now
   },
-  deny: async (a: Actor, actionId: string, rationale: string) => denyApproval(await ctx(), a, actionId, rationale),
+  deny: async (a: Actor, actionId: string, rationale: string) => {
+    const c = await ctx();
+    await denyApproval(c, a, actionId, rationale);
+    await releaseMessages(c);
+  },
+  approveAndSend: async (a: Actor, insightId: string, input: ApproveAndSendInput) => {
+    const c = await ctx();
+    const id = await approveAndSend(c, a, insightId, input);
+    await executeReadyActions(c);
+    return id;
+  },
+  declineInCenter: async (a: Actor, insightId: string, rationale: string) =>
+    declineInCenter(await ctx(), a, insightId, rationale),
   review: async (a: Actor, outcomeId: string, lesson: string) => reviewOutcome(await ctx(), a, outcomeId, { lesson }),
   commitments: async (a: Actor, unitId?: string) => commitmentsView(db(), await activeOrgId(db()), a, unitId),
   commitmentsForInsight: async (a: Actor, insightId: string) =>
@@ -154,6 +218,12 @@ export const api = {
   resetDemo: (a: Actor, password: string) => resetDemo(db(), a, password),
 };
 export type { KpiStat, PerformanceView } from "./queries/performance";
+export type { ExecutiveHome, MoneyLine } from "./queries/executive";
+export type { ValuePoint } from "./queries/value-map";
+export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives";
+export type { ActionCenterView, QueueItem } from "./queries/action-center";
+export type { DependencyFlow, EventPlan } from "./queries/flow";
+export type { ResolvedBlock, ResolvedReport, BlockData, ReportScopeOption } from "./queries/report-data";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

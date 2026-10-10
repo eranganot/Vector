@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { day } from "./format";
 import type { api } from "@/application/facade";
 import { Band, Card, SectionTitle } from "./ui";
 import { getT } from "../_lib/locale";
@@ -61,7 +62,7 @@ export async function WaitingCard({
           : a.action.dueAt
             ? t("your task · {status} · due {date}", {
                 status: t(a.action.status.replace("_", " ")),
-                date: a.action.dueAt.toISOString().slice(5, 10),
+                date: day(t, a.action.dueAt),
               })
             : t("your task · {status}", { status: t(a.action.status.replace("_", " ")) }),
     })),

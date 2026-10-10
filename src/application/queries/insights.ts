@@ -20,6 +20,7 @@ import {
   signal,
   task,
   outboxMessage,
+  outboundMessage,
   roleAssignment,
   user,
 } from "@/infra/db/schema";
@@ -164,6 +165,7 @@ export async function auditTrailForInsight(db: DbOrTx, orgId: string, insightId:
           union select ${action.id} from ${action} where ${action.insightId} = ${insightId}
           union select ${approval.id} from ${approval} join ${action} on ${approval.actionId} = ${action.id} where ${action.insightId} = ${insightId}
           union select ${outcome.id} from ${outcome} where ${outcome.insightId} = ${insightId}
+          union select ${outboundMessage.id} from ${outboundMessage} where ${outboundMessage.insightId} = ${insightId}
         )`,
       ),
     )
@@ -173,7 +175,7 @@ export async function auditTrailForInsight(db: DbOrTx, orgId: string, insightId:
 type Person = { name: string; assignments: RoleAssignment[] };
 
 /** Everyone in the org with their role assignments (for routing approvals). */
-async function peopleWithAssignments(db: DbOrTx, orgId: string) {
+export async function peopleWithAssignments(db: DbOrTx, orgId: string) {
   const rows = await db
     .select({ id: user.id, name: user.name, role: roleAssignment.role, unit: orgUnit })
     .from(user)
@@ -194,7 +196,7 @@ async function peopleWithAssignments(db: DbOrTx, orgId: string) {
  * (AZ-2), excluding the Executive when anyone else is eligible. The Executive stays eligible under every
  * rule (a fallback and escalation path) but is only *asked* when nobody else may approve (G3, Eran 2026-10-04).
  */
-function routeApproval(
+export function routeApproval(
   people: Map<string, Person>,
   requirement: ApprovalRequirement,
   act: { ownerUserId: string; proposedBy: string },

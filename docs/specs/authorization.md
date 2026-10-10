@@ -4,6 +4,8 @@ Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built.** Implem
 §2 and the rules in §4 are table-driven unit tests (`src/domain/policy/policy.test.ts`); §5 is covered by
 integration tests (`tests/integration/lifecycle.test.ts`).
 
+> **Plan v2 (E0, 2026-10-06):** the C-suite read scope is in [ADR-008](../adr/ADR-008-c-suite-scope.md) (proposed). The CFO and COO also hold Viewer @ Group; acting scope is unchanged.
+
 These are four separate checks, in this order, each with its own code path and audit trail:
 
 | Check             | Question                                                   | Where                                                             | Failure                                |
@@ -59,6 +61,9 @@ unit), not in SQL; Phase 3 moves them to SQL filters.
 | `outcome.review`                        |       |     ✓     |         ✓          |             ✓             |        |
 | `commitment.record` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
 | `commitment.update` (P4, owner unit)    |       |     ✓     |         ✓          |             ✓             |        |
+| `initiative.record` (plan v2, E1c)      |       |     ✓     |         ✓          |                           |        |
+| `initiative.update` (plan v2, E3)       |       |     ✓     |         ✓          |                           |        |
+| `report.generate` (plan v2, E5, scope)  |       |     ✓     |         ✓          |             ✓             |        |
 | `audit.read` (in scope)                 |   ✓   |     ✓     |         ✓          |             ✓             |        |
 | `config.priority_weights.propose`       |   ✓   |     ✓     |                    |                           |        |
 | `config.priority_weights.approve`       |       |     ✓     |                    |                           |        |
@@ -72,7 +77,9 @@ it may approve a given action is decided by the approval rules (§4) and scope.
 Assignments in the seed (20 people): Executive at the group root (Dana, CEO); a Department Manager for each of the
 8 departments, plus a second manager in Legal & Compliance (Dafna Mor, Senior Legal Counsel) and in Supply Chain (Ben Shalom, Head of DC Operations) (Yael Barak, General Counsel, and Dafna are AP-7 approvers); a Regional
 Manager for each of the 5 regions; two Branch Managers (Avi at Haifa Grand Canyon, Lior at Tel Aviv Dizengoff); a
-Viewer at the group root (Tal, board observer); and an Admin at the group root. A Branch Manager is the
+Viewer at the group root (Tal, board observer); and an Admin at the group root. Plan v2 (ADR-008, E1b): the CFO and the
+new COO (Oren Halevi, Department Manager @ Store Operations and @ Supply Chain, not head) also hold Viewer @ Group;
+reading the group never widens what they may do. A Branch Manager is the
 `regional_manager` role assigned at a branch unit; there is no separate role.
 
 How the UI applies `audit.read` (Phase 4): `/audit` is a scoped explorer for everyone holding `audit.read`. An event is

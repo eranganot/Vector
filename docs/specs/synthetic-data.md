@@ -25,7 +25,7 @@ synthetic (charter §17). Code: `src/infra/seed/` (`org.ts`, `generator.ts`, `ca
 | Departments     | 8 (see [scenarios.md](scenarios.md))                             | same                                          |
 | Users           | 20 personas                                                      | ~25 (more branch managers, a deputy CEO)      |
 | KPIs            | 16: 6 per branch per day, 10 per department per day              | + promo redemption, online orders (Phase 4–6) |
-| History         | 84 days daily (12 weeks)                                         | 52 weeks (Phase 7, for year-on-year)          |
+| History         | 52 weeks daily (since E1c, seed `p5-v1`; 84 days before)         | —                                             |
 | Planted stories | 1 live detector story + 18 catalog scenarios + background plants | five charter scenarios on one timeline (P7)   |
 
 "Haifa & Coast" in the Phase 1 plan became **Coast** (Netanya–Hadera–Herzliya and the Sharon): the Haifa branches stay in
@@ -43,28 +43,29 @@ North so the Phase 2 story keeps its regional manager.
 
 ## Personas (seeded users)
 
-| Name          | Title                              | Role @ scope                                        |
-| ------------- | ---------------------------------- | --------------------------------------------------- |
-| Dana Levi     | CEO                                | Executive @ Group                                   |
-| Yossi Cohen   | Regional Manager, North            | Regional Manager @ North                            |
-| Gil Peretz    | Regional Manager, Coast            | Regional Manager @ Coast                            |
-| Maya Azulay   | Regional Manager, Center           | Regional Manager @ Center                           |
-| Rina Avraham  | Regional Manager, Jerusalem        | Regional Manager @ Jerusalem                        |
-| Omer Biton    | Regional Manager, South            | Regional Manager @ South                            |
-| Avi Mizrahi   | Branch Manager, Haifa Grand Canyon | Regional Manager role @ the branch (branch manager) |
-| Lior Ben-Ami  | Branch Manager, Tel Aviv Dizengoff | Regional Manager role @ the branch (branch manager) |
-| Shira Katz    | VP Store Operations                | Department Manager @ Store Operations               |
-| Noa Friedman  | VP Supply Chain                    | Department Manager @ Supply Chain                   |
-| Eitan Rosen   | VP Trade & Commercial              | Department Manager @ Trade & Commercial             |
-| Ronit Shapiro | VP Marketing                       | Department Manager @ Marketing                      |
-| Michal Golan  | CFO                                | Department Manager @ Finance                        |
-| Hila Dahan    | VP HR                              | Department Manager @ HR                             |
-| Yael Barak    | General Counsel                    | Department Manager @ Legal & Compliance (AP-7)      |
-| Dafna Mor     | Senior Legal Counsel               | Department Manager @ Legal & Compliance (AP-7)      |
-| Ben Shalom    | Head of DC Operations              | Department Manager @ Supply Chain                   |
-| Amir Klein    | CIO                                | Department Manager @ IT                             |
-| Tal Ben-David | Board observer                     | Viewer @ Group                                      |
-| Ops Admin     | System administrator               | Admin @ Group                                       |
+| Name          | Title                              | Role @ scope                                                                                   |
+| ------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Dana Levi     | CEO                                | Executive @ Group                                                                              |
+| Yossi Cohen   | Regional Manager, North            | Regional Manager @ North                                                                       |
+| Gil Peretz    | Regional Manager, Coast            | Regional Manager @ Coast                                                                       |
+| Maya Azulay   | Regional Manager, Center           | Regional Manager @ Center                                                                      |
+| Rina Avraham  | Regional Manager, Jerusalem        | Regional Manager @ Jerusalem                                                                   |
+| Omer Biton    | Regional Manager, South            | Regional Manager @ South                                                                       |
+| Avi Mizrahi   | Branch Manager, Haifa Grand Canyon | Regional Manager role @ the branch (branch manager)                                            |
+| Lior Ben-Ami  | Branch Manager, Tel Aviv Dizengoff | Regional Manager role @ the branch (branch manager)                                            |
+| Shira Katz    | VP Store Operations                | Department Manager @ Store Operations                                                          |
+| Noa Friedman  | VP Supply Chain                    | Department Manager @ Supply Chain                                                              |
+| Eitan Rosen   | VP Trade & Commercial              | Department Manager @ Trade & Commercial                                                        |
+| Ronit Shapiro | VP Marketing                       | Department Manager @ Marketing                                                                 |
+| Michal Golan  | CFO                                | Department Manager @ Finance + Viewer @ Group (ADR-008)                                        |
+| Oren Halevi   | COO (E1b)                          | Department Manager @ Store Operations and @ Supply Chain (not head) + Viewer @ Group (ADR-008) |
+| Hila Dahan    | VP HR                              | Department Manager @ HR                                                                        |
+| Yael Barak    | General Counsel                    | Department Manager @ Legal & Compliance (AP-7)                                                 |
+| Dafna Mor     | Senior Legal Counsel               | Department Manager @ Legal & Compliance (AP-7)                                                 |
+| Ben Shalom    | Head of DC Operations              | Department Manager @ Supply Chain                                                              |
+| Amir Klein    | CIO                                | Department Manager @ IT                                                                        |
+| Tal Ben-David | Board observer                     | Viewer @ Group                                                                                 |
+| Ops Admin     | System administrator               | Admin @ Group                                                                                  |
 
 A branch manager is a `regional_manager` assignment at a branch unit; there is no separate role (authorization.md §2).
 
@@ -80,7 +81,7 @@ A branch manager is a `regional_manager` assignment at a branch unit; there is n
 | `nps`                | Customer NPS                | branch     | score | higher | 40     | Store Operations   |
 | `dc_on_time`         | DC deliveries on time       | department | %     | higher | 95     | Supply Chain       |
 | `supplier_fill`      | Supplier fill rate          | department | %     | higher | 97     | Trade & Commercial |
-| `gross_margin`       | Gross margin                | department | %     | higher | 31.5   | Trade & Commercial |
+| `gross_margin`       | Gross margin                | department | %     | higher | 26.0   | Trade & Commercial |
 | `campaign_ready`     | Campaigns on schedule       | department | %     | higher | 90     | Marketing          |
 | `opex_vs_budget`     | Operating spend vs budget   | department | %     | lower  | 100    | Finance            |
 | `vacancy_pct`        | Open store positions        | department | %     | lower  | 4      | HR                 |
@@ -90,6 +91,12 @@ A branch manager is a `regional_manager` assignment at a branch unit; there is n
 | `it_incidents`       | Open IT incidents           | department | count | lower  | 5      | IT                 |
 
 "Usual" means no fixed target: the dashboards compare with the usual level (same weekday, previous four weeks).
+
+## Money lines and initiatives (plan v2, E1c)
+
+See [financials.md](financials.md) for the money lines, budgets and the measured P&L (gross margin recalibrated to
+26%, G-E0g) and [cross-department.md §5](cross-department.md#5-seeded-initiatives-v5) for the eight initiatives. The
+holiday calendar now covers the whole 52 weeks (Rosh Hashanah to Shavuot 5786, from Hebcal).
 
 ## Generator model (per branch, per day)
 

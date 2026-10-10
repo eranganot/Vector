@@ -68,3 +68,29 @@ a {
   direction: ltr;
   unicode-bidi: isolate;
 }
+/* A table cell keeps the page's direction, so its padding and alignment follow the reader (Hebrew: right to left);
+   its own text still reads left to right when it starts with digits or Latin letters. Forcing ltr on a cell put its
+   padding on the wrong side in Hebrew: the due date touched the next column (E4e root cause, STATUS.md). */
+td.num,
+th.num {
+  direction: inherit;
+  unicode-bidi: plaintext;
+}
+
+/* Print view (E5b, reports.md §3): a report prints as it looks on screen — dark theme kept, shell hidden — so
+   "Save as PDF" from the browser gives the same charts, in Hebrew right to left too. */
+@media print {
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  [data-shell="nav"],
+  [data-shell="top"] {
+    display: none !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+}

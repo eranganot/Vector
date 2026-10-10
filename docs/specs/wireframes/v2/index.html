@@ -1,0 +1,473 @@
+<title>VECTOR Plan v2 Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: the product's own shell (sidebar + content) per screen; screens switch by tab. Single dark look, matching VECTOR's approved dark theme (G2). */
+:root {
+  --ground: #0b1424; --panel: #111d31; --panel-2: #16243c; --line: #22324d;
+  --fg: #e6edf7; --muted: #8fa0ba; --accent: #22c3e6;
+  --p1: #f05d5e; --p2: #f2b53a; --p3: #22c3e6; --p4: #6b7a93; --ok: #2fcf8f; --wire: #f2b53a;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+body { background: var(--ground); color: var(--fg); font: 14px/1.5 var(--sans); margin: 0; padding: 16px; }
+a { color: var(--accent) }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.intro { max-width: 1280px; margin: 0 auto 14px; display: grid; gap: 6px }
+.intro h1 { font-size: 20px; margin: 0; text-wrap: balance }
+.intro p { margin: 0; color: var(--muted); max-width: 80ch }
+.tabs { max-width: 1280px; margin: 0 auto 14px; display: flex; flex-wrap: wrap; gap: 6px }
+.tabs a { text-decoration: none; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13px }
+.tabs a[aria-current="page"] { color: var(--ground); background: var(--accent); border-color: var(--accent) }
+.tabs a:focus-visible, button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.app { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 220px minmax(0,1fr); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--ground) }
+.side { background: var(--panel); border-inline-end: 1px solid var(--line); padding: 16px 12px; display: grid; align-content: start; gap: 2px }
+.brand { font-weight: 700; letter-spacing: .08em; font-size: 13px; padding: 0 8px 14px; line-height: 1.3 }
+.brand span { display: inline; font-weight: 500; letter-spacing: .02em; color: var(--muted); font-size: 11px }
+.nav { padding: 6px 8px; border-radius: 6px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between }
+.nav.on { background: var(--panel-2); color: var(--fg); box-shadow: inset 2px 0 0 var(--accent) }
+.nav .new { font-size: 10px; color: var(--wire); border: 1px solid var(--wire); border-radius: 4px; padding: 0 4px }
+.main { padding: 18px 20px 24px; display: grid; gap: 16px; min-width: 0 }
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; white-space: nowrap }
+h2 { font-size: 22px; margin: 0; text-wrap: balance; line-height: 1.25 }
+h3 { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; font-weight: 600 }
+.sub { color: var(--muted); margin: 4px 0 0 }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0 }
+.note { border: 1px dashed var(--wire); color: var(--wire); border-radius: 6px; padding: 6px 10px; font-size: 12px }
+.money { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px }
+.money div { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px }
+.money b { display: block; font-family: var(--mono); font-size: 19px; font-weight: 500 }
+.money small { color: var(--muted); font-size: 11.5px }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px }
+.tile .row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px }
+.tile .score { font-family: var(--mono); font-size: 26px; font-weight: 500 }
+.tile .why { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px }
+.state { font-size: 12px; display: inline-flex; align-items: center; gap: 5px }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block }
+.good { color: var(--ok) } .bad { color: var(--p1) } .warn { color: var(--p2) }
+.bg-good { background: var(--ok) } .bg-bad { background: var(--p1) } .bg-warn { background: var(--p2) }
+.grid2 { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 16px }
+.cause { display: grid; gap: 10px }
+.cause div { border-inline-start: 3px solid var(--line); padding-inline-start: 10px }
+.cause div.b { border-color: var(--p1) } .cause div.w { border-color: var(--p2) } .cause div.g { border-color: var(--ok) }
+.cause p { margin: 0 }
+.cause small { color: var(--muted) }
+.tw { overflow-x: auto }
+table { border-collapse: collapse; width: 100%; font-size: 13px }
+th { text-align: start; font-weight: 500; color: var(--muted); font-size: 11.5px; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap }
+td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top }
+td.r, th.r { text-align: end; white-space: nowrap }
+td.r { font-family: var(--mono); font-variant-numeric: tabular-nums }
+.tile .row > span:last-child:not(.state) { font-size: 12px }
+.band { font-family: var(--mono); font-size: 11px; border-radius: 4px; padding: 1px 6px; white-space: nowrap; display: inline-block }
+.P1 { background: var(--p1); color: #1a0b0b } .P2 { background: var(--p2); color: #1b1305 } .P3 { background: var(--p3); color: #06161b }
+.O1 { background: var(--ok); color: #04170f } .O2 { border: 1px solid var(--ok); color: var(--ok) } .O3 { border: 1px solid var(--p4); color: var(--muted) }
+.flag { color: var(--p1); font-size: 12px }
+ol.focus { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; counter-reset: f }
+ol.focus li { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 10px; align-items: center; counter-increment: f }
+ol.focus li::before { content: counter(f); font-family: var(--mono); color: var(--muted) }
+ol.focus small { color: var(--muted); display: block }
+button { font: inherit; font-size: 12.5px; border-radius: 6px; padding: 5px 12px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer }
+button.primary { background: var(--accent); color: var(--ground) }
+button.ghost { border-color: var(--line); color: var(--muted) }
+.chart text { fill: var(--muted); font: 11px var(--mono) }
+.chart .ax { stroke: var(--line) }
+.compose { display: grid; gap: 10px }
+.compose label { font-size: 12px; color: var(--muted); display: grid; gap: 4px }
+textarea, select { font: 13px/1.5 var(--sans); background: var(--panel-2); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100% }
+textarea { min-height: 150px; resize: vertical }
+.people { display: flex; flex-wrap: wrap; gap: 6px }
+.status { font-size: 12.5px; color: var(--ok); min-height: 1.2em }
+.thread { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line) }
+.thread:last-child { border-bottom: 0 }
+.thread .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px }
+.qs { display: flex; flex-wrap: wrap; gap: 6px }
+.qs button { border-color: var(--line); color: var(--fg) }
+.src { font-size: 11.5px; color: var(--muted) }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted) }
+.legend i { display: inline-block; width: 18px; height: 2px; vertical-align: middle; margin-inline-end: 4px }
+section[hidden] { display: none }
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr }
+  .side { display: none }
+  .strip { grid-template-columns: repeat(2, minmax(0,1fr)) }
+  .grid2 { grid-template-columns: 1fr }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="intro">
+  <h1>VECTOR plan v2: wireframes for the E0 design gate</h1>
+  <p>Eight screens for the C-suite, drawn in the product's dark theme with the demo's story day (22 Oct 2026). Company figures are synthetic and illustrate the data planned for v5. Market figures marked "real" were fetched on 6 Oct 2026. Dashed amber boxes are notes for the gate and are not part of the UI. Every screen is mirrored right-to-left in Hebrew.</p>
+</div>
+
+<nav class="tabs" aria-label="Screens">
+  <a href="#home">1 · C-suite home</a>
+  <a href="#drill">2 · Department drill-down</a>
+  <a href="#opps">3 · Opportunities</a>
+  <a href="#cross">4 · Cross-department</a>
+  <a href="#action">5 · Action Center</a>
+  <a href="#reports">6 · Reports</a>
+  <a href="#market">7 · Market &amp; competitors</a>
+  <a href="#inbox">8 · Inbox</a>
+</nav>
+
+<div class="app">
+  <aside class="side" aria-label="Product navigation (as the C-suite sees it)">
+    <div class="brand">VECTOR <span style="display:inline;color:var(--muted)">|</span> <span>Organizational Intelligence</span></div>
+    <div class="nav" data-for="home drill">Home</div>
+    <div class="nav" data-for="action">Action Center <span class="new">new</span></div>
+    <div class="nav">Waiting on you</div>
+    <div class="nav">Risks</div>
+    <div class="nav" data-for="opps">Opportunities</div>
+    <div class="nav" data-for="cross">Cross-department <span class="new">new</span></div>
+    <div class="nav">Commitments</div>
+    <div class="nav">Actions &amp; outcomes</div>
+    <div class="nav" data-for="market">Market &amp; competitors <span class="new">new</span></div>
+    <div class="nav" data-for="reports">Reports <span class="new">new</span></div>
+    <div class="nav" data-for="inbox">Inbox <span class="new">new</span></div>
+    <div class="nav">Organization</div>
+    <div class="nav">Audit</div>
+  </aside>
+
+  <main class="main">
+    <div class="top"><span class="num">2026-10-22 05:00 · demo clock</span><span><span class="chip">EN | עברית</span> <span class="chip">Viewing as Dana Levi · CEO</span></span></div>
+
+    <!-- 1 HOME -->
+    <section id="s-home">
+      <div style="display:grid;gap:16px">
+        <div>
+          <h2>Supply Chain and Store Operations are slipping; October tracks −2.1% to sales budget.</h2>
+          <p class="sub">4 P1 risks · <span class="num">₪3.10M</span>/week at stake · 2 items wait on you · Group, week 15–21 Oct</p>
+        </div>
+        <div class="money" aria-label="Money header">
+          <div><small>Revenue, October to date</small><b>₪146.2M</b><small class="bad">−₪3.1M (−2.1%) vs budget</small></div>
+          <div><small>Gross margin, October to date</small><b>31.2%</b><small class="warn">−0.3 pts vs 31.5% target</small></div>
+          <div><small>Operating profit, October to date</small><b>₪5.6M</b><small class="bad">−₪0.8M vs budget</small></div>
+          <div><small>End of quarter, projected</small><b>₪661M</b><small class="warn">miss ₪11M (−1.6%) · range ₪655–667M</small></div>
+        </div>
+        <div>
+          <h3>Health by department · change vs last week · projected at end of quarter</h3>
+          <div class="strip">
+            <div class="tile"><div class="row"><strong>Supply Chain</strong><span class="state bad"><i class="dot bg-bad"></i>At risk</span></div><div class="row"><span class="score">54</span><span class="num bad">▼ 9</span><span class="num muted" style="color:var(--muted)">EOQ 51 · worsening</span></div><div class="why">North DC delays <span class="band P1">P1·77</span> pulled North OSA to 94.9%</div></div>
+            <div class="tile"><div class="row"><strong>Store Operations</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">66</span><span class="num bad">▼ 6</span><span class="num" style="color:var(--muted)">EOQ 70 · improving</span></div><div class="why">Stock-outs, 9 North branches <span class="band P1">P1·72</span></div></div>
+            <div class="tile"><div class="row"><strong>Marketing</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">63</span><span class="num bad">▼ 3</span><span class="num" style="color:var(--muted)">EOQ 63 · stable</span></div><div class="why">₪350k campaign frozen by the spend freeze (conflict)</div></div>
+            <div class="tile"><div class="row"><strong>IT</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">69</span><span class="num bad">▼ 2</span><span class="num" style="color:var(--muted)">EOQ 66 · worsening</span></div><div class="why">POS upgrade 14% over budget</div></div>
+            <div class="tile"><div class="row"><strong>Trade &amp; Commercial</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">74</span><span class="num good">▲ 2</span><span class="num" style="color:var(--muted)">EOQ 76 · stable</span></div><div class="why">Margin 31.2%; supplier overstock offer open <span class="band O2">O2·48</span></div></div>
+            <div class="tile"><div class="row"><strong>Finance</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">78</span><span class="num bad">▼ 1</span><span class="num" style="color:var(--muted)">EOQ 75 · stable</span></div><div class="why">Opex 1.8% over budget (labor, Center)</div></div>
+            <div class="tile"><div class="row"><strong>Legal &amp; Compliance</strong><span class="state warn"><i class="dot bg-warn"></i>Watch</span></div><div class="row"><span class="score">71</span><span class="num good">▲ 4</span><span class="num" style="color:var(--muted)">EOQ 80 · improving</span></div><div class="why">Recall executed within 12 h <span class="band P1">P1·92</span>; outcome measuring</div></div>
+            <div class="tile"><div class="row"><strong>HR</strong><span class="state good"><i class="dot bg-good"></i>Healthy</span></div><div class="row"><span class="score">84</span><span class="num good">▲ 1</span><span class="num" style="color:var(--muted)">EOQ 83 · stable</span></div><div class="why">Training 96%; wage-rule item on time</div></div>
+          </div>
+          <p class="note" style="margin:10px 0 0">Click a tile to open screen 2 (that department by region). A Group / Region toggle shows the same strip per region. Score = 45% KPIs + 35% money + 20% open risks (health-v2).</p>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Why it changed this week</h3>
+            <div class="cause">
+              <div class="b"><p><strong>Supply Chain −9:</strong> North DC delivery delays cascading to 14 branches <span class="band P1">P1·77</span>, with the decision still open at Supply Chain.</p><small class="num">−₪1.1M/week in North sales · −₪4.4M to end of month if not fixed</small></div>
+              <div class="b"><p><strong>Store Operations −6:</strong> stock-outs on top-50 SKUs in 9 North branches <span class="band P1">P1·72</span>; weekend staffing uplift awaits your approval.</p><small class="num">−₪420k/week · labor % 16.1 in North</small></div>
+              <div class="g"><p><strong>Legal &amp; Compliance +4:</strong> chilled-dessert recall completed in all 60 branches within 12 h <span class="band P1">P1·92</span>.</p><small>Outcome being measured until 29 Oct</small></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Where to focus</h3>
+            <ol class="focus">
+              <li><span><strong>North DC recovery</strong><small class="num">₪1.1M/wk · blocked 6 days · conflict Supply Chain ↔ Finance</small></span><button>Open</button></li>
+              <li><span><strong>Approve weekend staffing uplift</strong><small class="num">cost ₪54k · protects ₪420k/wk · expires in 2 days</small></span><button class="primary">Approve</button></li>
+              <li><span><strong>Heatwave in the South</strong> <span class="band O1">O1·64</span><small class="num">₪150k/wk upside · window closes in 3 days</small></span><button>Make it an action</button></li>
+              <li><span><strong>October sales to budget</strong><small class="num">projected −₪4.5M at end of month</small></span><button>Open</button></li>
+              <li><span><strong>POS upgrade over budget</strong><small class="num">₪3.2M spent of ₪2.8M · CFO and CIO</small></span><button>Open</button></li>
+            </ol>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Financials vs budget · October to date · projections vs target</h3>
+          <div class="tw"><table>
+            <thead><tr><th>Department</th><th>Money line</th><th class="r">Actual</th><th class="r">Budget</th><th class="r">Var.</th><th class="r">EOM proj.</th><th class="r">EOQ proj.</th></tr></thead>
+            <tbody>
+              <tr><td>Store Operations</td><td>Net sales</td><td class="r">₪146.2M</td><td class="r">₪149.3M</td><td class="r bad">−2.1%</td><td class="r bad">₪213.9M (−₪4.5M)</td><td class="r warn">₪661M (−₪11M)</td></tr>
+              <tr><td>Store Operations</td><td>Labor cost</td><td class="r">₪23.5M · 16.1%</td><td class="r">15.8%</td><td class="r bad">+0.3 pts</td><td class="r warn">16.0%</td><td class="r good">15.9%</td></tr>
+              <tr><td>Trade &amp; Commercial</td><td>Gross margin</td><td class="r">₪45.6M · 31.2%</td><td class="r">31.5%</td><td class="r warn">−0.3 pts</td><td class="r warn">31.3%</td><td class="r good">31.5%</td></tr>
+              <tr><td>Supply Chain</td><td>Logistics cost · inventory days</td><td class="r">₪6.4M · 23.8 d</td><td class="r">₪6.1M · 22 d</td><td class="r bad">+4.9%</td><td class="r bad">₪9.3M</td><td class="r warn">₪27.6M</td></tr>
+              <tr><td>HR</td><td>Headcount cost</td><td class="r">₪31.9M</td><td class="r">₪31.6M</td><td class="r warn">+0.9%</td><td class="r warn">₪46.5M</td><td class="r good">₪138M</td></tr>
+              <tr><td><strong>Group</strong></td><td><strong>Operating profit</strong></td><td class="r"><strong>₪5.6M</strong></td><td class="r">₪6.4M</td><td class="r bad">−12.5%</td><td class="r bad">₪8.3M</td><td class="r warn">₪26.1M (−₪1.9M)</td></tr>
+            </tbody>
+          </table></div>
+          <p class="note" style="margin:10px 0 0">Each projection opens "How this is calculated": run-rate + risk drag + action lift, with the range (projection-v1). Further down the page: Waiting on you, risk and opportunity summaries, initiatives needing management, the market headline, and what changed in the last 24 h.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 DRILL -->
+    <section id="s-drill" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Supply Chain · 54 · at risk · ▼ 9</h2><p class="sub">Group › Supply Chain · by region · last 7 days vs the week before</p></div>
+        <div class="money">
+          <div><small>Logistics cost, October to date</small><b>₪6.4M</b><small class="bad">+₪0.3M vs budget</small></div>
+          <div><small>Inventory days</small><b>23.8</b><small class="bad">target 22</small></div>
+          <div><small>Fresh waste</small><b>₪1.9M</b><small class="warn">+6% vs budget</small></div>
+          <div><small>Dept opex, projected end of quarter</small><b>₪8.1M</b><small class="good">on budget</small></div>
+        </div>
+        <div class="panel"><h3>By region</h3><div class="tw"><table>
+          <thead><tr><th>Region</th><th>Health</th><th class="r">Change</th><th class="r">OSA</th><th class="r">DC on time</th><th class="r">Waste ₪</th><th>Cause</th></tr></thead>
+          <tbody>
+            <tr><td>North</td><td><span class="state bad"><i class="dot bg-bad"></i>41 · at risk</span></td><td class="r num bad">▼ 18</td><td class="r num bad">94.9%</td><td class="r num bad">81%</td><td class="r num">₪520k</td><td>North DC delays <span class="band P1">P1·77</span></td></tr>
+            <tr><td>Center</td><td><span class="state warn"><i class="dot bg-warn"></i>62 · watch</span></td><td class="r num bad">▼ 7</td><td class="r num">96.7%</td><td class="r num warn">90%</td><td class="r num">₪430k</td><td>Delays cascading from North DC (5 branches)</td></tr>
+            <tr><td>Coast</td><td><span class="state warn"><i class="dot bg-warn"></i>72 · watch</span></td><td class="r num good">▲ 1</td><td class="r num">96.8%</td><td class="r num">95%</td><td class="r num">₪330k</td><td>—</td></tr>
+            <tr><td>Jerusalem</td><td><span class="state good"><i class="dot bg-good"></i>81 · healthy</span></td><td class="r num">0</td><td class="r num">96.9%</td><td class="r num">96%</td><td class="r num">₪310k</td><td>—</td></tr>
+            <tr><td>South</td><td><span class="state good"><i class="dot bg-good"></i>80 · healthy</span></td><td class="r num good">▲ 2</td><td class="r num">96.7%</td><td class="r num">96%</td><td class="r num">₪300k</td><td>Heatwave pre-stock planned <span class="band O1">O1·64</span></td></tr>
+          </tbody></table></div>
+          <p class="note" style="margin:10px 0 0">Department-only lines (department opex) show "group only" in the region rows. VPs land here as their home, with this layout for their own department.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 OPPORTUNITIES -->
+    <section id="s-opps" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Opportunities · 5 open · ₪675k net value by end of quarter</h2><p class="sub">Each bubble is one action item: cost to capture, expected impact by end of quarter, and execution risk</p></div>
+        <div class="money">
+          <div><small>Upside per week</small><b>₪376k</b><small>5 opportunities</small></div>
+          <div><small>Cost to capture</small><b>₪1.18M</b><small>5 action items</small></div>
+          <div><small>Net value, end of quarter</small><b>₪675k</b><small class="warn">₪1.27M without the overstock buy</small></div>
+          <div><small>Captured so far</small><b>₪0</b><small>nothing executed yet</small></div>
+        </div>
+        <div class="panel">
+          <h3>Value map</h3>
+          <div class="tw">
+          <svg class="chart" viewBox="0 0 760 360" width="100%" style="min-width:560px" role="img" aria-label="Impact against cost for five opportunity action items">
+            <g transform="translate(70,24)">
+              <line class="ax" x1="0" y1="290" x2="650" y2="290"/><line class="ax" x1="0" y1="0" x2="0" y2="290"/>
+              <line class="ax" x1="0" y1="207" x2="650" y2="207" stroke-dasharray="2 4"/><line class="ax" x1="0" y1="124" x2="650" y2="124" stroke-dasharray="2 4"/><line class="ax" x1="0" y1="41" x2="650" y2="41" stroke-dasharray="2 4"/>
+              <text x="0" y="306">₪0</text><text x="145" y="306">₪250k</text><text x="308" y="306">₪500k</text><text x="470" y="306">₪750k</text><text x="620" y="306">₪1M</text>
+              <text x="-64" y="294">₪0</text><text x="-64" y="211">₪250k</text><text x="-64" y="128">₪500k</text><text x="-64" y="45">₪750k</text>
+              <text x="250" y="338">Cost to capture</text>
+              <text x="6" y="-6">↑ Impact by end of quarter</text>
+              <line x1="0" y1="290" x2="568" y2="0" stroke="var(--p4)" stroke-dasharray="5 5"/>
+              <text x="575" y="14">break-even</text>
+              <!-- x = cost/1M*650, y = 290 - impact/750k*249 ; r by risk -->
+              <circle cx="13" cy="141" r="9" fill="var(--ok)" opacity=".9"/><text x="28" y="137" style="fill:var(--fg)">Heatwave pre-stock · ₪20k → ₪450k · low</text>
+              <circle cx="117" cy="84" r="16" fill="none" stroke="var(--ok)" stroke-width="2"/><text x="138" y="80" style="fill:var(--fg)">Click-and-collect capacity · ₪180k → ₪620k · medium</text>
+              <circle cx="39" cy="164" r="9" fill="none" stroke="var(--ok)" stroke-width="2"/><text x="54" y="181" style="fill:var(--fg)">Competitor closure, Ramat Gan · ₪60k → ₪380k · low</text>
+              <circle cx="585" cy="187" r="24" fill="none" stroke="var(--ok)" stroke-width="2"/><text x="410" y="232" style="fill:var(--fg)">Overstock buy · ₪900k → ₪310k · high</text>
+              <circle cx="10" cy="260" r="7" fill="none" stroke="var(--p4)" stroke-width="2"/><text x="24" y="264" style="fill:var(--fg)">Petah Tikva pop-up lease · ₪15k → ₪90k · low</text>
+            </g>
+          </svg>
+          </div>
+          <div class="legend"><span>Above the dashed line = impact exceeds cost</span><span>Bubble size = execution risk</span><span>Solid = O1 · outlined = O2 · grey = O3</span></div>
+        </div>
+        <div class="panel"><h3>Action items by net value</h3><div class="tw"><table>
+          <thead><tr><th>Action item</th><th>Band</th><th class="r">Impact</th><th class="r">Cost</th><th class="r">Net</th><th>Risk</th><th>Window</th></tr></thead>
+          <tbody>
+            <tr><td>Click-and-collect pickup capacity, Center</td><td><span class="band O2">O2·56</span></td><td class="r num">₪620k</td><td class="r num">₪180k</td><td class="r num good">₪440k</td><td>Medium: depends on IT release</td><td class="num">before 1 Nov</td></tr>
+            <tr><td>Pre-stock beverages and ice cream, 8 South branches</td><td><span class="band O1">O1·64</span></td><td class="r num">₪450k</td><td class="r num">₪20k</td><td class="r num good">₪430k</td><td>Low: done 3 times, all hit</td><td class="num">closes 25 Oct</td></tr>
+            <tr><td>Local campaign near the Ramat Gan competitor closure</td><td><span class="band O2">O2·52</span></td><td class="r num">₪380k</td><td class="r num">₪60k</td><td class="r num good">₪320k</td><td>Low</td><td class="num">closure in 3 weeks</td></tr>
+            <tr><td>Pop-up partner in 300 m² at Petah Tikva</td><td><span class="band O3">O3·31</span></td><td class="r num">₪90k</td><td class="r num">₪15k</td><td class="r num good">₪75k</td><td>Low</td><td>open</td></tr>
+            <tr><td>Buy supplier overstock at 25% off, two categories</td><td><span class="band O2">O2·48</span></td><td class="r num">₪310k</td><td class="r num">₪900k</td><td class="r num bad">−₪590k by EOQ</td><td>High: spend freeze conflict, storage</td><td class="num">expires in 5 days</td></tr>
+          </tbody></table></div>
+          <p class="note" style="margin:10px 0 0">The overstock buy pays back over two quarters, so its end-of-quarter net is negative. The row shows that on purpose rather than hiding it. Risk = dependencies + conflicts + track record + owner load (economics-v1).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 CROSS -->
+    <section id="s-cross" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Cross-department · 8 initiatives · 3 need management</h2><p class="sub">CEO, CFO and COO see all of them; each VP sees the ones their department is part of</p></div>
+        <div class="money">
+          <div><small>Budget</small><b>₪14.6M</b><small>8 initiatives</small></div>
+          <div><small>Spent</small><b>₪8.9M</b><small>61% of budget</small></div>
+          <div><small>Value at risk on blocked initiatives</small><b>₪4.4M</b><small class="bad">North DC recovery, to end of month</small></div>
+        </div>
+        <div class="panel"><div class="tw"><table>
+          <thead><tr><th>Initiative</th><th>Status</th><th>Departments</th><th>Next milestone</th><th>Barriers &amp; dependencies</th><th>Management needed</th></tr></thead>
+          <tbody>
+            <tr><td><strong>North DC recovery</strong><br><small style="color:var(--muted)">Sponsor: COO</small></td><td><span class="state bad"><i class="dot bg-bad"></i>Blocked 6 d</span></td><td>Supply Chain · Store Ops · Finance</td><td class="num">Second shift live · 24 Oct</td><td>Overtime budget not approved (decision) · Finance spend freeze</td><td class="flag">M1 blocked &gt; 5 days · M3 conflict Supply Chain ↔ Finance → CEO</td></tr>
+            <tr><td><strong>POS upgrade</strong><br><small style="color:var(--muted)">Sponsor: CIO</small></td><td><span class="state warn"><i class="dot bg-warn"></i>At risk</span></td><td>IT · Store Ops · Finance</td><td class="num">Wave 3 (20 branches) · 3 Nov</td><td>Vendor install crews · 14% over budget</td><td class="flag">M5 over budget → CFO and sponsor</td></tr>
+            <tr><td><strong>Holiday-season readiness</strong><br><small style="color:var(--muted)">Sponsor: COO</small></td><td><span class="state warn"><i class="dot bg-warn"></i>At risk</span></td><td>Store Ops · Supply Chain · Marketing · HR</td><td class="num">Seasonal hiring 80% · 27 Oct (late 4 d)</td><td>Depends on North DC recovery</td><td class="flag">M2 milestone late → sponsor</td></tr>
+            <tr><td>Click-and-collect scale-up, Center</td><td><span class="state good"><i class="dot bg-good"></i>On track</span></td><td>IT · Store Ops · Marketing</td><td class="num">Pickup lockers, 6 branches · 31 Oct</td><td>IT release 4.2 (on time)</td><td>—</td></tr>
+            <tr><td>Recall-readiness process</td><td><span class="state good"><i class="dot bg-good"></i>On track</span></td><td>Legal · Supply Chain · Store Ops</td><td class="num">Post-recall review · 29 Oct</td><td>—</td><td>—</td></tr>
+            <tr><td>Wage-rule compliance</td><td><span class="state good"><i class="dot bg-good"></i>On track</span></td><td>HR · Legal · Finance</td><td class="num">Payroll change · 1 Nov</td><td>—</td><td>—</td></tr>
+            <tr><td>Private-label margin programme</td><td><span class="state good"><i class="dot bg-good"></i>On track</span></td><td>Trade · Supply Chain · Marketing</td><td class="num">12 SKUs on shelf · 15 Nov</td><td>—</td><td>—</td></tr>
+            <tr><td>Monthly budget review <small style="color:var(--muted)">(process)</small></td><td><span class="state good"><i class="dot bg-good"></i>On track</span></td><td>Finance + all</td><td class="num">October close · 5 Nov</td><td>—</td><td>—</td></tr>
+          </tbody></table></div>
+          <p class="note" style="margin:10px 0 0">Each row opens a milestone timeline across the participating departments, with barriers and dependencies drawn on it. Status is derived, never typed in. Rules M1–M5 are in cross-department.md §3.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 ACTION CENTER -->
+    <section id="s-action" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Action Center</h2><p class="sub">Turn an insight into an action with the right person. In the demo, messages are delivered inside VECTOR.</p></div>
+        <div class="money">
+          <div><small>At stake, waiting for an action</small><b>₪1.52M/wk</b><small>6 items</small></div>
+          <div><small>In actions awaiting approval</small><b>₪612k</b><small>8 actions</small></div>
+          <div><small>Sent this week</small><b>4</b><small>3 acknowledged</small></div>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Needs an action</h3>
+            <ol class="focus">
+              <li><span><strong>Stock-outs on top-50 SKUs, 9 North branches</strong> <span class="band P1">P1·72</span><small class="num">₪420k/wk</small></span><button class="primary">Make it an action</button></li>
+              <li><span><strong>Heatwave in the South</strong> <span class="band O1">O1·64</span><small class="num">₪150k/wk upside · closes 25 Oct</small></span><button>Make it an action</button></li>
+              <li><span><strong>Labor cost over plan, Center</strong> <span class="band P3">P3·49</span><small class="num">₪90k/wk</small></span><button>Make it an action</button></li>
+            </ol>
+            <h3 style="margin-top:16px">Waiting on you (same items as the tab)</h3>
+            <ol class="focus"><li><span><strong>Approve: weekend staffing uplift, 9 North branches</strong><small class="num">₪54k · requested by Yossi Cohen</small></span><button>Review</button></li></ol>
+          </div>
+          <div class="panel">
+            <h3>Make it an action · stock-outs in North</h3>
+            <div class="compose">
+              <p style="margin:0"><strong>Suggested approach</strong> (playbook "replenish top SKUs"): emergency transfer from Haifa Downtown, a daily DC slot for the 9 branches, and a review in 5 days. Impact ₪380k by end of month · cost ₪54k · risk medium (depends on North DC recovery). Last time (August, Center): 4 days to recover OSA, verdict hit.</p>
+              <div><small style="color:var(--muted)">With whom</small><div class="people"><span class="chip">Owner: Noa Friedman · VP Supply Chain (head of the owning unit)</span><span class="chip">Informed: Yossi Cohen · North</span><span class="chip">Informed: Shira Katz · Store Operations</span></div></div>
+              <p class="src" style="margin:0">Approval: AP-3 (cost ≥ ₪50k) → Shira Katz may approve; you are not asked.</p>
+              <label for="msg">Message to Noa (editable)
+                <textarea id="msg">Noa, 9 North branches are out of stock on top-50 SKUs (OSA 94.9%, about ₪420k a week). Please run the emergency transfer from Haifa Downtown and give these branches a daily DC slot until North DC recovery's second shift is live (24 Oct). Budget up to ₪54k. Shira approves the spend. Let's review on 27 Oct. Dana</textarea>
+              </label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="approve" type="button">Approve and send</button><button class="ghost" id="decline" type="button">Decline</button></div>
+              <div class="status" id="status" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 REPORTS -->
+    <section id="s-reports" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Reports</h2><p class="sub">Materials for meetings, management and the board, for your scope or any unit below it</p></div>
+        <div class="grid2">
+          <div class="panel compose">
+            <h3>Generate</h3>
+            <label for="tpl">Template<select id="tpl"><option>Weekly management report</option><option>Board pack (after the weekly report)</option></select></label>
+            <label for="scope">Scope<select id="scope"><option>VECTOR Retail Group</option><option>North region</option><option>Supply Chain</option><option>Haifa Grand Canyon</option></select></label>
+            <label for="lang">Language<select id="lang"><option>English</option><option>עברית</option></select></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" type="button">View in VECTOR</button><button type="button">PowerPoint (editable)</button><button type="button">PDF</button></div>
+            <p class="src" style="margin:0">As of the demo clock, 22 Oct 05:00. Each generation is an audited snapshot that never changes afterwards.</p>
+          </div>
+          <div class="panel">
+            <h3>Weekly management report · Group · week 15–21 Oct</h3>
+            <ol style="margin:0;padding-inline-start:20px;display:grid;gap:4px">
+              <li>Headline and health: 1 at risk, 6 watch, 1 healthy; causes</li>
+              <li>Sales: <span class="num">₪51.16M</span> for the week, −0.4% w/w, October −2.1% to budget</li>
+              <li>Finance: P&amp;L vs budget, projection to end of month and end of quarter</li>
+              <li>HR: headcount cost +0.9%, vacancies 4.2%, training 96%</li>
+              <li>Projects: 8 initiatives, 3 need management</li>
+              <li>KPIs vs targets: 16 KPIs, 5 off target</li>
+              <li>Blockers: 2 blocked dependencies, 3 overdue commitments</li>
+              <li><strong>Decisions needed:</strong> 4 (owner, deadline, ₪)</li>
+              <li>Focus for next week</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 MARKET -->
+    <section id="s-market" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Market &amp; competitors</h2><p class="sub">What changed outside, and how it hits us. Every figure shows its source and date.</p></div>
+        <div class="money">
+          <div><small>Food prices, year on year (CBS, Aug 2026)</small><b>+1.0%</b><small class="good">real · down from +2.8% in April</small></div>
+          <div><small>Our average price, year on year</small><b>+2.7%</b><small class="bad">synthetic · 1.7 pts above the market</small></div>
+          <div><small>Our basket index vs market</small><b>102.4</b><small class="warn">illustrative · computed in E6</small></div>
+        </div>
+        <div class="grid2">
+          <div class="panel">
+            <h3>Food prices vs ours · year-on-year change, %</h3>
+            <div class="tw">
+            <svg class="chart" viewBox="0 0 520 250" width="100%" style="min-width:420px" role="img" aria-label="CBS food price index year-on-year change March to August 2026 against our synthetic average price change">
+              <g transform="translate(40,14)">
+                <line class="ax" x1="0" y1="200" x2="460" y2="200"/>
+                <line class="ax" x1="0" y1="140" x2="460" y2="140" stroke-dasharray="2 4"/><line class="ax" x1="0" y1="80" x2="460" y2="80" stroke-dasharray="2 4"/><line class="ax" x1="0" y1="20" x2="460" y2="20" stroke-dasharray="2 4"/>
+                <text x="-30" y="204">0%</text><text x="-30" y="144">1%</text><text x="-30" y="84">2%</text><text x="-30" y="24">3%</text>
+                <text x="0" y="222">Mar</text><text x="90" y="222">Apr</text><text x="180" y="222">May</text><text x="270" y="222">Jun</text><text x="360" y="222">Jul</text><text x="440" y="222">Aug</text>
+                <!-- y = 200 - pct*60 ; CBS real: 2.5 2.8 2.6 1.6 1.4 1.0 -->
+                <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" points="10,50 100,32 190,44 280,104 370,116 450,140"/>
+                <circle cx="450" cy="140" r="4" fill="var(--accent)"/><text x="400" y="160" style="fill:var(--accent)">CBS +1.0%</text>
+                <!-- ours synthetic: 2.0 2.3 2.5 2.4 2.6 2.7 -->
+                <polyline fill="none" stroke="var(--p2)" stroke-width="2.5" stroke-dasharray="6 4" points="10,80 100,62 190,50 280,56 370,44 450,38"/>
+                <circle cx="450" cy="38" r="4" fill="var(--p2)"/><text x="402" y="30" style="fill:var(--p2)">ours +2.7%</text>
+              </g>
+            </svg>
+            </div>
+            <div class="legend"><span><i style="background:var(--accent)"></i>CBS food index 110050 (real)</span><span><i style="background:var(--p2)"></i>VECTOR Retail Group average price (synthetic)</span></div>
+            <p class="src">Source: CBS price index API, index 110050 "Food, including vegetables and fruit", fetched 6 Oct 2026.</p>
+          </div>
+          <div class="panel">
+            <h3>What changed outside</h3>
+            <div class="cause">
+              <div class="b"><p><strong>MK2 · pricing out of line:</strong> food prices fell three months running (−0.4% in August) while ours kept rising.</p><small>Risk: price perception and traffic · links to the Trade &amp; Commercial margin plan</small></div>
+              <div class="w"><p><strong>MK3 · competitor weakness:</strong> Shufersal Q2 2026 same-store sales −8.6% (reported).</p><small>Opportunity: share gain in categories where we lead on price</small></div>
+              <div class="g"><p><strong>MK5 · heatwave in the South</strong> (Open-Meteo)</p><small>Opportunity <span class="band O1">O1·64</span> (existing)</small></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel"><h3>Competitors</h3><div class="tw"><table>
+          <thead><tr><th>Chain</th><th>Metric</th><th class="r">Value</th><th>Kind</th><th>Source and date</th></tr></thead>
+          <tbody>
+            <tr><td>Shufersal</td><td>Revenue, Q2 2026</td><td class="r num">NIS 3.4B (−7.5%)</td><td>Reported</td><td><a href="https://en.globes.co.il/en/article-1001553761">Globes, 27 Aug 2026</a></td></tr>
+            <tr><td>Shufersal</td><td>Same-store sales, Q2 2026</td><td class="r num">−8.6%</td><td>Reported</td><td><a href="https://en.globes.co.il/en/article-1001553761">Globes, 27 Aug 2026</a></td></tr>
+            <tr><td>Shufersal</td><td>Revenue, H1 2026</td><td class="r num">NIS 7.1B (−1.6%)</td><td>Reported</td><td><a href="https://en.globes.co.il/en/article-1001553761">Globes, 27 Aug 2026</a></td></tr>
+            <tr><td>Shufersal</td><td>Items in one store's price file</td><td class="r num">6,611</td><td>Reported (price file)</td><td>prices.shufersal.co.il, store 001, 6 Oct 2026</td></tr>
+            <tr><td>Rami Levy, Victory, Yochananof, Osher Ad</td><td>Results and price files</td><td class="r">—</td><td>Loaded in E6</td><td>TASE filings; publishedprices portal (to be checked in E6)</td></tr>
+          </tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 INBOX -->
+    <section id="s-inbox" hidden>
+      <div style="display:grid;gap:16px">
+        <div><h2>Inbox · 3 wait for your reply · 2 need a decision</h2><p class="sub">Email and Slack. In the demo this is a synthetic inbox; in production you connect your own accounts.</p></div>
+        <div class="panel">
+          <div class="thread">
+            <div class="meta"><span class="band P1">Needs decision</span><span>Email · Michal Golan, CFO · 26 h without a reply</span></div>
+            <strong>Overtime for the North DC second shift: exception to the spend freeze?</strong>
+            <p style="margin:0"><span style="color:var(--muted)">Impact:</span> <span class="num">₪1.1M/wk</span> North sales at stake; the overtime costs <span class="num">₪180k</span> over 4 weeks. <span style="color:var(--muted)">Benefit of acting now:</span> the second shift is live by 24 Oct, before the holiday weekend. <span style="color:var(--muted)">Recommendation:</span> approve the exception, capped at ₪180k, with a weekly review.</p>
+            <div class="qs"><button type="button">What happens if we wait a week?</button><button type="button">Who else is affected?</button><button type="button">What did we do last time?</button></div>
+            <div style="display:flex;gap:8px"><button class="primary" type="button">Draft reply</button><button type="button">Open North DC recovery</button></div>
+          </div>
+          <div class="thread">
+            <div class="meta"><span class="band P2">Waiting for reply</span><span>Slack #exec · Ronit Shapiro, Marketing · 9 h</span></div>
+            <strong>Can the ₪350k holiday campaign go ahead if we cut it to ₪220k?</strong>
+            <p style="margin:0"><span style="color:var(--muted)">Recommendation:</span> ask Michal to decide on the conflict by tomorrow (G4-Q escalation is due in 2 days).</p>
+          </div>
+          <div class="thread">
+            <div class="meta"><span class="band O2">Needs decision</span><span>Email · supplier, via Eitan Rosen · 2 days</span></div>
+            <strong>25% off two categories, offer expires Sunday</strong>
+            <p style="margin:0"><span style="color:var(--muted)">Recommendation:</span> decline as offered (₪900k, high risk); counter with half the volume.</p>
+          </div>
+          <p class="note" style="margin:6px 0 0">Demo: three suggested follow-up questions per thread, with answers prepared from VECTOR data. Free-form questions arrive with the AI integration after the MVP (FB-10).</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  var ids = ["home","drill","opps","cross","action","reports","market","inbox"];
+  function show() {
+    var h = (location.hash || "#home").slice(1);
+    if (ids.indexOf(h) < 0) h = "home";
+    ids.forEach(function (id) { document.getElementById("s-" + id).hidden = id !== h; });
+    document.querySelectorAll(".tabs a").forEach(function (a) {
+      if (a.getAttribute("href") === "#" + h) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+    });
+    document.querySelectorAll(".nav").forEach(function (n) {
+      var f = (n.getAttribute("data-for") || "").split(" ");
+      n.classList.toggle("on", f.indexOf(h) >= 0);
+    });
+  }
+  window.addEventListener("hashchange", show); show();
+  var st = document.getElementById("status");
+  document.getElementById("approve").addEventListener("click", function () { st.style.color = "var(--ok)"; st.textContent = "Sent to Noa inside VECTOR (Waiting on you and Inbox). Shira asked to approve ₪54k. Audited."; });
+  document.getElementById("decline").addEventListener("click", function () { st.style.color = "var(--muted)"; st.textContent = "Declined. In the product you give a reason, and it is recorded."; });
+})();
+</script>

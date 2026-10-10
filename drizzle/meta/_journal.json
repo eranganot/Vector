@@ -57,6 +57,48 @@
       "when": 1791153270030,
       "tag": "0007_conflict_escalation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791312371243,
+      "tag": "0008_c_suite_flag",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791314005930,
+      "tag": "0009_plan_v2_finance_initiatives",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791320955908,
+      "tag": "0010_read_model_day_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791352430113,
+      "tag": "0011_initiative_updates",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791397141701,
+      "tag": "0012_outbound_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791440810638,
+      "tag": "0013_reports",
+      "breakpoints": true
     }
   ]
 }

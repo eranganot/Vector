@@ -92,7 +92,7 @@ export const orgUnit = pgTable(
   (t) => [uniqueIndex("org_unit_code_uq").on(t.orgId, t.code), index("org_unit_parent_idx").on(t.parentId)],
 );
 
-// ── Auth (Better Auth tables; extra fields: orgId, title, isSeeded) ──────────
+// ── Auth (Better Auth tables; extra fields: orgId, title, isSeeded, isCSuite) ─
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -104,6 +104,8 @@ export const user = pgTable("user", {
   orgId: uuid("org_id").references(() => organization.id),
   title: text("title"),
   isSeeded: boolean("is_seeded").notNull().default(false),
+  /** C-suite member (ADR-008): chooses the executive layout and navigation, never permissions. */
+  isCSuite: boolean("is_c_suite").notNull().default(false),
 });
 
 export const session = pgTable("session", {
@@ -198,7 +200,11 @@ export const kpiObservation = pgTable(
     value: doublePrecision("value").notNull(),
     source: text("source").notNull(),
   },
-  (t) => [primaryKey({ columns: [t.kpiId, t.orgUnitId, t.day] })],
+  // Read models load "the last N days" for the whole organization (E2 executive home): index by org and day.
+  (t) => [
+    primaryKey({ columns: [t.kpiId, t.orgUnitId, t.day] }),
+    index("kpi_observation_org_day_idx").on(t.orgId, t.day),
+  ],
 );
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
@@ -314,6 +320,12 @@ export const action = pgTable("action", {
   /** Action version: bumped when params, targets or cost change; approvals bind to it. */
   revision: integer("revision").notNull().default(1),
   result: jsonb("result"),
+  /** Action economics (plan v2, cross-department.md §2): ₪ expected by end of quarter, how it was computed. */
+  expectedImpactIls: numeric("expected_impact_ils", { mode: "number" }),
+  impactBasis: text("impact_basis"),
+  /** 0–1; shown as low (< 0.3), medium, high (> 0.6). */
+  executionRisk: doublePrecision("execution_risk"),
+  riskFactors: jsonb("risk_factors"),
   version: integer("version").notNull().default(1),
   createdAt: ts("created_at").notNull(),
   updatedAt: ts("updated_at").notNull(),
@@ -538,3 +550,222 @@ export const appMeta = pgTable("app_meta", {
   value: text("value").notNull(),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 });
+
+// ── Plan v2: finance (financials.md) ─────────────────────────────────────────
+/** A money line. Ratio lines (gross margin %) are derived from amounts and are not stored here. */
+export const finAccount = pgTable(
+  "fin_account",
+  {
+    orgId: orgId(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull(), // revenue | cost | balance
+    unit: text("unit").notNull(), // ils | days
+    higherIsBetter: boolean("higher_is_better").notNull(),
+    ownerDepartmentId: uuid("owner_department_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    /** Region-level lines are summed up from the branches; department lines sit on the department unit. */
+    level: text("level").notNull(), // region | department
+  },
+  (t) => [primaryKey({ columns: [t.orgId, t.code] })],
+);
+
+export const finActual = pgTable(
+  "fin_actual",
+  {
+    orgId: orgId(),
+    accountCode: text("account_code").notNull(),
+    orgUnitId: uuid("org_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    day: date("day").notNull(),
+    amount: doublePrecision("amount").notNull(),
+    source: text("source").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.orgId, t.accountCode, t.orgUnitId, t.day] }),
+    index("fin_actual_org_day_idx").on(t.orgId, t.day),
+  ],
+);
+
+export const finBudget = pgTable(
+  "fin_budget",
+  {
+    orgId: orgId(),
+    accountCode: text("account_code").notNull(),
+    orgUnitId: uuid("org_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    month: text("month").notNull(), // YYYY-MM (calendar fiscal year, FB-5)
+    amount: doublePrecision("amount").notNull(),
+    version: integer("version").notNull().default(1),
+  },
+  (t) => [primaryKey({ columns: [t.orgId, t.accountCode, t.orgUnitId, t.month, t.version] })],
+);
+
+// ── Plan v2: cross-department initiatives (cross-department.md §3, ADR-008 §3) ──
+export const initiative = pgTable("initiative", {
+  id: id(),
+  orgId: orgId(),
+  key: text("key").notNull(),
+  title: text("title").notNull(),
+  kind: text("kind").notNull(), // project | process
+  sponsorUserId: text("sponsor_user_id")
+    .notNull()
+    .references(() => user.id),
+  ownerUnitId: uuid("owner_unit_id")
+    .notNull()
+    .references(() => orgUnit.id),
+  participatingUnitIds: uuid("participating_unit_ids").array().notNull(),
+  /** Participating units and their ancestors: the read rule is the insight's (ADR-008 §3). */
+  visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+  budgetIls: numeric("budget_ils", { mode: "number" }).notNull().default(0),
+  spentIls: numeric("spent_ils", { mode: "number" }).notNull().default(0),
+  valueIls: numeric("value_ils", { mode: "number" }).notNull().default(0),
+  startsOn: date("starts_on").notNull(),
+  endsOn: date("ends_on"),
+  /** Linked Phase 4 records (no copies): commitments and insights that tell this initiative's story. */
+  commitmentIds: uuid("commitment_ids")
+    .array()
+    .notNull()
+    .default(sql`'{}'::uuid[]`),
+  insightIds: uuid("insight_ids")
+    .array()
+    .notNull()
+    .default(sql`'{}'::uuid[]`),
+  version: integer("version").notNull().default(1),
+  createdAt: ts("created_at").notNull(),
+  updatedAt: ts("updated_at").notNull(),
+});
+
+export const milestone = pgTable("milestone", {
+  id: id(),
+  orgId: orgId(),
+  initiativeId: uuid("initiative_id")
+    .notNull()
+    .references(() => initiative.id),
+  title: text("title").notNull(),
+  ownerUnitId: uuid("owner_unit_id")
+    .notNull()
+    .references(() => orgUnit.id),
+  startsOn: date("starts_on").notNull(),
+  dueOn: date("due_on").notNull(),
+  doneOn: date("done_on"),
+  /** Share of the owning department's part that is done (0–100), as reported by the owner. */
+  progress: integer("progress").notNull().default(0),
+  /** Date moves (E3): [{from, to, by, at, reason}], like commitment renegotiations. */
+  history: jsonb("history")
+    .notNull()
+    .default(sql`'[]'::jsonb`),
+});
+
+export const barrier = pgTable("barrier", {
+  id: id(),
+  orgId: orgId(),
+  initiativeId: uuid("initiative_id")
+    .notNull()
+    .references(() => initiative.id),
+  title: text("title").notNull(),
+  kind: text("kind").notNull(), // dependency | resource | budget | decision | external
+  ownerUnitId: uuid("owner_unit_id")
+    .notNull()
+    .references(() => orgUnit.id),
+  costIls: numeric("cost_ils", { mode: "number" }).notNull().default(0),
+  since: date("since").notNull(),
+  resolvedOn: date("resolved_on"),
+  /** How it was resolved (E3), in the resolver's words. */
+  resolution: text("resolution"),
+});
+
+/**
+ * A message the Action Center sends when someone approves an action (plan v2, E4; action-center.md §4). In the demo
+ * every message is internal (in_app): it reaches the recipients' Waiting on you; nothing leaves VECTOR (FB-8).
+ */
+export const outboundMessage = pgTable(
+  "outbound_message",
+  {
+    id: id(),
+    orgId: orgId(),
+    insightId: uuid("insight_id")
+      .notNull()
+      .references(() => insight.id),
+    decisionId: uuid("decision_id")
+      .notNull()
+      .references(() => decision.id),
+    channel: text("channel").notNull(), // in_app | email | slack | sms | whatsapp
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id),
+    toUserIds: text("to_user_ids").array().notNull(),
+    ccUserIds: text("cc_user_ids").array().notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    language: text("language").notNull(),
+    templateId: text("template_id").notNull(),
+    edited: boolean("edited").notNull().default(false),
+    /** approved → sent (or cancelled / failed). Approved messages wait until every action's approval is granted. */
+    status: text("status").notNull(),
+    approvedBy: text("approved_by"),
+    approvedAt: ts("approved_at"),
+    sentAt: ts("sent_at"),
+    adapter: text("adapter"),
+    simulated: boolean("simulated").notNull().default(true),
+    visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("outbound_message_insight_idx").on(t.insightId)],
+);
+
+/** A reminder about an initiative (E3): the sponsor or management nudges the unit that owns a late item. */
+export const initiativeReminder = pgTable(
+  "initiative_reminder",
+  {
+    id: id(),
+    orgId: orgId(),
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiative.id),
+    /** milestone | barrier | budget */
+    subjectKind: text("subject_kind").notNull(),
+    subjectId: uuid("subject_id"),
+    toUnitId: uuid("to_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    fromUserId: text("from_user_id")
+      .notNull()
+      .references(() => user.id),
+    body: text("body").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("initiative_reminder_initiative_idx").on(t.initiativeId)],
+);
+
+/**
+ * A generated report (plan v2, E5; reports.md §3): an immutable snapshot of a layout resolved as of the demo clock, in
+ * one language. Regenerating creates a new version. Visible to the units that may read its scope.
+ */
+export const report = pgTable(
+  "report",
+  {
+    id: id(),
+    orgId: orgId(),
+    template: text("template").notNull(),
+    /** 1, 2, … per template, scope and language. */
+    version: integer("version").notNull(),
+    scopeUnitId: uuid("scope_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    asOf: ts("as_of").notNull(),
+    generatedBy: text("generated_by")
+      .notNull()
+      .references(() => user.id),
+    language: text("language").notNull(),
+    layout: jsonb("layout").notNull(),
+    content: jsonb("content").notNull(),
+    contentHash: text("content_hash").notNull(),
+    visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("report_org_created_idx").on(t.orgId, t.createdAt)],
+);

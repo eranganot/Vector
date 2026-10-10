@@ -8,6 +8,7 @@ import {
   RecordCommitmentForm,
   type CommitmentItem,
 } from "../../_components/commitments";
+import { ils, MoneyHeader } from "../../_components/money-header";
 import { Notice, SectionTitle } from "../../_components/ui";
 import { getT } from "../../_lib/locale";
 import { requireActor } from "../../_lib/session";
@@ -79,6 +80,41 @@ export default async function CommitmentsPage({
           )}
         </p>
       </div>
+      <MoneyHeader
+        label={t("Money")}
+        figures={[
+          {
+            icon: "₪",
+            label: t("a week riding on open commitments"),
+            value: ils(v.money.open),
+            hint: t("₪ a week at stake if late, summed over open and overdue commitments owed by or to {unit}", {
+              unit: v.scope.name,
+            }),
+            tone: "accent",
+          },
+          {
+            icon: "!",
+            label: t("of which overdue"),
+            value: ils(v.money.overdue),
+            hint: t("₪ a week at stake on commitments past their due date"),
+            tone: v.money.overdue ? "bad" : "good",
+          },
+          {
+            icon: "✓",
+            label: t("delivered this month"),
+            value: ils(v.money.deliveredThisMonth),
+            hint: t("₪ a week secured by commitments delivered since the 1st"),
+            tone: "good",
+          },
+          {
+            icon: "%",
+            label: t("on time"),
+            value: v.summary.onTimeRate === null ? "—" : `${Math.round(v.summary.onTimeRate * 100)}%`,
+            hint: t("Commitments delivered by their due date"),
+            tone: "muted",
+          },
+        ]}
+      />
       <Notice error={sp.error} done={sp.done && sp.done !== "conflict" ? DONE[sp.done] : undefined} />
       {sp.done === "conflict" && sp.insight && UUID.test(sp.insight) && (
         <p role="status" className="rounded-md border border-p1 bg-p1/10 px-4 py-3 text-sm">

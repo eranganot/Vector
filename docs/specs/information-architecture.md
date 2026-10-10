@@ -4,6 +4,8 @@ Status: **Approved (Phase 1, 2026-10-04); updated for Phase 2 as built.** The Ph
 [wireframes/](wireframes/)) are kept as the approved structure; the built screens are in [screens/](screens/) and supersede
 them visually (dark theme, G2).
 
+> **Plan v2 (E0, 2026-10-06):** for the C-suite, this IA is superseded by [executive-home.md](executive-home.md) (IA v2). FB-3 replaces the principle "KPIs never the headline": health and money lead, and every number carries its cause. Non-C-suite people keep the navigation below.
+
 ## Principle
 
 Every screen answers _what matters and what should happen_, in that order. **Risks and opportunities are separate

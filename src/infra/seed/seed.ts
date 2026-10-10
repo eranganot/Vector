@@ -2,13 +2,14 @@
  * Seeds a fresh organization epoch with the synthetic organization (org.ts). Never deletes:
  * previous organizations are deactivated so their audit history stays intact (ADR-004).
  */
-import { eq, ne } from "drizzle-orm";
+import { eq, ne, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { addDays } from "@/domain/calendar";
 import * as s from "@/infra/db/schema";
 import { generateDay, generateDepartmentDay } from "./generator";
+import { budgets, FIN_ACCOUNTS, financeHistory } from "./finance";
 import { HISTORY_DAYS, KPIS, ORG_NAME, SEED_VERSION, STORY_DAY, UNITS, USERS } from "./org";
 
 type Db = NodePgDatabase<typeof s>;
@@ -58,7 +59,7 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
       if (existing.length) {
         await tx
           .update(s.user)
-          .set({ orgId: org.id, name: u.name, title: u.title, isSeeded: true })
+          .set({ orgId: org.id, name: u.name, title: u.title, isSeeded: true, isCSuite: u.isCSuite ?? false })
           .where(eq(s.user.id, id));
         await tx
           .update(s.account)
@@ -73,6 +74,7 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
           orgId: org.id,
           title: u.title,
           isSeeded: true,
+          isCSuite: u.isCSuite ?? false,
         });
         await tx
           .insert(s.account)
@@ -135,7 +137,53 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
         }
       }
     }
-    for (let i = 0; i < rows.length; i += 1000) await tx.insert(s.kpiObservation).values(rows.slice(i, i + 1000));
+    // Bulk insert as one array per column (unnest): 52 weeks are ~135k rows, and row-by-row statements cost ~10 s of CPU.
+    for (let i = 0; i < rows.length; i += 50_000) {
+      const c = rows.slice(i, i + 50_000);
+      await tx.execute(sql`
+        insert into kpi_observation (org_id, kpi_id, org_unit_id, day, value, source)
+        select * from unnest(${sql.param(c.map((r) => r.orgId))}::uuid[], ${sql.param(c.map((r) => r.kpiId))}::uuid[],
+          ${sql.param(c.map((r) => r.orgUnitId))}::uuid[], ${sql.param(c.map((r) => r.day))}::date[], ${sql.param(c.map((r) => r.value))}::float8[],
+          ${sql.param(c.map((r) => r.source))}::text[])`);
+    }
+
+    // Plan v2 (E1c, financials.md): money lines for the same 52 weeks, and monthly budgets through year end.
+    for (const a of FIN_ACCOUNTS)
+      await tx.insert(s.finAccount).values({
+        orgId: org.id,
+        code: a.code,
+        name: a.name,
+        kind: a.kind,
+        unit: a.unit,
+        higherIsBetter: a.higherIsBetter,
+        ownerDepartmentId: unitIds[a.owner],
+        level: a.level,
+      });
+    const firstDay = addDays(STORY_DAY, -HISTORY_DAYS);
+    const fin = financeHistory(firstDay, addDays(STORY_DAY, -1)).map((r) => ({
+      orgId: org.id,
+      accountCode: r.account,
+      orgUnitId: unitIds[r.unit],
+      day: r.day,
+      amount: r.amount,
+      source: "synthetic:finance-feed",
+    }));
+    for (let i = 0; i < fin.length; i += 50_000) {
+      const c = fin.slice(i, i + 50_000);
+      await tx.execute(sql`
+        insert into fin_actual (org_id, account_code, org_unit_id, day, amount, source)
+        select * from unnest(${sql.param(c.map((r) => r.orgId))}::uuid[], ${sql.param(c.map((r) => r.accountCode))}::text[],
+          ${sql.param(c.map((r) => r.orgUnitId))}::uuid[], ${sql.param(c.map((r) => r.day))}::date[], ${sql.param(c.map((r) => r.amount))}::float8[],
+          ${sql.param(c.map((r) => r.source))}::text[])`);
+    }
+    const bud = budgets(firstDay.slice(0, 7), `${STORY_DAY.slice(0, 4)}-12`).map((r) => ({
+      orgId: org.id,
+      accountCode: r.account,
+      orgUnitId: unitIds[r.unit],
+      month: r.month,
+      amount: r.amount,
+    }));
+    await tx.insert(s.finBudget).values(bud);
 
     await tx.insert(s.demoClock).values({ orgId: org.id, now: new Date(`${STORY_DAY}T05:00:00Z`) });
     return { orgId: org.id, unitIds, userIds, kpiIds };

@@ -6,12 +6,14 @@
 import { CATALOG } from "@/infra/seed/catalog";
 import { runCommitmentMonitor } from "./commands/commitments";
 import { seedCommitments } from "./commitments-seed";
+import { seedInitiatives } from "./initiatives-seed";
 import { and, eq, inArray } from "drizzle-orm";
 import { addDays } from "@/domain/calendar";
 import { DomainError } from "@/domain/errors";
 import { assertAuthorized, authorizeUser } from "@/domain/policy/authorize";
 import type { Actor } from "@/domain/types";
-import { action, demoClock, kpi, kpiObservation, orgUnit } from "@/infra/db/schema";
+import { action, demoClock, finActual, kpi, kpiObservation, orgUnit } from "@/infra/db/schema";
+import { financeHistory } from "@/infra/seed/finance";
 import { generateDay, generateDepartmentDay, P2S1, type Interventions } from "@/infra/seed/generator";
 import { SEED_VERSION, UNITS } from "@/infra/seed/org";
 import { seed } from "@/infra/seed/seed";
@@ -21,6 +23,7 @@ import { executeReadyActions, runClockJobs } from "./commands/lifecycle";
 import { createContext, type AppContext } from "./context";
 import type { Db } from "./db";
 import { seedCatalog } from "./catalog";
+import { releaseMessages } from "./commands/messages";
 import { runDetector } from "./detector";
 
 const dayOf = (d: Date) => d.toISOString().slice(0, 10);
@@ -79,6 +82,22 @@ async function generateDays(ctx: AppContext, fromDay: string, toDay: string) {
     }
   }
   if (rows.length) await ctx.db.insert(kpiObservation).values(rows).onConflictDoNothing();
+  // Money lines for the same days (plan v2, E2): the finance feed keeps pace with the store feed.
+  if (fromDay < toDay) {
+    const all = await ctx.db.select().from(orgUnit).where(eq(orgUnit.orgId, ctx.orgId));
+    const idOf = new Map(all.map((u) => [u.code, u.id]));
+    const fin = financeHistory(fromDay, addDays(toDay, -1), iv)
+      .filter((r) => idOf.has(r.unit))
+      .map((r) => ({
+        orgId: ctx.orgId,
+        accountCode: r.account,
+        orgUnitId: idOf.get(r.unit)!,
+        day: r.day,
+        amount: r.amount,
+        source: "synthetic:finance-feed",
+      }));
+    if (fin.length) await ctx.db.insert(finActual).values(fin).onConflictDoNothing();
+  }
   return rows.length;
 }
 
@@ -112,6 +131,7 @@ export async function advanceClock(db: Db, actor: Actor, hours: number) {
   const after = await createContext(db, { orgId: ctx.orgId, requestId: ctx.requestId });
   const clock = await runClockJobs(after);
   await executeReadyActions(after);
+  await releaseMessages(after);
   const outcomes = await evaluateDueOutcomes(after);
   const detections = dayOf(from) !== dayOf(to) ? await runDetector(after) : [];
   const commitments = await runCommitmentMonitor(after);
@@ -130,7 +150,13 @@ export async function bootstrapEpoch(db: Db, password: string) {
   // Phase 4: the commitment register and dependency graph; catalog stories link to their commitments.
   const catalogIds = new Map(CATALOG.map((c, i) => [c.id, catalog[i].insightId]));
   const commitments = await seedCommitments(await createContext(db, { orgId: r.orgId }), catalogIds);
-  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor };
+  // Plan v2 (E1c): cross-department initiatives, linked to the catalog stories and commitments above.
+  const initiatives = await seedInitiatives(
+    await createContext(db, { orgId: r.orgId }),
+    catalogIds,
+    commitments.commitments,
+  );
+  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor, initiatives };
 }
 
 /** Starts a fresh demo epoch (new organization; history of the old one stays intact). */

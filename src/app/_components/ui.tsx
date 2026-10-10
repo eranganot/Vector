@@ -1,5 +1,6 @@
 /** Shared presentational pieces (dark theme). No data access here. */
 import Link from "next/link";
+import { day } from "./format";
 import { getT } from "../_lib/locale";
 
 const BAND_STYLE: Record<string, string> = {
@@ -44,9 +45,16 @@ export function Pill({
   return <span className={`inline-flex rounded-md border px-2 py-0.5 text-[13px] ${cls}`}>{children}</span>;
 }
 
-export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function Card({
+  children,
+  className = "",
+  ...rest
+}: { children: React.ReactNode; className?: string } & Omit<React.HTMLAttributes<HTMLElement>, "className">) {
   return (
-    <section className={`rounded-xl border border-line bg-panel/90 p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.2)] ${className}`}>
+    <section
+      {...rest}
+      className={`rounded-xl border border-line bg-panel/90 p-5 shadow-[0_0_0_1px_rgb(0_0_0/0.2)] ${className}`}
+    >
       {children}
     </section>
   );
@@ -172,10 +180,10 @@ export async function LineChart({
             {t("dashed = {label}", { label })}
           </text>
           <text x="8" y={H - 6} fontSize="11" fill="#8fa1bc">
-            {days[0].day.slice(5)}
+            {day(t, days[0].day)}
           </text>
           <text x={W - 8} y={H - 6} fontSize="11" textAnchor="end" fill="#e6edf7">
-            {last.day.slice(5)}: {fmtKpi(last.actual, unit)} {t("vs")} {fmtKpi(last.expected, unit)}
+            {day(t, last.day)}: {fmtKpi(last.actual, unit)} {t("vs")} {fmtKpi(last.expected, unit)}
           </text>
         </>
       )}

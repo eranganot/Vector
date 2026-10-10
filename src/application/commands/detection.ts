@@ -3,6 +3,7 @@
  * insight with the same dedupe key (re-prioritizing it) or create a new insight with VECTOR's
  * recommended decision and proposed actions (rows I1, D1, A1).
  */
+import { actionEconomics, type Economics } from "@/domain/economics";
 import { createHash } from "node:crypto";
 import { and, arrayOverlaps, eq, inArray } from "drizzle-orm";
 import { assertAuthorized, authorizeSystem } from "@/domain/policy/authorize";
@@ -15,6 +16,13 @@ import { playbook } from "../playbooks";
 import { SYSTEM, unitsByIds, visibleIds } from "./shared";
 
 export type EvidenceInput = { kind: string; title: string; sourceRef: string; payload: unknown };
+
+const economicsColumns = (e: Economics) => ({
+  expectedImpactIls: e.expectedImpactIls,
+  impactBasis: e.impactBasis,
+  executionRisk: e.executionRisk,
+  riskFactors: e.riskFactors,
+});
 
 export type DetectionInput = {
   signal: {
@@ -246,6 +254,16 @@ export async function recordDetection(ctx: AppContext, input: DetectionInput): P
             visibleUnitIds: [...new Set([...visibleIds(targets), ...ins.visibleUnitIds])],
             dueAt: a.dueAt,
             estimatedCost: a.estimatedCost,
+            // Plan v2 (E1c): what the action is expected to deliver by quarter end, and its execution risk.
+            ...economicsColumns(
+              actionEconomics({
+                type: a.type,
+                weeklyIls: input.insight.priority?.impactIls ?? input.insight.opportunity?.valueIls ?? 0,
+                confidence: input.insight.confidence,
+                actionsInResponse: input.recommendation.actions.length,
+                now,
+              }),
+            ),
             executor: pb.executor,
             params: { ...a.params, audience: pb.audience ?? "internal" },
             idempotencyKey: `${ins.id}:${a.type}:${actionIds.length}`,

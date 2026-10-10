@@ -27,6 +27,7 @@ import { DomainError } from "@/domain/errors";
 import { requireRationale } from "@/domain/lifecycle/guards";
 import { transition } from "@/domain/lifecycle/machines";
 import { assertAuthorized, authorizeSystem, authorizeUser } from "@/domain/policy/authorize";
+import { hasPermission } from "@/domain/policy/permissions";
 import { type Actor, actorId, inSubtree } from "@/domain/types";
 import { commitment, conflict, decision, dependency, insight, orgUnit, roleAssignment, user } from "@/infra/db/schema";
 import { type AppContext, runCommand } from "../context";
@@ -129,13 +130,16 @@ export async function recordCommitment(
       if (!(impact >= 0) || !(compliance >= 0 && compliance <= 1))
         throw new DomainError("Invalid", "impact ≥ 0, compliance 0–1");
       // The owner must hold a role in the owning unit's subtree: a promise is owned by someone who can keep it.
+      // Only roles that may act on commitments count: a read-only grant (Viewer @ Group, ADR-008) is not "working in".
       const ownerRoles = await tx
-        .select({ unit: orgUnit })
+        .select({ unit: orgUnit, role: roleAssignment.role })
         .from(roleAssignment)
         .innerJoin(orgUnit, eq(orgUnit.id, roleAssignment.orgUnitId))
         .where(and(eq(roleAssignment.orgId, ctx.orgId), eq(roleAssignment.userId, input.ownerUserId)));
-      if (!ownerRoles.some((r) => inSubtree(owner, r.unit.id) || r.unit.pathIds.includes(owner.id)))
-        throw new DomainError("Invalid", "the owner must work in the owning unit");
+      const canKeep = (r: (typeof ownerRoles)[number]) =>
+        hasPermission(r.role, "commitment.update") &&
+        (inSubtree(owner, r.unit.id) || r.unit.pathIds.includes(owner.id));
+      if (!ownerRoles.some(canKeep)) throw new DomainError("Invalid", "the owner must work in the owning unit");
       const beneficiaries = await unitsByIds(tx, ctx.orgId, [...new Set(input.beneficiaryUnitIds)]);
       const effects = validEffects(input.effects ?? []);
       const t = transition("commitment", null, "record");

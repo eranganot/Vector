@@ -3,13 +3,12 @@
  * (seed, branch, KPI, day, interventions), never on generation order, so history and future days
  * produced by the scenario engine are reproducible.
  */
-import { dayKind, weekday } from "@/domain/calendar";
+import { dayKind, tradingWeight } from "@/domain/calendar";
 import { createRng } from "./prng";
 import type { UnitSeed } from "./org";
 
 export const GENERATOR_SEED = "vector-v1";
 
-const WEEKDAY_SHAPE = [0.95, 0.9, 0.9, 1.0, 1.25, 1.1, 0.35]; // Sun..Sat
 const BASE_SALES = { L: 190_000, M: 110_000 } as const;
 const REGION_FACTOR: Record<string, number> = { NORTH: 0.97, COAST: 1.0, CENTER: 1.05, JERUSALEM: 0.98, SOUTH: 0.92 };
 
@@ -70,6 +69,17 @@ function storyOsaShortfall(branchCode: string, day: string, iv: Interventions): 
   return shortfall;
 }
 
+/**
+ * Expected net sales for a branch and day: the plan line before noise and stories. Budgets are built from it
+ * (financials.md §3); `generateDay` uses the same expression, so the two can never drift apart.
+ */
+export function expectedSales(branch: UnitSeed, day: string): number {
+  const size = branch.sizeClass ?? "M";
+  const branchFactor = 0.92 + 0.16 * createRng(`${GENERATOR_SEED}|${branch.code}`).next();
+  const base = BASE_SALES[size] * (REGION_FACTOR[branch.parent ?? ""] ?? 1) * branchFactor;
+  return base * tradingWeight(day) * (1 + 0.0002 * daysBetween("2026-07-01", day));
+}
+
 export function generateDay(branch: UnitSeed, day: string, iv: Interventions = {}): DayValues {
   const size = branch.sizeClass ?? "M";
   const branchRng = createRng(`${GENERATOR_SEED}|${branch.code}`);
@@ -79,7 +89,7 @@ export function generateDay(branch: UnitSeed, day: string, iv: Interventions = {
 
   const rng = createRng(`${GENERATOR_SEED}|${branch.code}|${day}`);
   const kind = dayKind(day);
-  const dayFactor = kind === "holiday" ? 0.05 : kind === "holiday_eve" ? 1.45 : WEEKDAY_SHAPE[weekday(day)];
+  const dayFactor = tradingWeight(day);
   const trend = 1 + 0.0002 * daysBetween("2026-07-01", day);
   const expected = base * dayFactor * trend;
 
@@ -126,7 +136,7 @@ const DEPT_KPIS: Record<string, { base: number; sd: number; plants?: { from: str
   {
     dc_on_time: { base: 95.5, sd: 0.8, plants: [{ from: "2026-10-20", delta: -17 }] }, // R2
     supplier_fill: { base: 97.4, sd: 0.4, plants: [{ from: "2026-10-18", delta: -4 }] }, // R3
-    gross_margin: { base: 31.8, sd: 0.15 },
+    gross_margin: { base: 25.95, sd: 0.15 }, // G-E0g: recalibrated from 31.8 (target 26.0)
     campaign_ready: { base: 92, sd: 1.5, plants: [{ from: "2026-10-19", delta: -20 }] }, // R4
     opex_vs_budget: { base: 99, sd: 0.6, plants: [{ from: "2026-10-05", delta: 7 }] }, // R7
     vacancy_pct: { base: 3.6, sd: 0.2 },

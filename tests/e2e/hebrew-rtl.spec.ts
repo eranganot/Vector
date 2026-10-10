@@ -26,7 +26,7 @@ test("the reader chooses Hebrew: the whole app turns right-to-left, names and da
   // The headline is a Hebrew sentence; the department is named in Hebrew.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(HEBREW);
   await expect(page.getByText("סחר ומסחר").first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "תוצאות המחלקה" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "כסף מול תקציב" })).toBeVisible(); // C-suite home (E2)
 
   // An insight: title, story and recommendation in Hebrew.
   await nav.getByRole("link", { name: "סיכונים" }).click();

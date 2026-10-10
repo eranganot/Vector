@@ -63,6 +63,35 @@ export const INPUTS = {
     windowEnd: dayStr.optional(),
   }),
   cancelCommitment: z.object({ commitmentId: id, rationale: note.min(3, "say why it is cancelled") }),
+  // Plan v2, E3: initiatives (cross-department.md §3). `key` returns the reader to the initiative they acted on.
+  completeMilestone: z.object({ key: z.string().max(60), milestoneId: id }),
+  moveMilestone: z.object({
+    key: z.string().max(60),
+    milestoneId: id,
+    dueOn: dayStr,
+    reason: note.min(5, "say why the date moves"),
+  }),
+  resolveBarrier: z.object({
+    key: z.string().max(60),
+    barrierId: id,
+    resolution: note.min(5, "say how it was resolved"),
+  }),
+  raiseBarrier: z.object({
+    key: z.string().max(60),
+    initiativeId: id,
+    title: note.min(3, "name the barrier"),
+    kind: z.enum(["dependency", "resource", "budget", "decision", "external"]),
+    ownerUnitId: id,
+    costIls: z.coerce.number().min(0).max(100_000_000).optional(),
+  }),
+  sendReminder: z.object({
+    key: z.string().max(60),
+    initiativeId: id,
+    toUnitId: id,
+    subjectKind: z.enum(["milestone", "barrier", "budget"]),
+    subjectId: id.optional(),
+    body: note.min(5, "write the reminder"),
+  }),
   insight: z.object({ insightId: id }),
   dismissInsight: z.object({ insightId: id, rationale: note.min(3, "say why it can be dismissed") }),
   actionRef: z.object({ insightId: id, actionId: id }),
@@ -73,6 +102,19 @@ export const INPUTS = {
     estimatedCost: z.coerce.number().min(0).max(100_000_000),
     note: note.optional(),
   }),
+  // Action Center (plan v2, E4): approve and send / decline, from the selected item's form.
+  approveAndSend: z.object({
+    insightId: id,
+    toUserId: ownerId,
+    ccUserIds: z.array(ownerId).max(20).default([]),
+    subject: z.string().trim().min(3, "write a subject").max(200),
+    body: note.min(10, "write the message"),
+    language: z.enum(["en", "he"]),
+    templateId: z.string().max(120),
+    suggestedBody: z.string().max(4000).default(""),
+    grantActionIds: z.array(id).max(20).default([]),
+  }),
+  declineInCenter: z.object({ insightId: id, rationale: note.min(3, "say why it is declined") }),
   advanceClock: z.object({
     hours: z.coerce
       .number()

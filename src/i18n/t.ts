@@ -7,12 +7,15 @@ import { heContent } from "./content";
 import { HE } from "./messages/he";
 
 export type Params = Record<string, string | number>;
-export type T = (en: string, params?: Params) => string;
+/** Translate; carries the reader's locale so a screen can also format dates for them. */
+export type T = ((en: string, params?: Params) => string) & { locale?: Locale };
 
 const fill = (s: string, params?: Params) =>
   params ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in params ? String(params[k]) : m)) : s;
 
 export function makeT(locale: Locale): T {
-  if (locale === "en") return (en, params) => fill(en, params);
-  return (en, params) => fill(HE[en] ?? heContent(en) ?? en, params);
+  const t: T =
+    locale === "en" ? (en, params) => fill(en, params) : (en, params) => fill(HE[en] ?? heContent(en) ?? en, params);
+  t.locale = locale;
+  return t;
 }

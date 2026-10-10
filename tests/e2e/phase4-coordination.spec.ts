@@ -47,7 +47,8 @@ test("Marketing records a weekend promotion; VECTOR flags the conflict with Trad
 
   // Trade's head is asked to confirm his plan (a task he owns).
   await as(page, "Eitan Rosen");
-  await expect(page.getByText(/Confirm your plan with Marketing: Delist 6 dairy items/)).toBeVisible();
+  await page.goto("/approvals"); // Waiting on you (the home lists the first five)
+  await expect(page.getByText(/Confirm your plan with Marketing: Delist 6 dairy items/).first()).toBeVisible();
 });
 
 test("cancelling one side resolves the conflict; the trace says why", async ({ page }) => {
@@ -64,6 +65,7 @@ test("cancelling one side resolves the conflict; the trace says why", async ({ p
   await page.goto("/risks");
   await page
     .getByRole("link", { name: /Weekend dairy discount in South/ })
+    .and(page.locator(":not([data-testid=value-bubble])")) // the insight card, not its bubble on the value map
     .first()
     .click();
   await expect(page.getByText(/Conflict resolved \(a commitment was cancelled\)/)).toBeVisible();
@@ -80,7 +82,15 @@ test("dependencies on every home: the CEO's bottlenecks, Finance blocked on Trad
   await expect(page.getByText("Agree the response to Dairy Co.'s +7% price increase").first()).toBeVisible();
   await expect(page.getByText(/\d+ days? overdue/).first()).toBeVisible();
 
+  // ADR-008: the CFO's home is the whole group; Finance's own view is its unit page.
   await as(page, "Michal Golan");
+  await expect(page.getByTestId("pulse")).toBeVisible();
+  await page.goto("/org");
+  await page
+    .locator("main a", { hasText: /^Finance$/ })
+    .first()
+    .click();
+  await page.waitForURL(/\/units\//);
   const deps = page
     .locator("section, div")
     .filter({ has: page.getByText("We're waiting on", { exact: false }) })

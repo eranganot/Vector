@@ -1,6 +1,7 @@
 /**
  * Phase smoke test against a running environment. Each phase appends its checks;
  * a later phase's smoke always re-runs the earlier phases' checks.
+ * Plan v2 stages continue the numbering: E1 = phase 5, E2 = 6, … E7 = 11 (so `--phase 4` still means "Prod on Phase 4").
  *   pnpm smoke --url https://<env>.up.railway.app [--expect-sha <git sha>]
  */
 import { SEED_VERSION } from "../src/infra/seed/org";
@@ -164,6 +165,119 @@ const checks: Check[] = [
       if (!/<html[^>]*lang="he"[^>]*dir="rtl"|<html[^>]*dir="rtl"[^>]*lang="he"/.test(he)) throw new Error("no rtl");
       if (!he.includes("כניסה")) throw new Error("sign-in page not in Hebrew");
       return "en → ltr · he → rtl";
+    },
+  },
+  {
+    phase: 5,
+    name: 'E1: the product is named "VECTOR | Organizational Intelligence" in English and in Hebrew (FB-2)',
+    run: async (base) => {
+      const en = (await get(base, "/login")).text;
+      if (!en.includes("<title>VECTOR | Organizational Intelligence</title>")) throw new Error("English title missing");
+      const he = await (
+        await fetch(new URL("/login", base), {
+          headers: { cookie: "vector_lang=he" },
+          signal: AbortSignal.timeout(15_000),
+        })
+      ).text();
+      if (!he.includes("<title>VECTOR | אינטליגנציה ארגונית</title>")) throw new Error("Hebrew title missing");
+      return "en and he titles";
+    },
+  },
+  {
+    phase: 5,
+    name: "E1: the C-suite cast is seeded: the COO persona exists (ADR-008)",
+    run: async (base) => {
+      const text = (await get(base, "/login")).text;
+      if (!text.includes("Demo personas")) return "skipped (personas off in this environment)";
+      if (!text.includes("Oren Halevi")) throw new Error("COO persona missing");
+      return "Oren Halevi (COO) listed";
+    },
+  },
+  {
+    phase: 5,
+    name: "E1: synthetic data v5 is live (52 weeks, money lines, budgets, initiatives; seed p5+)",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      const v = /^p(\d+)-/.exec(body.demo?.seedVersion ?? "");
+      if (!v || Number(v[1]) < 5) throw new Error(`seed ${body.demo?.seedVersion}, expected p5 or later`);
+      if (body.migrations.applied < 10) throw new Error(`expected migration 0009, got ${body.migrations.applied}`);
+      return `seed ${body.demo.seedVersion} · migrations ${body.migrations.applied}`;
+    },
+  },
+  {
+    phase: 6,
+    name: "E2a: the C-suite home read model's day indexes are migrated (0010)",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 11) throw new Error(`expected migration 0010, got ${body.migrations.applied}`);
+      return `migrations ${body.migrations.applied}`;
+    },
+  },
+  {
+    phase: 6,
+    name: "E2b: the C-suite home and its department drill-down require sign-in (no health or money leaks)",
+    run: async (base) => {
+      for (const path of ["/", "/?unit=00000000-0000-4000-8000-000000000000", "/?by=region"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Money vs budget|Organization pulse/.test(await res.text())) throw new Error(`${path} leaked the home`);
+      }
+      return "3 routes → /login";
+    },
+  },
+  {
+    phase: 7,
+    name: "E3: initiative updates are migrated (0011); the Cross-department tab requires sign-in",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 12) throw new Error(`expected migration 0011, got ${body.migrations.applied}`);
+      for (const path of ["/initiatives", "/initiatives?i=I-NORTH-DC"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/North DC recovery|Your action items/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
+    },
+  },
+  {
+    phase: 8,
+    name: "E4: outbound messages are migrated (0012); the Action Center and the dependency flow require sign-in",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 13) throw new Error(`expected migration 0012, got ${body.migrations.applied}`);
+      for (const path of [
+        "/action-center",
+        "/action-center?item=00000000-0000-0000-0000-000000000000",
+        "/initiatives?i=I-HOLIDAY&wf=00000000-0000-0000-0000-000000000000&wd=7",
+      ]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Approve and send|With whom|Stock-outs|How a delay travels/.test(await res.text()))
+          throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 3 routes → /login`;
+    },
+  },
+  {
+    phase: 9,
+    name: "E5: reports are migrated (0013); the builder and a snapshot require sign-in and leak nothing",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 14) throw new Error(`expected migration 0013, got ${body.migrations.applied}`);
+      for (const path of ["/reports", "/reports/00000000-0000-0000-0000-000000000000"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Reports builder|sha256|Decisions needed/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
     },
   },
 ];

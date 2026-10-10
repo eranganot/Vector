@@ -12,6 +12,7 @@ import { auth } from "@/infra/auth";
 import { isLocale, LOCALE_COOKIE } from "@/i18n/locale";
 import { seedPassword } from "@/infra/seed/password";
 import { demoPersonasEnabled, requireActor, SWITCHER_COOKIE } from "./_lib/session";
+import { decodeLayout } from "./_lib/report-layout";
 
 /**
  * Marks a notice literal as a translation key (a no-op): the English text travels in the URL and the page's `Notice`
@@ -291,4 +292,118 @@ export async function setLanguageAction(form: FormData) {
     back = "/";
   }
   redirect(back);
+}
+
+// ── Initiatives (plan v2, E3; cross-department.md §3) ──
+const INITIATIVES_PATH = "/initiatives";
+async function onInitiative(
+  form: FormData,
+  done: string,
+  run: (actor: Awaited<ReturnType<typeof requireActor>>["actor"], key: string) => Promise<unknown>,
+) {
+  const { actor } = await requireActor();
+  const key = String(form.get("key") ?? "");
+  const back = key ? `${INITIATIVES_PATH}?i=${encodeURIComponent(key)}` : INITIATIVES_PATH;
+  try {
+    await run(actor, key);
+  } catch (e) {
+    if (e instanceof DomainError)
+      redirect(`${back}${back.includes("?") ? "&" : "?"}error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(INITIATIVES_PATH);
+  redirect(`${back}${back.includes("?") ? "&" : "?"}done=${done}`);
+}
+
+export async function completeMilestoneAction(form: FormData) {
+  await onInitiative(form, "milestone_done", async (a) =>
+    api.completeMilestone(a, parseInput("completeMilestone", form).milestoneId),
+  );
+}
+
+export async function moveMilestoneAction(form: FormData) {
+  await onInitiative(form, "milestone_moved", async (a) => {
+    const i = parseInput("moveMilestone", form);
+    await api.moveMilestone(a, i.milestoneId, i.dueOn, i.reason);
+  });
+}
+
+export async function resolveBarrierAction(form: FormData) {
+  await onInitiative(form, "barrier_resolved", async (a) => {
+    const i = parseInput("resolveBarrier", form);
+    await api.resolveBarrier(a, i.barrierId, i.resolution);
+  });
+}
+
+export async function raiseBarrierAction(form: FormData) {
+  await onInitiative(form, "barrier_raised", async (a) => {
+    const i = parseInput("raiseBarrier", form);
+    await api.raiseBarrier(a, i.initiativeId, i);
+  });
+}
+
+export async function sendReminderAction(form: FormData) {
+  await onInitiative(form, "reminder_sent", async (a) => {
+    const i = parseInput("sendReminder", form);
+    await api.sendInitiativeReminder(a, i.initiativeId, i);
+  });
+}
+
+// ── Action Center (plan v2, E4; action-center.md §3–§4) ──
+const CENTER_PATH = "/action-center";
+const centerBack = (f: FormData) => {
+  const raw = String(f.get("insightId") ?? "");
+  return /^[0-9a-f-]{36}$/i.test(raw) ? `${CENTER_PATH}?item=${raw}` : `${CENTER_PATH}?`;
+};
+
+export async function approveAndSendAction(form: FormData) {
+  const { actor } = await requireActor();
+  const back = centerBack(form);
+  try {
+    const i = parseInput("approveAndSend", {
+      ...Object.fromEntries([...form.entries()].filter(([k]) => !k.startsWith("$") && k !== "cc" && k !== "grant")),
+      ccUserIds: form.getAll("cc").map(String).filter(Boolean),
+      grantActionIds: form.getAll("grant").map(String).filter(Boolean),
+    });
+    await api.approveAndSend(actor, i.insightId, i);
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(CENTER_PATH);
+  redirect(`${back}&done=sent`);
+}
+
+export async function declineInCenterAction(form: FormData) {
+  const { actor } = await requireActor();
+  const back = centerBack(form);
+  try {
+    const i = parseInput("declineInCenter", form);
+    await api.declineInCenter(actor, i.insightId, i.rationale);
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath(CENTER_PATH);
+  redirect(`${CENTER_PATH}?done=declined`);
+}
+
+// ── Reports (plan v2, E5; reports.md §3) ──
+export async function generateReportAction(form: FormData) {
+  const { actor } = await requireActor();
+  const scope = String(form.get("scope") ?? "");
+  const raw = String(form.get("layout") ?? "");
+  const back = `/reports?s=${encodeURIComponent(scope)}&l=${encodeURIComponent(raw)}`;
+  if (!/^[0-9a-f-]{36}$/i.test(scope)) redirect(`${back}&error=${encodeURIComponent(tk("Choose a scope"))}`);
+  const layout = decodeLayout(raw, "weekly_management", (id) => /^[0-9a-f-]{36}$/i.test(id));
+  const lang = (await cookies()).get(LOCALE_COOKIE)?.value === "he" ? "he" : "en";
+  let id = "";
+  try {
+    id = await api.generateReport(actor, { scopeUnitId: scope, layout, language: lang });
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath("/reports");
+  redirect(`/reports/${id}`);
 }

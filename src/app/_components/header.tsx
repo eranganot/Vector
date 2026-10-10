@@ -8,6 +8,7 @@ import { getLocale } from "../_lib/locale";
 import { LanguageSwitch } from "./language-switch";
 import { NavLink } from "./nav-link";
 import { Logo } from "./ui";
+import { PRODUCT, TAGLINE } from "@/i18n/brand";
 
 const Icon = ({ d }: { d: string }) => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -25,12 +26,15 @@ const ICONS = {
   approvals: "M9 12l2 2 4-4M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z",
   audit: "M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z",
   demo: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
+  cross: "M5 5h5v5H5zM14 14h5v5h-5zM14 5h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v6.5H14",
+  center: "M13 2L4 14h7l-1 8 9-12h-7z",
+  reports: "M7 3h7l5 5v13H7zM14 3v5h5M10 17v-3M13 17v-6M16 17v-4",
 };
 
 function groupOf(title: string | null) {
   const t = title ?? "";
   if (/Regional|Branch/.test(t)) return "Regions & branches";
-  if (/CEO|Board|administrator/.test(t)) return "Leadership & admin";
+  if (/^(CEO|CFO|COO)$|Board|administrator/.test(t)) return "Leadership & admin";
   return "Departments";
 }
 
@@ -42,7 +46,7 @@ export async function Shell({
   via,
   children,
 }: {
-  me: { name: string; title: string | null };
+  me: { name: string; title: string | null; isCSuite?: boolean };
   approvals: number;
   roles: string[];
   via: boolean;
@@ -60,17 +64,50 @@ export async function Shell({
   const shownGroups = await localized(groups);
   // audit.read (authorization.md §2): Executive, Admin and managers; the explorer scopes what each one sees.
   const seeAudit = ["executive", "admin", "department_manager", "regional_manager"].some((r) => roles.includes(r));
+  const waiting = (
+    <NavLink href="/approvals">
+      <Icon d={ICONS.approvals} /> {t("Waiting on you")}
+      {approvals > 0 && (
+        <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
+          {approvals}
+        </span>
+      )}
+    </NavLink>
+  );
+  // C-suite navigation (IA v2, executive-home.md §2): what waits on you comes right after Home.
+  const cSuite = !!me.isCSuite;
+  // Cross-department (E3): the C-suite and anyone who manages a department or the group, where initiatives live.
+  const seeCross = cSuite || ["executive", "department_manager"].some((r) => roles.includes(r));
+  // Action Center (E4): whoever decides or approves: the C-suite and managers.
+  const seeCenter = cSuite || ["executive", "department_manager", "regional_manager"].some((r) => roles.includes(r));
+  const center = seeCenter && (
+    <NavLink href="/action-center">
+      <Icon d={ICONS.center} /> {t("Action Center")}
+    </NavLink>
+  );
   const nav = (
     <>
       <NavLink href="/">
         <Icon d={ICONS.today} /> {t("Home")}
       </NavLink>
+      {cSuite && waiting}
+      {cSuite && center}
       <NavLink href="/risks">
         <Icon d={ICONS.risks} /> {t("Risks")}
       </NavLink>
       <NavLink href="/opportunities">
         <Icon d={ICONS.opportunities} /> {t("Opportunities")}
       </NavLink>
+      {seeCross && (
+        <NavLink href="/initiatives">
+          <Icon d={ICONS.cross} /> {t("Cross-department")}
+        </NavLink>
+      )}
+      {seeCross && (
+        <NavLink href="/reports">
+          <Icon d={ICONS.reports} /> {t("Reports")}
+        </NavLink>
+      )}
       <NavLink href="/commitments">
         <Icon d={ICONS.commitments} /> {t("Commitments")}
       </NavLink>
@@ -80,14 +117,8 @@ export async function Shell({
       <NavLink href="/org">
         <Icon d={ICONS.org} /> {t("Organization")}
       </NavLink>
-      <NavLink href="/approvals">
-        <Icon d={ICONS.approvals} /> {t("Waiting on you")}
-        {approvals > 0 && (
-          <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
-            {approvals}
-          </span>
-        )}
-      </NavLink>
+      {!cSuite && waiting}
+      {!cSuite && center}
       {seeAudit && (
         <NavLink href="/audit">
           <Icon d={ICONS.audit} /> {t("Audit")}
@@ -101,13 +132,16 @@ export async function Shell({
     </>
   );
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="hidden border-e border-line bg-panel/60 px-4 py-6 lg:flex lg:flex-col lg:gap-8">
+    <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
+      <aside
+        data-shell="nav"
+        className="hidden border-e border-line bg-panel/60 px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:gap-8 lg:overflow-y-auto"
+      >
         <Link href="/" className="flex items-center gap-2.5 px-2 no-underline">
           <Logo />
           <span className="flex flex-col leading-tight">
-            <span className="text-[15px] font-semibold tracking-[0.14em]">VECTOR</span>
-            <span className="text-[11px] text-muted">{t("Organizational intelligence")}</span>
+            <span className="text-[15px] font-semibold tracking-[0.14em]">{PRODUCT}</span>
+            <span className="text-[11px] text-muted">| {TAGLINE[locale]}</span>
           </span>
         </Link>
         <nav className="flex flex-col gap-1" aria-label={t("Main")}>
@@ -118,10 +152,14 @@ export async function Shell({
         </p>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <header className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-panel/40 px-4 py-3 sm:px-8">
+        <header
+          data-shell="top"
+          className="sticky top-0 z-30 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-ground/90 px-4 py-3 backdrop-blur sm:px-8"
+        >
           <Link href="/" className="flex items-center gap-2 no-underline lg:hidden">
             <Logo size={22} />
-            <span className="text-sm font-semibold tracking-[0.14em]">VECTOR</span>
+            <span className="text-sm font-semibold tracking-[0.14em]">{PRODUCT}</span>
+            <span className="text-[11px] text-muted">| {TAGLINE[locale]}</span>
           </Link>
           <nav className="flex w-full gap-1 overflow-x-auto lg:hidden" aria-label={t("Main (mobile)")}>
             {nav}
