@@ -1,21 +1,15 @@
 # Session handoff
 
-_Last updated: 2026-10-08 (E4d)_
+_Last updated: 2026-10-10 (E5a)_
 
 ## Current phase
 
-**Plan v2, stage E4 (Action Center): built, revised after Eran's review (E4d) and verified on Dev (8dbf734); awaiting Eran's E4 gate** (docs/phases/STAGE_E4.md).
-E3 was accepted by Eran 2026-10-07 (G-E3), with one comment fixed in E4 (Action plan due date and ₪ formatting).
-Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
+**Plan v2, stage E5 (reports): E5a built** (builder, weekly management template, in-app snapshot). Next: E5b editable
+PowerPoint and PDF, then the board pack and the E5 gate. E4 accepted by Eran 2026-10-08 (G-E4); E4e (his review
+fixes) verified on Dev db3c43e. Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
-- E4 #47: Action Center (queue, selected item, approve and send through the lifecycle, in-app messages; migration
-  0012), Messages for you in Waiting on you, Action plan formatting. Spec as built: docs/specs/action-center.md §6.
-  Dev 4dc66f0: migrations 13/13, smoke 18/18, e2e 43/43 against Dev, demo reset after.
-- E4d #49: Eran's E4 review — event → action plan rebuilt; Cross-department dependency flow with what-if (knock-on-v1).
-  Dev 8dbf734: smoke 18/18, e2e 46/46 against Dev, demo reset after.
-  On 2026-10-07 Eran wrote "E3 is signed off" in his E4 review; G-E3 was already recorded. Whether he meant E4 is
-  asked, not inferred.
-- E3a–E3c #42–#46 shipped and verified on Dev (smoke 17/17, e2e 40/40).
+- E5a #52: reports (report-v1, migration 0013). Spec as built: docs/specs/reports.md §5.
+- E4 #47–#51 shipped and verified on Dev.
 
 ## Objective (E0, done)
 
@@ -36,7 +30,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E4 on Dev (docs/phases/STAGE_E4.md); on sign-off, E5 (reports).
+1. E5b: editable PowerPoint and PDF exports; then the board pack and the E5 gate brief.
 
 ## Reproducible commands
 
