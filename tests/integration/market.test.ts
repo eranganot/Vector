@@ -83,9 +83,9 @@ describe("market & competitors (E6)", () => {
   it("market-v1: MK2 (our prices rose while CBS food fell) and MK3 (Shufersal shrinking) become insights with sources", async () => {
     const dana = await as("dana");
     const v = (await marketView(appDb, dana, { orgId }))!;
-    const mk2 = v.changed.find((c) => c.workstream === "risk")!;
+    const mk2 = v.changed.find((c) => c.title.startsWith("Our prices rose"))!;
     const mk3 = v.changed.find((c) => c.workstream === "opportunity")!;
-    expect(v.changed).toHaveLength(2);
+    expect(v.changed).toHaveLength(3); // MK2, MK3 and MK6 (North dairy)
     expect(mk2.title).toBe("Our prices rose while food prices fell (July and August)");
     expect(mk2.priorityBand).toMatch(/^P[23]$/);
     expect(mk2.impactIls).toBeGreaterThan(0);
@@ -101,7 +101,7 @@ describe("market & competitors (E6)", () => {
     const { runMarketRules } = await import("@/application/market-rules");
     const { createContext } = await import("@/application/context");
     const r = await runMarketRules(await createContext(appDb, { orgId }));
-    expect(r.map((x) => x.outcome)).toEqual(["attached", "attached"]);
+    expect(r.map((x) => x.outcome)).toEqual(["attached", "attached", "attached"]);
   });
 
   it("the board pack carries the market block: basket vs market by chain, ours included", async () => {
@@ -116,5 +116,29 @@ describe("market & competitors (E6)", () => {
     const rows = (block.data as { rows: { label: string; value: number }[] }).rows;
     expect(rows.map((r) => r.label)).toContain("Shufersal");
     expect(rows.find((r) => r.label === "VECTOR Retail Group")).toBeDefined();
+  });
+
+  it("growth & expansion: 8 quarters of reported results, estimates labelled, ours computed from our data", async () => {
+    const v = (await marketView(appDb, await as("dana"), { orgId }))!;
+    const g = v.growth;
+    expect(g.quarters).toHaveLength(8);
+    const shufersal = g.chains.find((c) => c.key === "shufersal")!;
+    expect(shufersal.growthByQuarter.at(-1)).toBe(-7.5); // Globes' rounded figure wins over the source's −7.53
+    expect(shufersal.marketShare).toBeCloseTo((14_489_000_000 / 52e9) * 100, 0);
+    expect(g.chains.find((c) => c.key === "osher_ad")!.revenueLatest).toBeNull(); // private: not reported
+    expect(g.ours!.synthetic).toBe(true);
+    expect(g.ours!.avgBasket).toBeGreaterThan(100);
+    expect(g.ours!.stores!.value).toBe(60);
+  });
+
+  it("MK6 price gap: North dairy, compared with every chain, owned by Trade", async () => {
+    const dana = await as("dana");
+    const v = (await marketView(appDb, dana, { orgId }))!;
+    const gap = v.changed.find((c) => c.title === "Dairy in North is +13.2% above the market")!;
+    expect(gap.priorityBand).toBe("P2");
+    const trace = (await getInsightTrace(appDb, orgId, dana, gap.id))!;
+    const rows = (trace.evidence[0].payload as { rows: { label: string }[] }).rows.map((r) => r.label);
+    expect(rows).toEqual(expect.arrayContaining(["Shufersal", "Rami Levy", "Osher Ad", "Yohananof", "Tiv Taam"]));
+    expect(trace.actions.map((a) => a.type)).toEqual(["price_change", "notify_owner"]);
   });
 });

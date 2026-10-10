@@ -42,23 +42,23 @@ describe("Phase 2 demo scenario", () => {
   const haifa = async (email: string) =>
     (await listInsights(appDb, orgId, await as(email))).find((i) => /Haifa Grand Canyon net sales/.test(i.title))!;
 
-  it("reset seeds a new epoch: the detector finds the planted story and the two market signals, and the catalog loads", async () => {
+  it("reset seeds a new epoch: the detector finds the planted story and the three market signals, and the catalog loads", async () => {
     // Bootstrap an epoch so the Admin persona exists, then reset as that Admin.
     orgId = (await seed(ownerDb, { password: "test-password" })).orgId;
     const admin = await as("admin@vector-retail.example");
     const r = await resetDemo(appDb, admin, "test-password");
     orgId = r.orgId;
-    expect(r.detections).toHaveLength(3); // the Haifa story, MK2 and MK3 (E6b)
+    expect(r.detections).toHaveLength(4); // the Haifa story, MK2, MK3 (E6b) and MK6 North dairy (E6c)
     expect(r.catalog).toHaveLength(CATALOG.length);
     const list = await listInsights(appDb, orgId, await as("dana@vector-retail.example"));
-    expect(list).toHaveLength(21); // 15 risks (13 catalog, Haifa, MK2) and 6 opportunities (5 catalog, MK3)
+    expect(list).toHaveLength(22); // 16 risks (13 catalog, Haifa, MK2, MK6) and 6 opportunities (5 catalog, MK3)
     expect(
       list
         .filter((i) => i.workstream === "risk")
         .map((i) => i.priorityBand)
         .sort()
         .join(""),
-    ).toBe("P1P1P1P1P2P2P2P2P2P2P3P3P3P4P4");
+    ).toBe("P1P1P1P1P2P2P2P2P2P2P2P3P3P3P4P4");
     expect(
       list
         .filter((i) => i.workstream === "opportunity")
@@ -124,7 +124,7 @@ describe("Phase 2 demo scenario", () => {
     const decide = async (email: string) => (await listMyDecisions(appDb, orgId, await as(email))).map((d) => d.title);
     expect(await decide("avi@vector-retail.example")).toEqual([expect.stringMatching(/Haifa Grand Canyon net sales/)]);
     expect(await decide("maya@vector-retail.example")).toEqual(["Labor cost 6% over plan across the Center region"]);
-    expect(await decide("eitan@vector-retail.example")).toHaveLength(4); // 3 catalog stories and MK2 (E6b)
+    expect(await decide("eitan@vector-retail.example")).toHaveLength(5); // 3 catalog stories, MK2 (E6b) and MK6 (E6c)
     expect(await decide("ronit@vector-retail.example")).toContain(
       "Shufersal is shrinking (same-store −8.6%); we are growing",
     );

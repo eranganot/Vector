@@ -7,7 +7,7 @@
  * deviations (market-intelligence.md §3), and its monthly price index following CBS food with a planted rise in the
  * last two months (the MK2 story).
  */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { basketIndex, CATEGORIES, type BasketItem, type Category } from "@/domain/market";
@@ -69,6 +69,17 @@ type Snapshot = {
   prices: Record<string, Record<string, Record<string, number>>>;
 };
 type Filings = {
+  market?: {
+    code: string;
+    name: string;
+    period: string;
+    value: number;
+    unit: string;
+    source: string;
+    url: string;
+    asOf: string;
+    method: string;
+  };
   figures: {
     chain: string;
     period: string;
@@ -99,18 +110,21 @@ const hashOf = (xs: string[]) =>
     .join(",")
     .slice(0, 64 * 3);
 
-export function readSnapshots(dir = DIR): { snapshots: Snapshot[]; filings: Filings } {
+export function readSnapshots(dir = DIR): { snapshots: Snapshot[]; filings: Filings; quarterly: Filings } {
   const files = readdirSync(dir)
     .filter((f) => /^snapshot-\d{4}-\d{2}-\d{2}\.json$/.test(f))
     .sort();
   return {
     snapshots: files.map((f) => JSON.parse(readFileSync(join(dir, f), "utf8")) as Snapshot),
     filings: JSON.parse(readFileSync(join(dir, "filings.json"), "utf8")) as Filings,
+    quarterly: existsSync(join(dir, "quarterly.json"))
+      ? (JSON.parse(readFileSync(join(dir, "quarterly.json"), "utf8")) as Filings)
+      : { figures: [] },
   };
 }
 
 export async function loadMarket(tx: DbLike, dir = DIR) {
-  const { snapshots, filings } = readSnapshots(dir);
+  const { snapshots, filings, quarterly } = readSnapshots(dir);
   if (!snapshots.length) return { series: 0, points: 0 };
   const seriesIds = new Map<string, string>();
   const series = async (source: string, code: string, name: string, unit: string, frequency: string) => {
@@ -218,6 +232,33 @@ export async function loadMarket(tx: DbLike, dir = DIR) {
       }
     }
     scopes.push(["ALL", all]);
+    // The average shelf price of a basket item at the market median (real): used for items per basket (ours).
+    const meds = basket
+      .map((b) => {
+        const ps = snap.chains
+          .map((c) => all[c][b.code])
+          .filter((x): x is number => !!x)
+          .sort((a, z) => a - z);
+        return ps.length ? ps[Math.floor((ps.length - 1) / 2)] : null;
+      })
+      .filter((x): x is number => x !== null);
+    if (meds.length) {
+      const id = await series(
+        "derived",
+        "basket:avg_item_price",
+        "Average basket item price, market median",
+        "ils",
+        "daily",
+      );
+      await point(
+        id,
+        snap.day,
+        Math.round((meds.reduce((a, x) => a + x, 0) / meds.length) * 100) / 100,
+        snap.fetchedAt,
+        "basket-index-v1: mean of the market-median shelf prices of the basket items",
+        null,
+      );
+    }
     for (const [region, prices] of scopes) {
       if (Object.keys(prices).length < 2) continue;
       const idx = basketIndex(basket, prices);
@@ -335,7 +376,14 @@ export async function loadMarket(tx: DbLike, dir = DIR) {
         set: { value: f.value, source: f.source, url: f.url, asOf: f.asOf, method: f.method ?? null },
       });
   };
+  // Quarterly history first; the hand-curated filings win for the same quarter.
+  for (const f of quarterly.figures) await figure(f);
   for (const f of filings.figures) await figure(f);
+  if (filings.market) {
+    const m = filings.market;
+    const id = await series("storenext", m.code, m.name, m.unit, "annual");
+    await point(id, m.period, m.value, `${m.asOf}T00:00:00Z`, m.url, null);
+  }
   for (const [chain, s] of Object.entries(latest.storeCounts ?? {}))
     await figure({
       chain,

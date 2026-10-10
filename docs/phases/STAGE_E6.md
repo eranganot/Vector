@@ -1,13 +1,14 @@
 # Stage E6: Market & competitors (plan v2)
 
-Status: **Built on Dev (2026-10-10); awaiting Eran's review (G-E6).** Prod stays on E5 until sign-off.
+Status: **Built on Dev (2026-10-10); first review done (G-E6r), changes shipped in E6c; awaiting sign-off (G-E6).** Prod stays on E5 until sign-off.
 
 ## What shipped
 
-| PR  | What                                                                                                                                                                       |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #56 | E6a: real CBS price indices, 47 real price files from 5 chains, basket-index-v1 on 154 barcodes, reported competitor results with sources, the Market tab (migration 0015) |
-| #57 | E6b: market-v1 rules → insights (MK2 risk, MK3 opportunity), "What changed outside", the board pack's market block, Hebrew for all generated text                          |
+| PR  | What                                                                                                                                                                                                      |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #56 | E6a: real CBS price indices, 47 real price files from 5 chains, basket-index-v1 on 154 barcodes, reported competitor results with sources, the Market tab (migration 0015)                                |
+| #57 | E6b: market-v1 rules → insights (MK2 risk, MK3 opportunity), "What changed outside", the board pack's market block, Hebrew for all generated text                                                         |
+| #58 | E6c (your review): "What it means" on every card, clearer CBS and heatmap cards, us among competitors, centred numbers, Growth & expansion, MK6 price gap vs every chain, Reports "Ask your data" preview |
 
 ## What to look at in the demo (Dev)
 
@@ -43,7 +44,5 @@ Status: **Built on Dev (2026-10-10); awaiting Eran's review (G-E6).** Prod stays
 ## Decisions for Eran
 
 1. **Accept E6** (G-E6) and promote Prod.
-2. **A "price gap now" rule?** The approved rules (MK1) look for a competitor's price _drop_ over 14 days. The planted
-   North dairy gap (ours 4% above Shufersal) is visible on the tab but raises no insight. Should a standing gap (say
-   ≥ 3% in a category and region) become its own risk? It is not in the approved spec, so it is not built.
-3. **The ₪ assumptions** shown in the insights: price elasticity 1.5 (MK2) and a 1% weekly lift (MK3). Keep or change.
+2. **The ₪ assumptions** shown in the insights: price elasticity 1.5 (MK2, MK6), a 1% weekly lift (MK3), and for MK6 a
+   category's share of sales = its basket weight (dairy 20%). Keep or change.

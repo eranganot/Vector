@@ -5,7 +5,8 @@ _Last updated: 2026-10-10 (E5a)_
 ## Current phase
 
 **Plan v2, stage E6 (market & competitors): built, awaiting Eran's review (G-E6).** E6a #56 (real data, basket
-index, the tab) and E6b #57 (market-v1 → insights, What changed outside, board-pack market block). **Prod is on E5**
+index, the tab), E6b #57 (market-v1 → insights, What changed outside, board-pack market block) and E6c #58 (Eran's
+review: takeaways on every card, growth & expansion, us among competitors, MK6 price gap, Ask-your-data preview). **Prod is on E5**
 (`demo` 3d68c7f: migrations 14, seed p5-v2); E6 goes to Prod only on Eran's sign-off.
 
 - E6a Dev verified at a76ef05 (smoke 20/20, e2e 55/55 on Dev, demo reset after).
@@ -30,7 +31,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E6 (G-E6, docs/phases/STAGE_E6.md); open question: a "price gap now" rule for the planted North dairy gap.
+1. Eran reviews E6 again after E6c (G-E6, docs/phases/STAGE_E6.md).
 2. After sign-off: promote Prod to E6; then E7 (mail agent).
 
 ## Reproducible commands
@@ -47,6 +48,10 @@ See README "Commands". Deploy check: `pnpm smoke --url <dev url> --expect-sha <s
 - Start command (`start:railway`): migrate → app role → `demo:reset --if-empty` (reseeds when the seed version changes) → start
 
 ## Lessons
+
+- The local `vector_test` database only grows (integration tests never delete; a new epoch per run). At 27 GB it filled the
+  workspace disk ("No space left on device" in every integration file). It is disposable: `drop database vector_test`
+  and recreate it (owner `vector`).
 
 - 2026-10-04: public smoke and doctor never sign in; verifying an environment includes one persona sign-in.
 - 2026-10-04: rotating `SEED_USER_PASSWORD` now reseeds on the next boot (`reseedReason`); before #18 it did not.
