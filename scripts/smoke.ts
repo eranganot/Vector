@@ -280,6 +280,22 @@ const checks: Check[] = [
       return `migrations ${body.migrations.applied} · 2 routes → /login`;
     },
   },
+  {
+    phase: 10,
+    name: "E6: market tables are migrated (0015); the Market tab requires sign-in and leaks nothing",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 16) throw new Error(`expected migration 0015, got ${body.migrations.applied}`);
+      for (const path of ["/market", "/market?r=NORTH"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Basket price|Shufersal|competitors/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
+    },
+  },
 ];
 
 async function main() {

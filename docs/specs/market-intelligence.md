@@ -1,6 +1,6 @@
 # Market & competitors (E6)
 
-Status: **Proposed (E0, 2026-10-06); sources checked by fetching on 2026-10-06.** Implements FB item #6 and FB-7: real
+Status: **E6a built (2026-10-10): data, basket index and the tab; see §7. Signals → insights (market-v1) follow in E6b.** Proposed in E0 (2026-10-06); sources checked by fetching on 2026-10-06 and 2026-10-10. Implements FB item #6 and FB-7: real
 Israeli sources, real competitor names, real figures where available, and labelled estimates. This stage absorbs v1
 Phase 6 (external intelligence, D9). External data runs the full VECTOR flow: **source → signal → insight → priority
 → recommendation → action → outcome → audit** (charter §16).
@@ -78,3 +78,34 @@ The list that follows is the E0 v2 version:
   traceability, and fetch politely (daily, sequentially).
 - Chains' file formats differ, so there is one parser per chain, each with a fixture test.
 - Competitor figures are shown as published, never adjusted silently.
+
+## 7. As built (E6a, 2026-10-10)
+
+- **Fetcher** `pnpm market:fetch` (`scripts/market-fetch.ts`) writes `data/market/snapshot-<day>.json`, committed, so
+  the demo never needs the network. The seed loads it (`src/infra/market/load.ts`, migration 0015, seed `p6-v1`).
+  - **CBS** (`api.cbs.gov.il`): CPI 120010, food 110050 and the food groups (milk & dairy 120230, bread & cereals
+    120060, meat & fish 120130, drinks 120340, oils 120200, sugar & sweets 120370, vegetables & fruit 120040),
+    24 months. CBS re-based to "2024 average" in January 2025, so the series are chained from CBS's own monthly
+    changes on the current base; the y/y shown is CBS's published figure.
+  - **Price files** (published by law): Shufersal (its site; its "Deal" stores first, so a premium urban format does
+    not skew it) and Rami Levy, Osher Ad, Yohananof and Tiv Taam (the shared portal's public accounts, no password).
+    Up to 2 stores per chain and region, mapped to our regions by CBS locality code (or city name). 47 files on
+    2026-10-10, each recorded with URL, time and SHA-256 (`market_price_file`). The files are UTF-8 or UTF-16.
+  - **Basket**: 154 barcodes sold by every chain, 22 per category (dairy, bread & cereals, meat & fish, drinks,
+    pantry, snacks, household), chosen by how many stores carry them; weighted and chain-internal codes excluded.
+    Shelf prices (promotions excluded).
+  - **Competitors**: reported Q2 2026 figures, curated with their source (`data/market/filings.json`): Shufersal
+    (Globes, 27 Aug 2026) and Rami Levy (investor presentation, Aug 2026). Store counts are **estimates**: stores in
+    each chain's published stores file that day.
+- **basket-index-v1** (`src/domain/market.ts`, pure, unit-tested): per item the market price is the chains' median; a
+  chain's category index is the mean of its price ÷ market price × 100; the overall index weights the categories.
+- **Ours (synthetic, labelled)**: our category indices sit near the market median; planted: North dairy 4% above
+  Shufersal's. Our monthly price index follows CBS food, then rises +0.3% and +0.4% in the last two months while CBS
+  falls (the MK2 story).
+- **Tab** `/market`: tiles (food y/y from CBS, ours, our basket vs the market, Shufersal same-store sales), food prices
+  vs ours, CBS by category, basket vs competitors (VECTOR highlighted), a chains × categories heatmap, competitors
+  (revenue and growth bars, a table with sources and labelled estimates), sources with file hashes; region filter.
+- **History**: the chains publish only today's files, so the basket's lines per chain grow as daily snapshots are
+  collected (one day so far). CBS has real monthly history.
+- **Not yet (E6b)**: market-v1 rules MK1–MK4 → insights, "What changed outside", the board pack's market section,
+  and fetching from Railway (the demo works from the committed snapshot).

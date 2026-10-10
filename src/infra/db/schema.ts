@@ -787,3 +787,84 @@ export const reportLayout = pgTable(
   },
   (t) => [uniqueIndex("report_layout_owner_name_uq").on(t.orgId, t.ownerUserId, t.name)],
 );
+
+// ── Plan v2, E6: market & competitors (market-intelligence.md §2). Public data, shared by every organization. ──
+
+/** A series of public figures: a CBS index, a basket index of a chain in a region and category, our own index. */
+export const marketSeries = pgTable(
+  "market_series",
+  {
+    id: id(),
+    /** cbs | basket | synthetic */
+    source: text("source").notNull(),
+    code: text("code").notNull(),
+    name: text("name").notNull(),
+    unit: text("unit").notNull(),
+    frequency: text("frequency").notNull(), // monthly | daily
+  },
+  (t) => [uniqueIndex("market_series_source_code_uq").on(t.source, t.code)],
+);
+
+export const marketPoint = pgTable(
+  "market_point",
+  {
+    seriesId: uuid("series_id")
+      .notNull()
+      .references(() => marketSeries.id),
+    period: text("period").notNull(), // YYYY-MM or YYYY-MM-DD
+    value: doublePrecision("value").notNull(),
+    fetchedAt: ts("fetched_at").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    /** SHA-256 of the raw file(s) the value comes from, when there is one. */
+    rawHash: text("raw_hash"),
+  },
+  (t) => [primaryKey({ columns: [t.seriesId, t.period] })],
+);
+
+export const competitor = pgTable("competitor", {
+  id: id(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  listed: boolean("listed").notNull(),
+  ticker: text("ticker"),
+});
+
+export const competitorFigure = pgTable(
+  "competitor_figure",
+  {
+    id: id(),
+    competitorId: uuid("competitor_id")
+      .notNull()
+      .references(() => competitor.id),
+    metric: text("metric").notNull(),
+    period: text("period").notNull(),
+    value: doublePrecision("value").notNull(),
+    unit: text("unit").notNull(),
+    /** reported | estimate */
+    kind: text("kind").notNull(),
+    source: text("source").notNull(),
+    url: text("url").notNull(),
+    asOf: date("as_of").notNull(),
+    /** How an estimate was made (estimates only). */
+    method: text("method"),
+  },
+  (t) => [uniqueIndex("competitor_figure_uq").on(t.competitorId, t.metric, t.period, t.kind)],
+);
+
+/** Each price file a basket index was computed from (traceability: URL, time, SHA-256). */
+export const marketPriceFile = pgTable(
+  "market_price_file",
+  {
+    chain: text("chain").notNull(),
+    storeId: text("store_id").notNull(),
+    day: date("day").notNull(),
+    storeName: text("store_name").notNull(),
+    city: text("city").notNull(),
+    region: text("region").notNull(),
+    url: text("url").notNull(),
+    fetchedAt: ts("fetched_at").notNull(),
+    sha256: text("sha256").notNull(),
+    items: integer("items").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.chain, t.storeId, t.day] })],
+);

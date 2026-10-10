@@ -45,6 +45,7 @@ import { workstreamMoney } from "./queries/money";
 import { initiativesView } from "./queries/initiatives";
 import { actionCenter, messagesForMe } from "./queries/action-center";
 import { dependencyFlow, eventPlan } from "./queries/flow";
+import { marketView, type MarketRegion } from "./queries/market";
 import { getReport, listReports, myReportLayouts, reportScopes, resolveReport } from "./queries/report-data";
 import {
   deleteReportLayout,
@@ -126,6 +127,7 @@ export const api = {
   dependencyFlow: async (a: Actor, commitmentIds: string[], whatIf?: { nodeId: string; days: number }) =>
     dependencyFlow(db(), await activeOrgId(db()), a, commitmentIds, whatIf),
   eventPlan: async (a: Actor) => eventPlan(db(), await activeOrgId(db()), a),
+  marketView: async (a: Actor, region?: MarketRegion) => marketView(db(), a, { region }),
   reportScopes: async (a: Actor) => reportScopes(db(), await activeOrgId(db()), a),
   resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
     resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),
@@ -233,6 +235,8 @@ export type { ValuePoint } from "./queries/value-map";
 export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives";
 export type { ActionCenterView, QueueItem } from "./queries/action-center";
 export type { DependencyFlow, EventPlan } from "./queries/flow";
+export type { MarketView, MarketRegion } from "./queries/market";
+export { MARKET_REGIONS } from "./queries/market";
 export type { ResolvedBlock, ResolvedReport, BlockData, ReportScopeOption } from "./queries/report-data";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
