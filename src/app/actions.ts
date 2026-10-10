@@ -440,3 +440,23 @@ export async function deleteReportLayoutAction(form: FormData) {
   revalidatePath("/reports");
   redirect(`/reports?done=${encodeURIComponent(tk("Your version was deleted."))}`);
 }
+
+/** Plan v2, E7: approve the suggested reply (edited or not) and send it, in-app only in the demo. */
+export async function replyToThreadAction(form: FormData) {
+  const { actor } = await requireActor();
+  const id = String(form.get("thread") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect("/inbox");
+  const back = `/inbox?t=${id}`;
+  try {
+    await api.replyToThread(actor, id, {
+      body: String(form.get("body") ?? ""),
+      suggestedBody: String(form.get("suggested") ?? ""),
+      language: form.get("language") === "he" ? "he" : "en",
+    });
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath("/inbox");
+  redirect(`${back}&done=${encodeURIComponent(tk("Reply sent. It is in the thread and in the audit trail."))}`);
+}

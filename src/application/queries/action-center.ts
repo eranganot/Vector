@@ -4,7 +4,7 @@
  * the steps, what VECTOR will do on approval, the suggested message (action-suggest-v1) with whom it goes to and why,
  * and the history. Built on the existing lifecycle: nothing here writes.
  */
-import { and, arrayOverlaps, eq, inArray } from "drizzle-orm";
+import { and, arrayOverlaps, eq, inArray, isNotNull } from "drizzle-orm";
 import { commonAncestor } from "@/domain/commitments";
 import type { ApprovalRequirement } from "@/domain/policy/approval-rules";
 import { authorizeUser } from "@/domain/policy/authorize";
@@ -89,7 +89,14 @@ export async function actionCenter(
     db
       .select()
       .from(outboundMessage)
-      .where(and(eq(outboundMessage.orgId, orgId), arrayOverlaps(outboundMessage.visibleUnitIds, scope))),
+      .where(
+        and(
+          eq(outboundMessage.orgId, orgId),
+          arrayOverlaps(outboundMessage.visibleUnitIds, scope),
+          // Inbox replies (E7) are personal; the Action Center lists the messages of its decisions.
+          isNotNull(outboundMessage.insightId),
+        ),
+      ),
   ]);
   const now = clock?.now ?? new Date();
   const me = actor.userId;

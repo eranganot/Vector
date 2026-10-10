@@ -30,6 +30,7 @@ const ICONS = {
   center: "M13 2L4 14h7l-1 8 9-12h-7z",
   reports: "M7 3h7l5 5v13H7zM14 3v5h5M10 17v-3M13 17v-6M16 17v-4",
   market: "M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6",
+  inbox: "M4 4h16v12H15l-3 3-3-3H4zM8 9h8M8 12h5",
 };
 
 function groupOf(title: string | null) {
@@ -43,12 +44,15 @@ function groupOf(title: string | null) {
 export async function Shell({
   me,
   approvals,
+  inbox = 0,
   roles,
   via,
   children,
 }: {
   me: { name: string; title: string | null; isCSuite?: boolean };
   approvals: number;
+  /** Inbox threads that need a decision or a reply (E7). */
+  inbox?: number;
   roles: string[];
   via: boolean;
   children: React.ReactNode;
@@ -92,6 +96,16 @@ export async function Shell({
         <Icon d={ICONS.today} /> {t("Home")}
       </NavLink>
       {cSuite && waiting}
+      {cSuite && (
+        <NavLink href="/inbox">
+          <Icon d={ICONS.inbox} /> {t("Inbox")}
+          {inbox > 0 && (
+            <span className="ms-auto rounded-full bg-accent px-2 py-px text-xs font-semibold text-accent-ink">
+              {inbox}
+            </span>
+          )}
+        </NavLink>
+      )}
       {cSuite && center}
       <NavLink href="/risks">
         <Icon d={ICONS.risks} /> {t("Risks")}

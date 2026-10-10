@@ -46,6 +46,8 @@ import { initiativesView } from "./queries/initiatives";
 import { actionCenter, messagesForMe } from "./queries/action-center";
 import { dependencyFlow, eventPlan } from "./queries/flow";
 import { marketView, type MarketRegion } from "./queries/market";
+import { inboxView } from "./queries/inbox";
+import { type InboxReplyInput, replyToThread } from "./commands/inbox";
 import { getReport, listReports, myReportLayouts, reportScopes, resolveReport } from "./queries/report-data";
 import {
   deleteReportLayout,
@@ -127,12 +129,15 @@ export const api = {
   dependencyFlow: async (a: Actor, commitmentIds: string[], whatIf?: { nodeId: string; days: number }) =>
     dependencyFlow(db(), await activeOrgId(db()), a, commitmentIds, whatIf),
   eventPlan: async (a: Actor) => eventPlan(db(), await activeOrgId(db()), a),
+  inboxView: async (a: Actor, threadId?: string) => inboxView(db(), await activeOrgId(db()), a, { threadId }),
   marketView: async (a: Actor, region?: MarketRegion) =>
     marketView(db(), a, { region, orgId: await activeOrgId(db()) }),
   reportScopes: async (a: Actor) => reportScopes(db(), await activeOrgId(db()), a),
   resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
     resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),
   generateReport: async (a: Actor, input: GenerateReportInput) => generateReport(await ctx(), a, input),
+  replyToThread: async (a: Actor, threadId: string, input: InboxReplyInput) =>
+    replyToThread(await ctx(), a, threadId, input),
   recordReportDownload: async (a: Actor, id: string, format: "pptx" | "pdf") =>
     recordReportDownload(await ctx(), a, id, format),
   listReports: async (a: Actor) => listReports(db(), await activeOrgId(db()), a),
@@ -237,6 +242,7 @@ export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives"
 export type { ActionCenterView, QueueItem } from "./queries/action-center";
 export type { DependencyFlow, EventPlan } from "./queries/flow";
 export type { MarketView, MarketRegion } from "./queries/market";
+export type { InboxView } from "./queries/inbox";
 export { MARKET_REGIONS } from "./queries/market";
 export type { ResolvedBlock, ResolvedReport, BlockData, ReportScopeOption } from "./queries/report-data";
 export { headlineFor } from "./queries/performance";

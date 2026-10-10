@@ -7,7 +7,12 @@
  * translated in turn (a unit name inside a sentence). Text people typed (a lesson, a note) has no entry and stays as
  * written.
  */
-import { HE_CONTENT, HE_TEMPLATES } from "./messages/he-content";
+import { HE_CONTENT as HE_BASE, HE_TEMPLATES as HE_BASE_TEMPLATES } from "./messages/he-content";
+import { HE_INBOX, HE_INBOX_TEMPLATES } from "./messages/he-inbox";
+
+/** Data translations: the base set wins over the Inbox set on a shared key. */
+const HE_CONTENT: Record<string, string> = { ...HE_INBOX, ...HE_BASE };
+const HE_TEMPLATES: Record<string, string> = { ...HE_INBOX_TEMPLATES, ...HE_BASE_TEMPLATES };
 
 type Compiled = { re: RegExp; names: string[]; he: string };
 

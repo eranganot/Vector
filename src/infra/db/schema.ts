@@ -687,12 +687,13 @@ export const outboundMessage = pgTable(
   {
     id: id(),
     orgId: orgId(),
-    insightId: uuid("insight_id")
-      .notNull()
-      .references(() => insight.id),
-    decisionId: uuid("decision_id")
-      .notNull()
-      .references(() => decision.id),
+    /** Set for Action Center messages; null for Inbox replies (E7), which carry inboxThreadId instead. */
+    insightId: uuid("insight_id").references(() => insight.id),
+    decisionId: uuid("decision_id").references(() => decision.id),
+    /** Plan v2, E7: the Inbox thread this message replies to. */
+    inboxThreadId: uuid("inbox_thread_id").references(() => inboxThread.id),
+    /** An outside recipient (a supplier, an agency): named, never contacted in the demo (FB-8). */
+    toExternal: text("to_external"),
     channel: text("channel").notNull(), // in_app | email | slack | sms | whatsapp
     fromUserId: text("from_user_id")
       .notNull()
@@ -867,4 +868,61 @@ export const marketPriceFile = pgTable(
     items: integer("items").notNull(),
   },
   (t) => [primaryKey({ columns: [t.chain, t.storeId, t.day] })],
+);
+
+// ── Plan v2, E7: the Inbox (mail-agent.md §2). Synthetic threads per C-suite persona, seeded as inbox-v1. ──
+
+/** A conversation in one person's channels (email or Slack). Only its owner reads it. */
+export const inboxThread = pgTable(
+  "inbox_thread",
+  {
+    id: id(),
+    orgId: orgId(),
+    ownerUserId: text("owner_user_id")
+      .notNull()
+      .references(() => user.id),
+    channel: text("channel").notNull(), // email | slack
+    subject: text("subject").notNull(),
+    counterpartName: text("counterpart_name").notNull(),
+    counterpartRole: text("counterpart_role").notNull(),
+    /** Set when the counterpart is a VECTOR user (an internal colleague). */
+    counterpartUserId: text("counterpart_user_id").references(() => user.id),
+    asks: boolean("asks").notNull(),
+    decisionTag: boolean("decision_tag").notNull(),
+    urgent: boolean("urgent").notNull(),
+    /** Linked VECTOR entity: insight | commitment | initiative. */
+    linkType: text("link_type"),
+    linkId: uuid("link_id"),
+    impactIls: doublePrecision("impact_ils"),
+    costIls: doublePrecision("cost_ils"),
+    deadline: ts("deadline"),
+    benefit: text("benefit"),
+    recommendation: text("recommendation"),
+    suggestedReply: text("suggested_reply"),
+    followUps: text("follow_ups").array().notNull(),
+    templateId: text("template_id").notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("inbox_thread_owner_idx").on(t.orgId, t.ownerUserId)],
+);
+
+/** One message of a thread. The owner's replies sent from VECTOR are added here too (simulated delivery). */
+export const inboxMessage = pgTable(
+  "inbox_message",
+  {
+    id: id(),
+    orgId: orgId(),
+    threadId: uuid("thread_id")
+      .notNull()
+      .references(() => inboxThread.id),
+    fromName: text("from_name").notNull(),
+    fromOwner: boolean("from_owner").notNull(),
+    /** The last message is addressed to the owner (To, a direct message, or a mention). */
+    toOwner: boolean("to_owner").notNull(),
+    at: ts("at").notNull(),
+    body: text("body").notNull(),
+    /** Set when the message is a reply sent from VECTOR. */
+    outboundMessageId: uuid("outbound_message_id"),
+  },
+  (t) => [index("inbox_message_thread_idx").on(t.threadId, t.at)],
 );
