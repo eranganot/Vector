@@ -80,6 +80,8 @@ test("E5b: the board pack template, and the snapshot as an editable PowerPoint",
   await page.getByRole("button", { name: "Apply" }).click();
   await expect(page.locator('[data-metric="top_risks_opportunities"]')).toBeVisible();
   await expect(page.locator('[data-metric="health_by_region"]')).toBeVisible();
+  // E6b: the board pack's market section — basket vs market by chain.
+  await expect(page.locator('[data-metric="market_position"]')).toContainText("Shufersal");
   await page.getByTestId("generate-report").click();
   await page.waitForURL(/\/reports\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId("report-snapshot").getByRole("heading", { level: 1 })).toContainText(

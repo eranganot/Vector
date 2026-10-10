@@ -42,30 +42,30 @@ describe("Phase 2 demo scenario", () => {
   const haifa = async (email: string) =>
     (await listInsights(appDb, orgId, await as(email))).find((i) => /Haifa Grand Canyon net sales/.test(i.title))!;
 
-  it("reset seeds a new epoch: the detector finds exactly the planted story, and the catalog loads", async () => {
+  it("reset seeds a new epoch: the detector finds the planted story and the two market signals, and the catalog loads", async () => {
     // Bootstrap an epoch so the Admin persona exists, then reset as that Admin.
     orgId = (await seed(ownerDb, { password: "test-password" })).orgId;
     const admin = await as("admin@vector-retail.example");
     const r = await resetDemo(appDb, admin, "test-password");
     orgId = r.orgId;
-    expect(r.detections).toHaveLength(1);
+    expect(r.detections).toHaveLength(3); // the Haifa story, MK2 and MK3 (E6b)
     expect(r.catalog).toHaveLength(CATALOG.length);
     const list = await listInsights(appDb, orgId, await as("dana@vector-retail.example"));
-    expect(list).toHaveLength(19); // 14 risks (13 catalog + the live Haifa story) and 5 opportunities
+    expect(list).toHaveLength(21); // 15 risks (13 catalog, Haifa, MK2) and 6 opportunities (5 catalog, MK3)
     expect(
       list
         .filter((i) => i.workstream === "risk")
         .map((i) => i.priorityBand)
         .sort()
         .join(""),
-    ).toBe("P1P1P1P1P2P2P2P2P2P3P3P3P4P4");
+    ).toBe("P1P1P1P1P2P2P2P2P2P2P3P3P3P4P4");
     expect(
       list
         .filter((i) => i.workstream === "opportunity")
         .map((i) => i.priorityBand)
         .sort()
         .join(""),
-    ).toBe("O1O2O2O2O3");
+    ).toBe("O1O2O2O2O2O3");
     const h = await haifa("dana@vector-retail.example");
     expect(h.title).toMatch(/Haifa Grand Canyon net sales −1\d\.\d% vs\. usual/);
     expect(h.priorityBand).toBe("P2");
@@ -124,7 +124,10 @@ describe("Phase 2 demo scenario", () => {
     const decide = async (email: string) => (await listMyDecisions(appDb, orgId, await as(email))).map((d) => d.title);
     expect(await decide("avi@vector-retail.example")).toEqual([expect.stringMatching(/Haifa Grand Canyon net sales/)]);
     expect(await decide("maya@vector-retail.example")).toEqual(["Labor cost 6% over plan across the Center region"]);
-    expect(await decide("eitan@vector-retail.example")).toHaveLength(3);
+    expect(await decide("eitan@vector-retail.example")).toHaveLength(4); // 3 catalog stories and MK2 (E6b)
+    expect(await decide("ronit@vector-retail.example")).toContain(
+      "Shufersal is shrinking (same-store −8.6%); we are growing",
+    );
     expect(await decide("dana@vector-retail.example")).toEqual([]); // nothing is group-level: the CEO isn't flooded
     expect(await decide("tal@vector-retail.example")).toEqual([]); // viewers never decide
   });

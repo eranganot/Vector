@@ -8,6 +8,7 @@ import { DETECTOR, detectDeviation, KPI_CONFIG, type Deviation } from "@/domain/
 import { kpi, kpiObservation, orgUnit, roleAssignment, user } from "@/infra/db/schema";
 import type { AppContext } from "./context";
 import { recordDetection, type DetectionResult } from "./commands/detection";
+import { runMarketRules } from "./market-rules";
 
 const ils = (n: number) => `₪${Math.round(n / 1000).toLocaleString("en-US")}k`;
 const pct = (x: number) => `${(Math.abs(x) * 100).toFixed(1)}%`;
@@ -168,5 +169,7 @@ export async function runDetector(ctx: AppContext): Promise<DetectionResult[]> {
     });
     results.push(r);
   }
+  // Plan v2 (E6b): market-v1 on public market data, through the same write path.
+  results.push(...(await runMarketRules(ctx)));
   return results;
 }

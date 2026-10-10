@@ -38,3 +38,25 @@ test("Hebrew: the market tab reads right to left", async ({ page, context }) => 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.getByRole("heading", { level: 1, name: "שוק ומתחרים" })).toBeVisible();
 });
+
+test("What changed outside: MK2 and MK3 link to insights with their real sources (E6b)", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/market");
+  const changed = page.getByTestId("market-changed");
+  await expect(changed.getByTestId("market-change")).toHaveCount(2);
+  await expect(changed).toContainText("Our prices rose while food prices fell (July and August)");
+  await changed.getByRole("link", { name: /Shufersal is shrinking/ }).click();
+  await expect(page).toHaveURL(/\/insights\//);
+  await expect(page.getByTestId("market-evidence").first()).toContainText("Same-store sales");
+  await expect(page.getByRole("link", { name: "Open the source" }).first()).toHaveAttribute("href", /globes\.co\.il/);
+});
+
+test("Hebrew: market insights and chain names are translated", async ({ page, context }) => {
+  await as(page, "Dana Levi");
+  await context.addCookies([{ name: "vector_lang", value: "he", url: page.url() }]);
+  await page.goto("/market");
+  const changed = page.getByTestId("market-changed");
+  await expect(changed).toContainText("המחירים שלנו עלו בזמן שמחירי המזון ירדו (יולי ואוגוסט)");
+  await expect(changed).toContainText("שופרסל מצטמקת");
+  await expect(page.getByTestId("basket-by-chain")).toContainText("רמי לוי");
+});

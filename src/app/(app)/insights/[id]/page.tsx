@@ -218,7 +218,19 @@ export default async function TracePage({
                   <figure key={e.id} className="m-0 flex flex-col gap-2 rounded-lg border border-line p-3">
                     <figcaption className="text-[13px] font-semibold">{e.title}</figcaption>
                     {/* Only a KPI series is drawn; a source record's fields (which may include a "days" count) are listed. */}
-                    {e.kind === "kpi_series" && Array.isArray(p.days) ? (
+                    {e.kind.startsWith("market_") && Array.isArray(p.rows) ? (
+                      <dl
+                        className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[13px]"
+                        data-testid="market-evidence"
+                      >
+                        {(p.rows as { label: string; value: string }[]).map((r) => (
+                          <div key={r.label} className="contents">
+                            <dt className="text-muted">{r.label}</dt>
+                            <dd className="num">{r.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    ) : e.kind === "kpi_series" && Array.isArray(p.days) ? (
                       <EvidenceChart
                         days={p.days}
                         unit={p.unit ?? ""}
@@ -234,12 +246,23 @@ export default async function TracePage({
                         ))}
                       </dl>
                     )}
+                    {p.real === true && typeof p.url === "string" ? (
+                      <a href={p.url} className="text-xs text-accent underline" target="_blank" rel="noreferrer">
+                        {t("Open the source")}
+                      </a>
+                    ) : null}
                     <div className="text-xs text-muted">
-                      {t("Source: {ref} (synthetic) · captured {time} · frozen · sha256 {hash}…", {
-                        ref: e.sourceRef,
-                        time: fmtTime(e.capturedAt),
-                        hash: e.payloadHash.slice(0, 10),
-                      })}
+                      {p.real === true
+                        ? t("Source: {ref} · captured {time} · frozen · sha256 {hash}…", {
+                            ref: e.sourceRef,
+                            time: fmtTime(e.capturedAt),
+                            hash: e.payloadHash.slice(0, 10),
+                          })
+                        : t("Source: {ref} (synthetic) · captured {time} · frozen · sha256 {hash}…", {
+                            ref: e.sourceRef,
+                            time: fmtTime(e.capturedAt),
+                            hash: e.payloadHash.slice(0, 10),
+                          })}
                     </div>
                   </figure>
                 );

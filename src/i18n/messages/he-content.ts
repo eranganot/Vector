@@ -515,9 +515,74 @@ export const HE_CONTENT: Record<string, string> = {
     "לקמפיין יש מימון משותף וקנסות ביטול; לשלב ה-IT אין אף אחד מהם.",
   "Deliveries must leave the DC within 48 hours to land before the peak.":
     "המשלוחים חייבים לצאת מהמרלו״ג בתוך 48 שעות כדי להגיע לפני השיא.",
+  Shufersal: "שופרסל",
+  "Rami Levy": "רמי לוי",
+  "Osher Ad": "אושר עד",
+  Yohananof: "יוחננוף",
+  "Tiv Taam": "טיב טעם",
+  January: "ינואר",
+  February: "פברואר",
+  March: "מרץ",
+  April: "אפריל",
+  May: "מאי",
+  June: "יוני",
+  July: "יולי",
+  August: "אוגוסט",
+  September: "ספטמבר",
+  October: "אוקטובר",
+  November: "נובמבר",
+  December: "דצמבר",
+  dairy: "מוצרי חלב",
+  "bread & cereals": "לחם ודגנים",
+  "meat & fish": "בשר ודגים",
+  drinks: "משקאות",
+  pantry: "מזווה",
+  snacks: "חטיפים",
+  household: "משק בית",
+  "Review the last two price moves against the market and roll back where we lead the rise":
+    "לבחון את שני מהלכי המחיר האחרונים מול השוק ולהחזיר אחורה היכן שהובלנו את העלייה",
+  "Our prices went up in the two months the market's went down; the gap is what shoppers notice.":
+    "המחירים שלנו עלו בחודשיים שבהם מחירי השוק ירדו; את הפער הזה הלקוחות מרגישים.",
+  "A competitor losing same-store sales is a share-gain window; price leads are what bring switchers.":
+    "מתחרה שמאבד מכירות בחנויות זהות פותח חלון להגדלת נתח שוק; יתרון מחיר הוא מה שמביא לקוחות לעבור.",
+  "Food prices (CBS 110050) vs our price index, month on month":
+    "מחירי המזון (למ״ס 110050) לעומת מדד המחירים שלנו, חודש מול חודש",
+  "CBS food prices": "מחירי המזון של הלמ״ס",
+  "Our prices": "המחירים שלנו",
+  "Same-store sales": "מכירות בחנויות זהות",
+  Source: "מקור",
+  "real (Central Bureau of Statistics)": "אמיתי (הלשכה המרכזית לסטטיסטיקה)",
+  "real (published price files)": "אמיתי (קובצי מחירים מפורסמים)",
+  synthetic: "סינתטי",
+  "Globes, 27 Aug 2026": "גלובס, 27 באוג׳ 2026",
+  "Rami Levy investor presentation, Aug 2026": "רמי לוי, מצגת למשקיעים, אוג׳ 2026",
+  "no category yet": "עדיין אין קטגוריה",
+  "our price leads": "הקטגוריות שבהן אנחנו זולים יותר",
 };
 
 export const HE_TEMPLATES: Record<string, string> = {
+  // market-v1 (E6b), before the generic "{a}, {b}" list template.
+  "Our prices rose while food prices fell ({m1} and {m2})": "המחירים שלנו עלו בזמן שמחירי המזון ירדו ({m1} ו{m2})",
+  "CBS food prices fell {c1} and {c2} in {m1} and {m2}; our price index rose {o1} and {o2}. We moved {pts} points against the market.":
+    "מחירי המזון של הלמ״ס ירדו {c1} ו־{c2} ב{m1} וב{m2}; מדד המחירים שלנו עלה {o1} ו־{o2}. התרחקנו מהשוק ב־{pts} נקודות.",
+  "Shoppers compare. At a price elasticity of {e}, about {m} of weekly sales is at risk if the gap holds.":
+    "לקוחות משווים. בגמישות מחיר של {e}, כ־{m} ממכירות השבוע בסיכון אם הפער יישאר.",
+  "Review the {m1} and {m2} price increases against CBS food, by category":
+    "לבחון את העלאות המחיר של {m1} ו{m2} מול מחירי המזון של הלמ״ס, לפי קטגוריה",
+  "Brief {name} on the margin vs volume trade-off": "לעדכן את {name} על האיזון בין מרווח לכמות",
+  "CBS {pct}": "למ״ס {pct}",
+  "ours {pct}": "שלנו {pct}",
+  "{name} is shrinking (same-store {pct}); we are growing": "{name} מצטמקת (חנויות זהות {pct}); אנחנו צומחים",
+  "{name} reported same-store sales {pct} for {period} ({source}). Our same-store sales are {g} over the last 13 weeks. We are cheaper than {name2} in {leads}.":
+    "{name} דיווחה על מכירות בחנויות זהות של {pct} ב־{period} ({source}). המכירות שלנו בחנויות זהות {g} ב־13 השבועות האחרונים. אנחנו זולים מ{name2} ב: {leads}.",
+  "{cat} ({from} vs {to})": "{cat} ({from} לעומת {to})",
+  "{from} vs {to}": "{from} לעומת {to}",
+  "Their shoppers are looking elsewhere. A {pct} weekly lift from pushing the categories where we lead on price is worth about {m} a week.":
+    "הלקוחות שלהם מחפשים חלופה. עלייה של {pct} במכירות השבועיות, מקידום הקטגוריות שבהן אנחנו זולים יותר, שווה כ־{m} בשבוע.",
+  "Push the categories where we beat {name} on price": "לקדם את הקטגוריות שבהן אנחנו זולים מ{name}",
+  "Price-comparison campaign: {cats}": "קמפיין השוואת מחירים: {cats}",
+  "{name}: reported results, {period}": "{name}: תוצאות מדווחות, {period}",
+  "Basket index, ours vs {name} (price files of {date})": "מדד הסל, שלנו לעומת {name} (קובצי המחירים של {date})",
   // Dates and sources ("Weekly ops meeting · 15 Oct" is split on " · ")
   "{d} Oct": "{d} באוק׳",
   "{d} Nov": "{d} בנוב׳",
@@ -635,4 +700,5 @@ export const HE_TEMPLATES: Record<string, string> = {
   "outcome is {status}": "התוצאה במצב {status}",
   "Branch Manager, {unit}": "מנהל/ת סניף, {unit}",
   "Regional Manager, {unit}": "מנהל/ת אזור, {unit}",
+  "price files of {date}": "קובצי המחירים של {date}",
 };

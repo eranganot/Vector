@@ -467,6 +467,37 @@ export async function resolveReport(
           empty: "No risk or opportunity in this scope.",
         };
       }
+      case "market_position": {
+        const { marketView } = await import("./market");
+        const m = await marketView(db, actor, { region: "ALL" });
+        if (!m || !m.basket.length) return { type: "empty", reason: "No market data loaded." };
+        const vsMarket = (i: number) => Math.round((i - 100) * 10) / 10;
+        const tone = (i: number, synthetic: boolean): Tone => (synthetic ? (i > 100 ? "watch" : "good") : "watch");
+        if (b.kind === "table") {
+          const comp = (key: string) => m.competitors.find((c) => c.key === key);
+          const pctOf = (x: { value: number } | null | undefined) =>
+            x ? `${x.value > 0 ? "+" : x.value < 0 ? "−" : ""}${Math.abs(x.value).toFixed(1)}%` : "—";
+          return {
+            type: "table",
+            columns: ["Chain", "Basket vs market", "Same-store sales", "Revenue growth"],
+            rows: m.basket.map((r) => ({
+              label: r.name,
+              sub: r.synthetic ? "synthetic" : `price files of ${m.day}`,
+              values: [
+                `${vsMarket(r.index) > 0 ? "+" : vsMarket(r.index) < 0 ? "−" : ""}${Math.abs(vsMarket(r.index)).toFixed(1)}%`,
+                r.synthetic ? "—" : pctOf(comp(r.chain)?.sameStore),
+                r.synthetic ? "—" : pctOf(comp(r.chain)?.growth),
+              ],
+              tone: tone(r.index, r.synthetic),
+            })),
+          };
+        }
+        return {
+          type: "bars",
+          unit: "pct",
+          rows: m.basket.map((r) => ({ label: r.name, value: vsMarket(r.index), tone: tone(r.index, r.synthetic) })),
+        };
+      }
     }
     return { type: "empty", reason: "Unknown block." };
   }

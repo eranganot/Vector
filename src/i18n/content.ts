@@ -66,7 +66,7 @@ function heValue(v: string, depth: number) {
 
 /** Field names that hold identifiers or codes, never text to translate. */
 const SKIP =
-  /(^id$|Id$|Ids$|^href$|^email$|^operation$|^entityType$|^key$|^code$|^sha256$|^hash$|^status$|[a-z]Status$|^kind$|^type$|^workstream$|^health$|^band$|^groupBand$|^position$|^unit$|^effect$|^verdict$|^role$|^executor$|^audience$|^direction$|^actorType$|^fromState$|^toState$|^generatedBy$|^model$|^resource$)/;
+  /(^id$|Id$|Ids$|^href$|^email$|^operation$|^entityType$|^key$|^code$|^sha256$|^hash$|^status$|[a-z]Status$|^kind$|^type$|^workstream$|^health$|^band$|^groupBand$|^position$|^unit$|^effect$|^verdict$|^role$|^executor$|^audience$|^direction$|^actorType$|^fromState$|^toState$|^generatedBy$|^model$|^resource$|^category$)/;
 
 function note(s: string) {
   if (process.env.I18N_MISSES && /[A-Za-z]{2}/.test(s) && !/^[a-z0-9_.:-]+$/.test(s)) {

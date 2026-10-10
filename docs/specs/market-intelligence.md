@@ -1,6 +1,6 @@
 # Market & competitors (E6)
 
-Status: **E6a built (2026-10-10): data, basket index and the tab; see §7. Signals → insights (market-v1) follow in E6b.** Proposed in E0 (2026-10-06); sources checked by fetching on 2026-10-06 and 2026-10-10. Implements FB item #6 and FB-7: real
+Status: **E6a and E6b built (2026-10-10): data, basket index, the tab, and market-v1 signals → insights; see §7–§8.** Proposed in E0 (2026-10-06); sources checked by fetching on 2026-10-06 and 2026-10-10. Implements FB item #6 and FB-7: real
 Israeli sources, real competitor names, real figures where available, and labelled estimates. This stage absorbs v1
 Phase 6 (external intelligence, D9). External data runs the full VECTOR flow: **source → signal → insight → priority
 → recommendation → action → outcome → audit** (charter §16).
@@ -107,5 +107,25 @@ The list that follows is the E0 v2 version:
   (revenue and growth bars, a table with sources and labelled estimates), sources with file hashes; region filter.
 - **History**: the chains publish only today's files, so the basket's lines per chain grow as daily snapshots are
   collected (one day so far). CBS has real monthly history.
-- **Not yet (E6b)**: market-v1 rules MK1–MK4 → insights, "What changed outside", the board pack's market section,
-  and fetching from Railway (the demo works from the committed snapshot).
+- Fetching runs from Claude's workspace; Railway serves the committed snapshot (no network needed in the demo).
+
+## 8. As built (E6b, 2026-10-10): signals → insights
+
+- **market-v1** (`src/domain/detection/market-v1.ts`, pure, unit-tested) runs inside the detector
+  (`src/application/market-rules.ts`), so it fires on every demo reset and day advance and writes through the same
+  audited path (signal → frozen evidence → insight → decision → proposed actions). Re-runs attach to the open insight.
+  - **MK2 (fires)**: CBS food −0.4% in July and August while our synthetic price index rose +0.3% and +0.5%.
+    Risk owned by Trade & Commercial (Eitan decides); ₪ at risk = weekly sales × the 1.6-point gap × elasticity 1.5
+    (stated in the insight). Actions: review the two months' price increases (Eitan), brief the CFO.
+  - **MK3 (fires)**: Shufersal reported same-store sales −8.6% (Q2 2026, Globes) while ours grew (+1.5%, the last 13
+    weeks vs the 13 before, synthetic). Opportunity owned by Marketing (Ronit decides); upside = 1% of weekly sales;
+    the campaign names the categories where we are cheaper than Shufersal in the price files.
+  - **MK1, MK4 (dormant)**: they compare daily snapshots (a 3% basket drop over 14 days; a store-count drop). With one
+    day of price files they cannot fire; the rules are tested and switch on as snapshots accumulate.
+- Evidence from real sources is marked real, with a link to the source; our figures are labelled synthetic.
+- **What changed outside**: a card on the Market tab listing the market-v1 insights in the viewer's scope, with ₪ at
+  stake or upside and a link to the insight.
+- **Board pack**: a "Market & competitors" block (basket vs market by chain; a table adds same-store sales and revenue
+  growth), also available in any report.
+- Hebrew: chain, category and month names and every generated sentence are translated (templates in
+  `he-content.ts`). Category fields are codes and never translated (`localize` skips `category`).
