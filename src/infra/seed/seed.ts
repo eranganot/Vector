@@ -8,6 +8,7 @@ import { hashPassword } from "better-auth/crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { addDays } from "@/domain/calendar";
 import * as s from "@/infra/db/schema";
+import { loadMarket } from "@/infra/market/load";
 import { generateDay, generateDepartmentDay } from "./generator";
 import { budgets, FIN_ACCOUNTS, financeHistory } from "./finance";
 import { HISTORY_DAYS, KPIS, ORG_NAME, SEED_VERSION, STORY_DAY, UNITS, USERS } from "./org";
@@ -186,6 +187,8 @@ export async function seed(db: Db, opts: { password: string }): Promise<SeedResu
     await tx.insert(s.finBudget).values(bud);
 
     await tx.insert(s.demoClock).values({ orgId: org.id, now: new Date(`${STORY_DAY}T05:00:00Z`) });
+    // Market & competitors (E6): public data from the committed snapshots, shared by every epoch (idempotent).
+    await loadMarket(tx);
     return { orgId: org.id, unitIds, userIds, kpiIds };
   });
 }

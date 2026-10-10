@@ -1,0 +1,105 @@
+{
+  "model": "filings-v1",
+  "note": "Reported figures as published, curated by hand with their source. Never adjusted.",
+  "figures": [
+    {
+      "chain": "shufersal",
+      "period": "2026-Q2",
+      "metric": "revenue",
+      "value": 3400000000,
+      "unit": "ils",
+      "kind": "reported",
+      "source": "Globes, 27 Aug 2026",
+      "url": "https://en.globes.co.il/en/article-1001553761",
+      "asOf": "2026-08-27"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2026-Q2",
+      "metric": "revenue_growth",
+      "value": -7.5,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Globes, 27 Aug 2026",
+      "url": "https://en.globes.co.il/en/article-1001553761",
+      "asOf": "2026-08-27"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2026-Q2",
+      "metric": "same_store_sales",
+      "value": -8.6,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Globes, 27 Aug 2026",
+      "url": "https://en.globes.co.il/en/article-1001553761",
+      "asOf": "2026-08-27"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2026-Q2",
+      "metric": "net_profit",
+      "value": 125000000,
+      "unit": "ils",
+      "kind": "reported",
+      "source": "Globes, 27 Aug 2026",
+      "url": "https://en.globes.co.il/en/article-1001553761",
+      "asOf": "2026-08-27"
+    },
+    {
+      "chain": "rami_levy",
+      "period": "2026-Q2",
+      "metric": "revenue",
+      "value": 2065496000,
+      "unit": "ils",
+      "kind": "reported",
+      "source": "Rami Levy investor presentation, Aug 2026",
+      "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
+      "asOf": "2026-08-25"
+    },
+    {
+      "chain": "rami_levy",
+      "period": "2026-Q2",
+      "metric": "revenue_growth",
+      "value": 3.0,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Rami Levy investor presentation, Aug 2026",
+      "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
+      "asOf": "2026-08-25"
+    },
+    {
+      "chain": "rami_levy",
+      "period": "2026-Q2",
+      "metric": "gross_margin",
+      "value": 23.6,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Rami Levy investor presentation, Aug 2026",
+      "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
+      "asOf": "2026-08-25"
+    },
+    {
+      "chain": "rami_levy",
+      "period": "2026-Q2",
+      "metric": "operating_margin",
+      "value": 4.7,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Rami Levy investor presentation, Aug 2026",
+      "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
+      "asOf": "2026-08-25"
+    },
+    {
+      "chain": "rami_levy",
+      "period": "2026-Q2",
+      "metric": "net_profit",
+      "value": 59318000,
+      "unit": "ils",
+      "kind": "reported",
+      "source": "Rami Levy investor presentation, Aug 2026",
+      "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
+      "asOf": "2026-08-25"
+    }
+  ]
+}
