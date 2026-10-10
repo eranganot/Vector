@@ -88,3 +88,11 @@ generated sentence uses templates (FB-11), in the reader's language.
   landscape). **Spike decision:** no server-side PDF in the demo — headless Chromium on Railway would add a few
   hundred MB to the image for the same output the browser already gives. A server-rendered PDF (e.g. for scheduled
   e-mail) can come with the production channels.
+
+## 7. Saved layouts (E5c, G-E5a, 2026-10-10)
+
+- After editing, **Save as my version** stores the layout under a name (`report_layout`, migration 0014), private to
+  its owner; saving under the same name replaces it. **My versions** lists them, and the Template picker offers them
+  under "My versions". Deleting asks nothing more than the ×; every save, replace and delete is audited
+  (`report.layout_saved`, `report.layout_updated`, `report.layout_deleted`).
+- A saved version keeps the template it came from, so a snapshot generated from it is still that template's report.

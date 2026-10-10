@@ -769,3 +769,21 @@ export const report = pgTable(
   },
   (t) => [index("report_org_created_idx").on(t.orgId, t.createdAt)],
 );
+
+/** A person's own version of a report template (E5, G-E5a): their edited layout, by name. Private to its owner. */
+export const reportLayout = pgTable(
+  "report_layout",
+  {
+    id: id(),
+    orgId: orgId(),
+    ownerUserId: text("owner_user_id")
+      .notNull()
+      .references(() => user.id),
+    name: text("name").notNull(),
+    template: text("template").notNull(),
+    layout: jsonb("layout").notNull(),
+    createdAt: ts("created_at").notNull(),
+    updatedAt: ts("updated_at").notNull(),
+  },
+  (t) => [uniqueIndex("report_layout_owner_name_uq").on(t.orgId, t.ownerUserId, t.name)],
+);

@@ -22,6 +22,7 @@ import {
   insight,
   orgUnit,
   report as reportT,
+  reportLayout,
   user as userT,
 } from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
@@ -712,4 +713,16 @@ export async function getReport(db: DbOrTx, orgId: string, actor: Actor, id: str
     layout: r.layout as Layout,
     content: r.content as { model: string; asOf: string; scope: ReportScopeOption; blocks: ResolvedBlock[] },
   };
+}
+
+/** The viewer's own saved versions of the templates (G-E5a). */
+export async function myReportLayouts(db: DbOrTx, orgId: string, actor: Actor) {
+  if (actor.kind !== "user") return [];
+  const rows = await db
+    .select()
+    .from(reportLayout)
+    .where(and(eq(reportLayout.orgId, orgId), eq(reportLayout.ownerUserId, actor.userId)));
+  return rows
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+    .map((r) => ({ id: r.id, name: r.name, template: r.template, layout: r.layout, updatedAt: r.updatedAt }));
 }

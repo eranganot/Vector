@@ -4,13 +4,11 @@ _Last updated: 2026-10-10 (E5a)_
 
 ## Current phase
 
-**Plan v2, stage E5 (reports): E5a–E5b built** (builder, weekly management and board pack, snapshots, editable
-PowerPoint, PDF from the print view). Verified on Dev (e5e85d6); awaiting Eran's E5 gate (docs/phases/STAGE_E5.md). E4 accepted by Eran 2026-10-08 (G-E4); E4e (his review
-fixes) verified on Dev db3c43e. Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
+**Plan v2, stage E6 (market & competitors): starting.** E5 accepted by Eran 2026-10-10 (G-E5); saved layouts added
+(E5c, G-E5a). **Prod is on E5** (`demo` 3d68c7f: migrations 14, seed p5-v2; smoke 19/19, doctor clean).
 
-- E5a #52: reports (report-v1, migration 0013); Dev 0bf6db6 smoke 19/19. E5b #53: board pack, PowerPoint, PDF.
-  Spec as built: docs/specs/reports.md §5–§6.
-- E4 #47–#51 shipped and verified on Dev.
+- E5 #51–#55 shipped; Dev verified at e5e85d6 (e2e 52/52); decks opened in EN/HE.
+- Prod promotion: `main` 1da89d5 merged into `demo` (no force push; `demo` keeps its merge history).
 
 ## Objective (E0, done)
 
@@ -31,7 +29,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E5 on Dev (docs/phases/STAGE_E5.md); on sign-off, E6 (market & competitors).
+1. E6: market & competitors (docs/specs/market-intelligence.md), real Israeli sources with source and date on every figure.
 
 ## Reproducible commands
 

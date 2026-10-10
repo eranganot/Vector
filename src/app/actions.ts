@@ -407,3 +407,36 @@ export async function generateReportAction(form: FormData) {
   revalidatePath("/reports");
   redirect(`/reports/${id}`);
 }
+
+export async function saveReportLayoutAction(form: FormData) {
+  const { actor } = await requireActor();
+  const scope = String(form.get("scope") ?? "");
+  const raw = String(form.get("layout") ?? "");
+  const back = `/reports?s=${encodeURIComponent(scope)}&l=${encodeURIComponent(raw)}`;
+  const layout = decodeLayout(raw, "weekly_management", (id) => /^[0-9a-f-]{36}$/i.test(id));
+  let id = "";
+  try {
+    id = await api.saveReportLayout(actor, { name: String(form.get("name") ?? ""), layout });
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`${back}&error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath("/reports");
+  redirect(
+    `${back}&done=${encodeURIComponent(tk("Saved as your version. Pick it from Template next time."))}&mine=${id}`,
+  );
+}
+
+export async function deleteReportLayoutAction(form: FormData) {
+  const { actor } = await requireActor();
+  const id = String(form.get("id") ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) redirect("/reports");
+  try {
+    await api.deleteReportLayout(actor, id);
+  } catch (e) {
+    if (e instanceof DomainError) redirect(`/reports?error=${encodeURIComponent(e.message)}`);
+    throw e;
+  }
+  revalidatePath("/reports");
+  redirect(`/reports?done=${encodeURIComponent(tk("Your version was deleted."))}`);
+}

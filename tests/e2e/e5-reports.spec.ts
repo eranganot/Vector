@@ -91,3 +91,19 @@ test("E5b: the board pack template, and the snapshot as an editable PowerPoint",
   expect(res.headers()["content-type"]).toContain("presentationml");
   expect((await res.body()).subarray(0, 2).toString()).toBe("PK");
 });
+
+test("G-E5a: Dana saves her edited layout as her own version and opens it again", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/reports");
+  await page.getByTestId("report-section").filter({ hasText: "Blockers" }).getByTestId("remove-block").click();
+  await expect(page.locator('[data-metric="blockers"]')).toHaveCount(0);
+  const mine = page.getByTestId("my-versions");
+  await mine.getByRole("textbox").fill("Dana weekly, no blockers");
+  await mine.getByTestId("save-layout").click();
+  await expect(page.getByRole("status")).toContainText("Saved as your version");
+  await page.goto("/reports");
+  await expect(page.locator('[data-metric="blockers"]')).toHaveCount(1);
+  await page.getByTestId("my-version").filter({ hasText: "Dana weekly, no blockers" }).getByRole("link").click();
+  await expect(page.locator('[data-metric="blockers"]')).toHaveCount(0);
+  await expect(page.locator("#report-template optgroup")).toContainText("Dana weekly, no blockers");
+});
