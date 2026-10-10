@@ -558,10 +558,36 @@ export const HE_CONTENT: Record<string, string> = {
   "Rami Levy investor presentation, Aug 2026": "רמי לוי, מצגת למשקיעים, אוג׳ 2026",
   "no category yet": "עדיין אין קטגוריה",
   "our price leads": "הקטגוריות שבהן אנחנו זולים יותר",
+  Dairy: "מוצרי חלב",
+  "Bread & cereals": "לחם ודגנים",
+  "Meat & fish": "בשר ודגים",
+  Drinks: "משקאות",
+  Pantry: "מזווה",
+  Snacks: "חטיפים",
+  Household: "משק בית",
+  "Market median": "חציון השוק",
+  "Our index": "המדד שלנו",
+  Chains: "רשתות",
+  "The gap is measured on the same products in the same region's stores; the cheapest fix is a price move on the items that drive it.":
+    "הפער נמדד על אותם מוצרים בחנויות של אותו אזור; התיקון הזול ביותר הוא שינוי מחיר במוצרים שיוצרים אותו.",
+  "The chain's published stores file": "קובץ הסניפים שהרשת מפרסמת",
+  "StockAnalysis (S&P Global data from company filings), 27 Aug 2026":
+    "StockAnalysis (נתוני S&P Global מדיווחי החברות), 27 באוג׳ 2026",
+  "IFI Today, 28 May 2025 (Shufersal Q1 2025 results)": "IFI Today, 28 במאי 2025 (תוצאות שופרסל לרבעון 1 2025)",
 };
 
 export const HE_TEMPLATES: Record<string, string> = {
   // market-v1 (E6b), before the generic "{a}, {b}" list template.
+  "{cat} in {region} is {pct} above the market": "{cat} ב{region}: {pct} מעל השוק",
+  "Our {cat} prices in {region} are {pct} above the market median of the chains compared. We are dearer than {n} of {total} chains: {vs}.":
+    "המחירים שלנו ב{cat} ב{region} גבוהים ב־{pct} מחציון הרשתות שנבדקו. אנחנו יקרים יותר מ־{n} מתוך {total} רשתות: {vs}.",
+  "Shoppers compare. At a price elasticity of {e}, about {m} of weekly {cat} sales in {region} is at risk (category share of sales: {share}).":
+    "לקוחות משווים. בגמישות מחיר של {e}, כ־{m} ממכירות {cat} השבועיות ב{region} בסיכון (חלק הקטגוריה במכירות: {share}).",
+  "Bring {cat} prices in {region} back to the market": "להחזיר את מחירי {cat} ב{region} לרמת השוק",
+  "Reprice {cat} in {region} toward the market median": "לתמחר מחדש את {cat} ב{region} לכיוון חציון השוק",
+  "Brief {name} on the {cat} price gap": "לעדכן את {name} על פער המחיר ב{cat}",
+  "{cat} in {region}: our price vs every chain (price files of {date})":
+    "{cat} ב{region}: המחיר שלנו מול כל רשת (קובצי המחירים של {date})",
   "Our prices rose while food prices fell ({m1} and {m2})": "המחירים שלנו עלו בזמן שמחירי המזון ירדו ({m1} ו{m2})",
   "CBS food prices fell {c1} and {c2} in {m1} and {m2}; our price index rose {o1} and {o2}. We moved {pts} points against the market.":
     "מחירי המזון של הלמ״ס ירדו {c1} ו־{c2} ב{m1} וב{m2}; מדד המחירים שלנו עלה {o1} ו־{o2}. התרחקנו מהשוק ב־{pts} נקודות.",
@@ -701,4 +727,5 @@ export const HE_TEMPLATES: Record<string, string> = {
   "Branch Manager, {unit}": "מנהל/ת סניף, {unit}",
   "Regional Manager, {unit}": "מנהל/ת אזור, {unit}",
   "price files of {date}": "קובצי המחירים של {date}",
+  "{chain}: {pct}": "{chain}: {pct}",
 };

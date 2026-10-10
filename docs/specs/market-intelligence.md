@@ -1,6 +1,6 @@
 # Market & competitors (E6)
 
-Status: **E6a and E6b built (2026-10-10): data, basket index, the tab, and market-v1 signals → insights; see §7–§8.** Proposed in E0 (2026-10-06); sources checked by fetching on 2026-10-06 and 2026-10-10. Implements FB item #6 and FB-7: real
+Status: **E6a–E6c built (2026-10-10): data, basket index, the tab, market-v1 signals → insights, and Eran's review changes; see §7–§9.** Proposed in E0 (2026-10-06); sources checked by fetching on 2026-10-06 and 2026-10-10. Implements FB item #6 and FB-7: real
 Israeli sources, real competitor names, real figures where available, and labelled estimates. This stage absorbs v1
 Phase 6 (external intelligence, D9). External data runs the full VECTOR flow: **source → signal → insight → priority
 → recommendation → action → outcome → audit** (charter §16).
@@ -129,3 +129,27 @@ The list that follows is the E0 v2 version:
   growth), also available in any report.
 - Hebrew: chain, category and month names and every generated sentence are translated (templates in
   `he-content.ts`). Category fields are codes and never translated (`localize` skips `category`).
+
+## 9. As built (E6c, 2026-10-10): Eran's review (G-E6r, G-E6a–d)
+
+- **Every card ends with "What it means"**: a sentence computed from the card's numbers (food vs ours, CBS by
+  category, basket vs competitors, heatmap, competitors, growth, share, margins, baskets).
+- **CBS by category** now says what it compares (the last published month vs the same month a year earlier) and what the
+  colours mean: red = dearer than a year ago (supplier cost pressure), green = cheaper (room to lead on price).
+- **Heatmap** explains a cell (the chain's shelf price for the same products vs the market median, 100) with a legend.
+- **We are in the comparison**: VECTOR Retail Group (synthetic, highlighted) in the competitor bars and table; numbers
+  are centred under their headers.
+- **Growth & expansion** (G-E6a): revenue growth y/y over 8 quarters for Shufersal, Rami Levy and Yohananof (company
+  filings via StockAnalysis/S&P Global; `data/market/quarterly.json`, cross-checked with Globes and Rami Levy's
+  investor presentation for Q2 2026; Yohananof's Q2 2026 was not yet in the source); market share **estimate** =
+  2025 revenue ÷ the barcoded food & beverage market (₪52B in 2025, StoreNext via Strauss Group's 2025 report; overstated
+  because chain revenue includes fresh food and non-food); gross and operating margins; stores (estimates); online share
+  (Shufersal 19.8% in Q1 2025, IFI Today); average basket and items per basket (ours only: net sales ÷ transactions;
+  items = basket ÷ the basket items' market-median shelf price × our index). What a chain does not publish reads "not
+  reported". Ours: last full quarter, 13-week growth (one year of history, so no year-on-year yet).
+- **MK6 price gap** (G-E6b): a category where we are ≥ 3% above the market median in a region becomes a risk owned by
+  Trade, with our gap to **every** chain listed (North dairy fires: +13.2% vs the market; dearer than all 5 chains, from
+  +3.4% vs Tiv Taam to +17.1% vs Osher Ad). ₪ at risk = the region's weekly sales × the category's basket weight × the
+  gap × elasticity 1.5.
+- **Reports: Ask your data** (G-E6d): a preview of the free-text chat (an AI agent answering with read-only
+  text-to-SQL), disabled and labelled; not developed.

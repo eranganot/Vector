@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mk1, mk2, mk2AtRiskIls, mk3, mk3UpsideIls, mk4, priceLeads } from "./market-v1";
+import { mk1, mk2, mk2AtRiskIls, mk3, mk3UpsideIls, mk4, mk6, mk6AtRiskIls, priceLeads } from "./market-v1";
 
 const series = (vals: number[], start = 6) =>
   vals.map((value, i) => ({ period: `2026-${String(start + i).padStart(2, "0")}`, value }));
@@ -71,5 +71,18 @@ describe("market-v1", () => {
         { day: "2026-10-11", count: 31 },
       ]),
     ).toBeNull();
+  });
+
+  it("MK6 fires at 3% above the market median and lists the gap to every chain, dearest first", () => {
+    expect(mk6(102.9, { shufersal: 109 })).toBeNull();
+    expect(mk6(null, { shufersal: 109 })).toBeNull();
+    const r = mk6(113.2, { shufersal: 108.8, rami_levy: 96, osher_ad: null, tiv_taam: 120 })!;
+    expect(r.gapPct).toBe(13.2);
+    expect(r.vsChains).toEqual([
+      { chain: "rami_levy", index: 96, gapPct: 17.9 },
+      { chain: "shufersal", index: 108.8, gapPct: 4 },
+      { chain: "tiv_taam", index: 120, gapPct: -5.7 },
+    ]);
+    expect(mk6AtRiskIls(1_000_000, 13.2)).toBe(198_000);
   });
 });

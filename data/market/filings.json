@@ -100,6 +100,61 @@
       "source": "Rami Levy investor presentation, Aug 2026",
       "url": "https://ir.rami-levy.co.il/wp-content/uploads/2026/08/רמי-לוי-מצגת-משקיעים-אוגוסט-2026-ENGLISH.pdf",
       "asOf": "2026-08-25"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2025-Q1",
+      "metric": "same_store_sales",
+      "value": -8.1,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "IFI Today, 28 May 2025 (Shufersal Q1 2025 results)",
+      "url": "https://www.ifi.today/financial/1885-Retail-giant-Shufersal-Reports-Sales-Decline-in-Q1-2025-Despite-Surge-in-Profitability.html",
+      "asOf": "2025-05-28"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2025-Q1",
+      "metric": "online_share",
+      "value": 19.8,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "IFI Today, 28 May 2025 (Shufersal Q1 2025 results)",
+      "url": "https://www.ifi.today/financial/1885-Retail-giant-Shufersal-Reports-Sales-Decline-in-Q1-2025-Despite-Surge-in-Profitability.html",
+      "asOf": "2025-05-28"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2024-Q1",
+      "metric": "online_share",
+      "value": 20.7,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "IFI Today, 28 May 2025 (Shufersal Q1 2025 results)",
+      "url": "https://www.ifi.today/financial/1885-Retail-giant-Shufersal-Reports-Sales-Decline-in-Q1-2025-Despite-Surge-in-Profitability.html",
+      "asOf": "2025-05-28"
+    },
+    {
+      "chain": "shufersal",
+      "period": "2026-H1",
+      "metric": "same_store_sales",
+      "value": -2.7,
+      "unit": "pct",
+      "kind": "reported",
+      "source": "Globes, 27 Aug 2026",
+      "url": "https://en.globes.co.il/en/article-1001553761",
+      "asOf": "2026-08-27"
     }
-  ]
+  ],
+  "market": {
+    "code": "barcoded_fnb_2025",
+    "name": "Israeli barcoded food & beverage market, 2025",
+    "period": "2025",
+    "value": 52000000000.0,
+    "unit": "ils",
+    "source": "Strauss Group 2025 annual report, citing StoreNext",
+    "url": "https://ir.strauss-group.com/wp-content/uploads/2024/08/Reporting-Package-English-FY-2025.pdf",
+    "asOf": "2026-10-10",
+    "method": "StoreNext estimate of barcoded food and beverage sales (excludes unbarcoded fresh produce, meat and non-food)"
+  }
 }

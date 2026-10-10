@@ -17,6 +17,7 @@ import {
 import { deleteReportLayoutAction, generateReportAction, saveReportLayoutAction } from "../../actions";
 import { day, dayTime } from "../../_components/format";
 import { BlockBody } from "../../_components/report-blocks";
+import { ReportChatPreview } from "../../_components/report-chat-preview";
 import { Card, Notice, SectionTitle } from "../../_components/ui";
 import { decodeLayout, encodeLayout } from "../../_lib/report-layout";
 import { getT } from "../../_lib/locale";
@@ -154,6 +155,7 @@ export default async function ReportsPage({
         </div>
       </div>
       <Notice error={sp.error} done={sp.done} />
+      <ReportChatPreview t={t} />
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,9fr)]">
         <div className="flex min-w-0 flex-col gap-4">
           <Card className="flex flex-col gap-2" data-testid="report-sections">

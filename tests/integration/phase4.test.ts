@@ -107,7 +107,7 @@ describe("the seeded register (p4-v1)", () => {
     expect(await audits("commitment.recorded")).toHaveLength(20);
     expect(await audits("dependency.recorded")).toHaveLength(14);
     // Catalog stories keep their one insight; the small website task is listed, not escalated (Q2).
-    expect(await appDb.select().from(s.insight).where(eq(s.insight.orgId, orgId))).toHaveLength(21); // + MK2, MK3 (E6b)
+    expect(await appDb.select().from(s.insight).where(eq(s.insight.orgId, orgId))).toHaveLength(22); // + MK2, MK3 (E6b), MK6 (E6c)
     expect((await byTitle("Update holiday opening hours")).insightId).toBeNull();
   });
 

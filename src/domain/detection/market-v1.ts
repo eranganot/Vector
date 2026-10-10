@@ -83,3 +83,30 @@ export function mk4(points: { day: string; count: number }[]) {
   const [prev, last] = s.slice(-2);
   return last.count < prev.count ? { from: prev, to: last, closed: prev.count - last.count } : null;
 }
+
+/** MK6 (G-E6b, Eran 2026-10-10): a category where we are this far above the market median (index ≥ 103). */
+export const MK6_GAP = 3;
+
+export type Mk6 = {
+  ours: number;
+  gapPct: number;
+  /** Our gap to every other chain in the region, dearest gap first (positive: we are dearer). */
+  vsChains: { chain: string; index: number; gapPct: number }[];
+};
+
+/**
+ * MK6 price gap: our category index in a region is ≥ 3% above the market median (100); the gap to each chain is our
+ * index ÷ theirs − 1, so "we are 4% dearer than Shufersal" reads directly.
+ */
+export function mk6(ours: number | null, chains: Record<string, number | null>): Mk6 | null {
+  if (ours === null || ours - 100 < MK6_GAP) return null;
+  const vsChains = Object.entries(chains)
+    .filter((e): e is [string, number] => e[1] !== null)
+    .map(([chain, index]) => ({ chain, index, gapPct: r1((ours / index - 1) * 100) }))
+    .sort((a, b) => b.gapPct - a.gapPct);
+  return { ours, gapPct: r1(ours - 100), vsChains };
+}
+
+/** ₪ a week at risk: the category's weekly sales × the gap × PRICE_ELASTICITY. */
+export const mk6AtRiskIls = (categoryWeeklySalesIls: number, gapPct: number) =>
+  Math.round(categoryWeeklySalesIls * (gapPct / 100) * PRICE_ELASTICITY);

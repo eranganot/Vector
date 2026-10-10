@@ -3,10 +3,21 @@
  * chains' price files, reported results) next to VECTOR Retail Group's own synthetic prices. Every figure carries its
  * source and date; estimates are labelled.
  */
-import { and, arrayOverlaps, desc, eq, inArray, like } from "drizzle-orm";
+import { and, arrayOverlaps, desc, eq, gte, inArray, like, lt, sql } from "drizzle-orm";
 import { BASKET_MODEL, CATEGORIES, CBS_FOR_CATEGORY, yoy, type Category } from "@/domain/market";
 import type { Actor } from "@/domain/types";
-import { competitor, competitorFigure, insight, marketPoint, marketPriceFile, marketSeries } from "@/infra/db/schema";
+import {
+  competitor,
+  competitorFigure,
+  demoClock,
+  insight,
+  kpi,
+  kpiObservation,
+  marketPoint,
+  marketPriceFile,
+  marketSeries,
+  orgUnit,
+} from "@/infra/db/schema";
 import type { DbOrTx } from "../db";
 import { readScope } from "./insights";
 
@@ -171,6 +182,14 @@ export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: Mark
           null,
       }))
     : [];
+  const growth = await growthView(db, opts.orgId, {
+    comps,
+    figs,
+    marketSize: pts("storenext", "barcoded_fnb_2025").at(-1) ?? null,
+    marketSizeSeries: series.find((x) => x.source === "storenext") ?? null,
+    avgItemPrice: pts("derived", "basket:avg_item_price").at(-1)?.value ?? null,
+    ourBasketIndex: indexOf("vector", "ALL", "all"),
+  });
   const vectorIdx = indexOf("vector", region, "all");
   const leader = competitors.find((c) => c.key === "shufersal");
   return {
@@ -195,6 +214,7 @@ export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: Mark
     heatmap,
     history,
     competitors,
+    growth,
     changed,
     sources: {
       cbs: {
@@ -226,3 +246,193 @@ export async function marketView(db: DbOrTx, actor: Actor, opts: { region?: Mark
 
 export type MarketView = NonNullable<Awaited<ReturnType<typeof marketView>>>;
 export type { Category };
+
+const QUARTER_DAYS = (q: string) => {
+  const [y, n] = q.split("-Q").map(Number);
+  const start = Date.UTC(y, (n - 1) * 3, 1);
+  return {
+    start: new Date(start).toISOString().slice(0, 10),
+    end: new Date(Date.UTC(y, n * 3, 1)).toISOString().slice(0, 10),
+  };
+};
+const quarterOf = (d: string) => `${d.slice(0, 4)}-Q${Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1}`;
+const CHAIN_KEYS = ["shufersal", "rami_levy", "yohananof", "osher_ad", "tiv_taam"];
+
+/**
+ * Growth & expansion (G-E6a): reported quarterly results for the listed chains (8 quarters), estimates labelled, and
+ * VECTOR Retail Group's own synthetic figures computed from its sales data. A figure a chain does not publish is null
+ * ("not reported"), never filled in.
+ */
+async function growthView(
+  db: DbOrTx,
+  orgId: string | undefined,
+  m: {
+    comps: (typeof competitor.$inferSelect)[];
+    figs: (typeof competitorFigure.$inferSelect)[];
+    marketSize: typeof marketPoint.$inferSelect | null;
+    marketSizeSeries: typeof marketSeries.$inferSelect | null;
+    avgItemPrice: number | null;
+    ourBasketIndex: number | null;
+  },
+) {
+  const series = (key: string, metric: string) => {
+    const c = m.comps.find((x) => x.key === key);
+    return c
+      ? m.figs
+          .filter((f) => f.competitorId === c.id && f.metric === metric && /^\d{4}-Q\d$/.test(f.period))
+          .sort((a, b) => a.period.localeCompare(b.period))
+      : [];
+  };
+  const latestOf = (key: string, metric: string) => {
+    const c = m.comps.find((x) => x.key === key);
+    return c
+      ? (m.figs
+          .filter((f) => f.competitorId === c.id && f.metric === metric)
+          .sort((a, b) => b.period.localeCompare(a.period))[0] ?? null)
+      : null;
+  };
+  const quarters = [...new Set(CHAIN_KEYS.flatMap((k) => series(k, "revenue_growth").map((f) => f.period)))]
+    .sort()
+    .slice(-8);
+  const marketIls = m.marketSize?.value ?? null;
+  const fig = (f: typeof competitorFigure.$inferSelect | null) =>
+    f ? { value: f.value, period: f.period, source: f.source, url: f.url, kind: f.kind, method: f.method } : null;
+
+  const chains = CHAIN_KEYS.filter((k) => m.comps.some((c) => c.key === k)).map((k) => {
+    const c = m.comps.find((x) => x.key === k)!;
+    const rev = series(k, "revenue");
+    const fy2025 = rev.filter((f) => f.period.startsWith("2025-"));
+    const fyTotal = fy2025.length === 4 ? fy2025.reduce((a, f) => a + f.value, 0) : null;
+    return {
+      key: k,
+      name: c.name,
+      synthetic: false,
+      growthByQuarter: quarters.map((q) => series(k, "revenue_growth").find((f) => f.period === q)?.value ?? null),
+      revenueLatest: fig(latestOf(k, "revenue")),
+      growthLatest: fig(latestOf(k, "revenue_growth")),
+      sameStore: fig(latestOf(k, "same_store_sales")),
+      grossMargin: fig(latestOf(k, "gross_margin")),
+      operatingMargin: fig(latestOf(k, "operating_margin")),
+      online: fig(latestOf(k, "online_share")),
+      stores: fig(latestOf(k, "store_count")),
+      annualRevenue: fyTotal,
+      annualPeriod: "2025",
+      marketShare: fyTotal !== null && marketIls ? Math.round((fyTotal / marketIls) * 1000) / 10 : null,
+      avgBasket: null as number | null,
+      itemsPerBasket: null as number | null,
+      quartersUp: series(k, "revenue_growth").filter((f) => quarters.includes(f.period) && f.value > 0).length,
+      quartersReported: series(k, "revenue_growth").filter((f) => quarters.includes(f.period)).length,
+    };
+  });
+
+  // ── Ours (synthetic): from the sales and margin data ──
+  let ours: (typeof chains)[number] | null = null;
+  if (orgId) {
+    const [clock] = await db.select().from(demoClock).where(eq(demoClock.orgId, orgId));
+    const asOf = (clock?.now ?? new Date()).toISOString().slice(0, 10);
+    const kpis = await db.select().from(kpi).where(eq(kpi.orgId, orgId));
+    const id = (code: string) => kpis.find((k) => k.code === code)?.id;
+    const from = new Date(Date.parse(asOf) - 365 * 86_400_000).toISOString().slice(0, 10);
+    const daily = async (code: string, type: "branch" | "department") => {
+      const k = id(code);
+      if (!k) return [];
+      return db
+        .select({
+          day: kpiObservation.day,
+          total: sql<number>`sum(${kpiObservation.value})::float8`,
+          n: sql<number>`count(*)::int`,
+        })
+        .from(kpiObservation)
+        .innerJoin(orgUnit, eq(orgUnit.id, kpiObservation.orgUnitId))
+        .where(
+          and(
+            eq(kpiObservation.orgId, orgId),
+            eq(kpiObservation.kpiId, k),
+            eq(orgUnit.type, type),
+            gte(kpiObservation.day, from),
+            lt(kpiObservation.day, asOf),
+          ),
+        )
+        .groupBy(kpiObservation.day);
+    };
+    const [sales, tx, gm] = await Promise.all([
+      daily("net_sales", "branch"),
+      daily("transactions", "branch"),
+      daily("gross_margin", "department"),
+    ]);
+    const branches = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(orgUnit)
+      .where(and(eq(orgUnit.orgId, orgId), eq(orgUnit.type, "branch")));
+    const inQ = (q: string, d: string) => {
+      const r = QUARTER_DAYS(q);
+      return d >= r.start && d < r.end;
+    };
+    const fullQuarters = [...new Set(sales.map((d) => quarterOf(d.day)))].filter((q) => {
+      const r = QUARTER_DAYS(q);
+      const days = (Date.parse(r.end) - Date.parse(r.start)) / 86_400_000;
+      return sales.filter((d) => inQ(q, d.day)).length === days;
+    });
+    const sum = (xs: { total: number }[]) => xs.reduce((a, x) => a + x.total, 0);
+    const lastQ = fullQuarters.at(-1);
+    const salesTtm = sum(sales);
+    const recent = sum(
+      sales.filter((d) => d.day >= new Date(Date.parse(asOf) - 91 * 86_400_000).toISOString().slice(0, 10)),
+    );
+    const priorFrom = new Date(Date.parse(asOf) - 182 * 86_400_000).toISOString().slice(0, 10);
+    const priorTo = new Date(Date.parse(asOf) - 91 * 86_400_000).toISOString().slice(0, 10);
+    const prior = sum(sales.filter((d) => d.day >= priorFrom && d.day < priorTo));
+    const growth13 = prior > 0 ? Math.round((recent / prior - 1) * 1000) / 10 : null;
+    const avgBasket = sum(tx) > 0 ? Math.round((salesTtm / sum(tx)) * 10) / 10 : null;
+    const qGm = lastQ ? gm.filter((d) => inQ(lastQ, d.day)) : [];
+    const syn = (value: number | null, period: string, method: string) =>
+      value === null ? null : { value, period, source: "synthetic", url: "", kind: "synthetic", method };
+    ours = {
+      key: "vector",
+      name: "VECTOR Retail Group",
+      synthetic: true,
+      growthByQuarter: quarters.map(() => null),
+      revenueLatest: lastQ
+        ? syn(
+            Math.round(sum(sales.filter((d) => inQ(lastQ, d.day)))),
+            lastQ,
+            "net sales of all branches in the quarter",
+          )
+        : null,
+      growthLatest: syn(growth13, "13w", "last 13 weeks vs the 13 before (one year of history: no year-on-year yet)"),
+      sameStore: syn(growth13, "13w", "every branch traded in both periods, so same-store equals total"),
+      grossMargin: syn(
+        qGm.length ? Math.round((qGm.reduce((a, d) => a + d.total / d.n, 0) / qGm.length) * 10) / 10 : null,
+        lastQ ?? "",
+        "average daily gross margin in the quarter",
+      ),
+      operatingMargin: null,
+      online: null,
+      stores: syn(branches[0]?.n ?? 0, asOf, "branches in the organization"),
+      annualRevenue: Math.round(salesTtm),
+      annualPeriod: "last 12 months",
+      marketShare: marketIls ? Math.round((salesTtm / marketIls) * 1000) / 10 : null,
+      avgBasket,
+      itemsPerBasket:
+        avgBasket !== null && m.avgItemPrice && m.ourBasketIndex
+          ? Math.round((avgBasket / (m.avgItemPrice * (m.ourBasketIndex / 100))) * 10) / 10
+          : null,
+      quartersUp: 0,
+      quartersReported: 0,
+    };
+  }
+  return {
+    quarters,
+    chains,
+    ours,
+    market: m.marketSize
+      ? {
+          value: m.marketSize.value,
+          period: m.marketSize.period,
+          name: m.marketSizeSeries?.name ?? "",
+          url: m.marketSize.sourceUrl,
+        }
+      : null,
+    avgItemPrice: m.avgItemPrice,
+  };
+}

@@ -1314,4 +1314,86 @@ export const HE_SCREENS: Record<string, string> = {
   "Same-store sales": "מכירות בחנויות זהות",
   "Revenue growth": "צמיחה בהכנסות",
   "No market data loaded.": "לא נטענו נתוני שוק.",
+  "Revenue growth by quarter": "צמיחה בהכנסות לפי רבעון",
+  "not reported": "לא מדווח",
+  "Growth & expansion": "צמיחה והתרחבות",
+  "year on year, reported": "שנה מול שנה, כפי שדווח",
+  "Quarters with growth out of the last {n}: {list}.": "רבעונים עם צמיחה מתוך {n} האחרונים: {list}.",
+  "Shoppers are moving from {from} to {to}; our growth (+{g}, 13 weeks) has no year-on-year history yet.":
+    "הלקוחות עוברים מ{from} אל {to}; לצמיחה שלנו (+{g}, 13 שבועות) עדיין אין היסטוריה של שנה מול שנה.",
+  "Quarterly results from company filings (StockAnalysis, S&P Global data); Osher Ad and Tiv Taam are private":
+    "תוצאות רבעוניות מדיווחי החברות (StockAnalysis, נתוני S&P Global); אושר עד וטיב טעם פרטיות",
+  "Market share (estimate)": "נתח שוק (הערכה)",
+  "Shufersal leads with about {lead}; we hold about {ours}. {n} chains do not publish revenue.":
+    "שופרסל מובילה עם כ־{lead}; לנו כ־{ours}. {n} רשתות אינן מפרסמות הכנסות.",
+  "The share is overstated: chain revenue also includes fresh food and non-food.":
+    "הנתח מוערך ביתר: הכנסות הרשתות כוללות גם מזון טרי ומוצרים שאינם מזון.",
+  "Revenue in 2025 (ours: last 12 months) ÷ the barcoded food & beverage market, {m} in {year} (StoreNext, via Strauss Group's 2025 report)":
+    "הכנסות 2025 (שלנו: 12 החודשים האחרונים) ÷ שוק המזון והמשקאות הממוקד בברקוד, {m} ב־{year} (StoreNext, דרך הדוח השנתי 2025 של קבוצת שטראוס)",
+  "last reported quarter": "הרבעון האחרון שדווח",
+  Margins: "שיעורי רווח",
+  "Gross margin": "רווח גולמי",
+  "Operating margin": "רווח תפעולי",
+  "{top} earns the highest gross margin ({topGm}) and is the dearest major chain; {lean} run leaner. Our gross margin is {ours} (synthetic).":
+    "ל{top} שיעור הרווח הגולמי הגבוה ביותר ({topGm}) והיא הרשת הגדולה היקרה ביותר; {lean} פועלות ברווח נמוך יותר. הרווח הגולמי שלנו {ours} (סינתטי).",
+  "ours: last 12 months": "שלנו: 12 החודשים האחרונים",
+  Baskets: "סלי קנייה",
+  "Average basket": "סל ממוצע",
+  "Items per basket": "פריטים בסל",
+  "Our average basket is ₪{b}, about {n} items at an average shelf price of ₪{p}. The chains do not publish basket figures, so there is no comparison yet.":
+    "הסל הממוצע שלנו ₪{b}, כ־{n} פריטים במחיר מדף ממוצע של ₪{p}. הרשתות אינן מפרסמות נתוני סל, ולכן עדיין אין השוואה.",
+  "Ours: net sales ÷ transactions (synthetic); items = basket ÷ the basket items' market-median shelf price × our basket index":
+    "שלנו: מכירות נטו ÷ עסקאות (סינתטי); פריטים = סל ÷ מחיר המדף החציוני של פריטי הסל × מדד הסל שלנו",
+  "latest figure each chain publishes": "הנתון האחרון שכל רשת מפרסמת",
+  "Revenue (year)": "הכנסות (שנה)",
+  "Market share": "נתח שוק",
+  "Online share": "שיעור אונליין",
+  "13 weeks": "13 שבועות",
+  "not modelled": "לא ממודל",
+  "Of the chains that publish revenue we are the smallest, and growing. The store count trend appears as daily store files are collected (one day so far). * synthetic":
+    "מבין הרשתות שמפרסמות הכנסות אנחנו הקטנים, וצומחים. מגמת מספר הסניפים תופיע ככל שייאספו קובצי סניפים יומיים (עד כה יום אחד). * סינתטי",
+  "What it means": "מה זה אומר",
+  "Since {month} our prices rose {ours} and food prices {food}: we are {gap} points above the market trend, and still rising while the market falls.":
+    "מאז {month} המחירים שלנו עלו {ours} ומחירי המזון {food}: אנחנו {gap} נקודות מעל מגמת השוק, ועדיין עולים בזמן שהשוק יורד.",
+  "Since {month} our prices rose {ours} and food prices {food}: we are at or below the market trend.":
+    "מאז {month} המחירים שלנו עלו {ours} ומחירי המזון {food}: אנחנו ברמת מגמת השוק או מתחתיה.",
+  "{month} vs {prev}": "{month} לעומת {prev}",
+  "Food prices by category: change in 12 months (CBS)": "מחירי מזון לפי קטגוריה: שינוי ב־12 חודשים (הלמ״ס)",
+  "dearer than a year ago: cost pressure from suppliers": "יקר יותר משנה שעברה: לחץ מחירים מהספקים",
+  "cheaper than a year ago: room to cut our prices": "זול יותר משנה שעברה: מקום להוזיל את המחירים שלנו",
+  "Getting dearer: {up}. Getting cheaper: {down}. Expect suppliers to push prices up in {top}; {low} is where we can lead on price.":
+    "מתייקרים: {up}. מוזלים: {down}. צפו שספקים ידחפו להעלאות ב{top}; ב{low} נוכל להוביל במחיר.",
+  "Our basket is {idx} (market = 100). We are cheaper than {cheaper} and dearer than {dearer}.":
+    "מדד הסל שלנו {idx} (השוק = 100). אנחנו זולים מ{cheaper} ויקרים מ{dearer}.",
+  "no chain": "אף רשת",
+  "Each cell compares the chain's shelf price for the same products with the market median (100): 110 = 10% dearer, 95 = 5% cheaper.":
+    "כל תא משווה את מחיר המדף של הרשת לאותם מוצרים מול חציון השוק (100): 110 = יקר ב־10%, 95 = זול ב־5%.",
+  cheaper: "זול יותר",
+  dearer: "יקר יותר",
+  "Our dearest category is {hi} ({hiIdx}); our cheapest is {lo} ({loIdx}).":
+    "הקטגוריה היקרה ביותר שלנו היא {hi} ({hiIdx}); הזולה ביותר {lo} ({loIdx}).",
+  "Cheapest chain: {cheap}; dearest: {dear}.": "הרשת הזולה ביותר: {cheap}; היקרה ביותר: {dear}.",
+  "Price gap: {cats} are 3% or more above the market (a risk in What changed outside).":
+    "פער מחיר: {cats} גבוהים ב־3% ומעלה מהשוק (סיכון ב״מה השתנה בחוץ״).",
+  "Revenue, last reported quarter": "הכנסות, הרבעון האחרון שדווח",
+  "Revenue growth, last reported quarter": "צמיחה בהכנסות, הרבעון האחרון שדווח",
+  "Revenue (quarter)": "הכנסות (רבעון)",
+  "Basket index": "מדד סל",
+  "us · synthetic": "אנחנו · סינתטי",
+  "our data (synthetic)": "הנתונים שלנו (סינתטי)",
+  "The discounters are growing while the market leader shrinks: {list}.":
+    "רשתות הדיסקאונט צומחות בזמן שמובילת השוק מצטמקת: {list}.",
+  "We grow {g} (synthetic, 13 weeks): faster than {faster}, slower than {slower}.":
+    "אנחנו צומחים {g} (סינתטי, 13 שבועות): מהר יותר מ{faster}, לאט יותר מ{slower}.",
+  "Preview · not active yet": "תצוגה מקדימה · עדיין לא פעיל",
+  "Ask your data": "שאלו את הנתונים",
+  "Ask in your own words. An AI agent turns the question into a read-only query on VECTOR's data, limited to what you may see, and answers with a number, a table or a chart you can add to this report. Every question is audited.":
+    "שאלו במילים שלכם. סוכן AI הופך את השאלה לשאילתת קריאה בלבד על נתוני VECTOR, מוגבלת למה שמותר לכם לראות, ועונה במספר, טבלה או תרשים שאפשר להוסיף לדוח הזה. כל שאלה נרשמת ביומן הביקורת.",
+  "Example questions": "שאלות לדוגמה",
+  "Type a question… (available in the AI stage)": "הקלידו שאלה… (זמין בשלב ה־AI)",
+  "Which North branches missed their sales budget last week?": "אילו סניפים בצפון לא עמדו בתקציב המכירות בשבוע שעבר?",
+  "How did our dairy prices move against Shufersal this month?": "איך זזו מחירי מוצרי החלב שלנו מול שופרסל החודש?",
+  "Show labor cost vs budget by region for the last 8 weeks": "הציגו עלות שכר מול תקציב לפי אזור ב־8 השבועות האחרונים",
+  "Which decisions have waited more than 3 days, and on whom?": "אילו החלטות ממתינות יותר מ־3 ימים, ועל מי?",
+  "last 12 months": "12 החודשים האחרונים",
 };

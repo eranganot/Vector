@@ -11,11 +11,13 @@ import {
   mk2AtRiskIls,
   mk3,
   mk3UpsideIls,
+  mk6,
+  mk6AtRiskIls,
   PRICE_ELASTICITY,
   priceLeads,
   SHARE_GAIN_UPLIFT,
 } from "@/domain/detection/market-v1";
-import { CATEGORIES } from "@/domain/market";
+import { CATEGORIES, CATEGORY_WEIGHTS } from "@/domain/market";
 import {
   competitor,
   competitorFigure,
@@ -55,10 +57,11 @@ const MONTH = [
   "December",
 ];
 const monthName = (period: string) => MONTH[Number(period.slice(5, 7)) - 1] ?? period;
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 const generatedBy = `rule:${MARKET_RULES.name}@${MARKET_RULES.version}`;
 
-/** Group net sales in [from, to). */
-async function salesBetween(ctx: AppContext, kpiId: string, from: string, to: string) {
+/** Net sales in [from, to): the group, or one region's branches. */
+async function salesBetween(ctx: AppContext, kpiId: string, from: string, to: string, regionId?: string) {
   const [r] = await ctx.db
     .select({ total: sql<number>`coalesce(sum(${kpiObservation.value}), 0)::float8` })
     .from(kpiObservation)
@@ -68,6 +71,7 @@ async function salesBetween(ctx: AppContext, kpiId: string, from: string, to: st
         eq(kpiObservation.orgId, ctx.orgId),
         eq(kpiObservation.kpiId, kpiId),
         eq(orgUnit.type, "branch"),
+        ...(regionId ? [eq(orgUnit.parentId, regionId)] : []),
         gte(kpiObservation.day, from),
         lt(kpiObservation.day, to),
       ),
@@ -322,6 +326,125 @@ export async function runMarketRules(ctx: AppContext): Promise<DetectionResult[]
         },
       }),
     );
+  }
+
+  // ── MK6 (G-E6b): a category where we are ≥ 3% above the market median in a region, against every chain ──
+  const chainName = (key: string) => comps.find((x) => x.key === key)?.name ?? key;
+  const regionIdx = (chain: string, region: string, cat: string) => {
+    const src = chain === "vector" ? "synthetic" : "basket";
+    return pts(src, `${chain}:${region}:${cat}`).find((p) => p.period === day)?.value ?? null;
+  };
+  const chainKeys = [...new Set(series.filter((x) => x.source === "basket").map((x) => x.code.split(":")[0]))];
+  for (const region of units.filter((u) => u.type === "region")) {
+    for (const cat of CATEGORIES) {
+      const m6 = mk6(
+        regionIdx("vector", region.code, cat),
+        Object.fromEntries(chainKeys.map((k) => [k, regionIdx(k, region.code, cat)])),
+      );
+      if (!m6 || !trade) continue;
+      const regionWeekly = await salesBetween(ctx, sales.id, addDays(asOf, -7), asOf, region.id);
+      // Category sales are not modelled per region: its share of the basket weights stands in (stated in the insight).
+      const catWeekly = regionWeekly * CATEGORY_WEIGHTS[cat];
+      const atRisk = mk6AtRiskIls(catWeekly, m6.gapPct);
+      const tradeHead = await holderOf(ctx, trade.id, "department_manager");
+      const regionHead = await holderOf(ctx, region.id, "regional_manager");
+      const dearer = m6.vsChains.filter((c) => c.gapPct > 0);
+      const vsText = m6.vsChains.map((c) => `${chainName(c.chain)}: ${signed(c.gapPct)}`).join(" · ");
+      results.push(
+        await recordDetection(ctx, {
+          signal: {
+            type: "market_price_gap",
+            source: "basket+synthetic",
+            detector: MARKET_RULES.name,
+            detectorVersion: MARKET_RULES.version,
+            observedAt: now,
+            primaryUnitId: trade.id,
+            measurements: {
+              rule: "MK6",
+              region: region.code,
+              category: cat,
+              ours: m6.ours,
+              gapPct: m6.gapPct,
+              vsChains: vsText,
+              day: day ?? "",
+            },
+            dedupeKey: `market:MK6:${region.code}:${cat}`,
+          },
+          evidence: [
+            {
+              kind: "market_record",
+              title: `${cap(CATEGORY_NAME[cat])} in ${region.name}: our price vs every chain (price files of ${day ?? "—"})`,
+              sourceRef: `basket-index-v1:${day ?? ""}:${region.code}:${cat}`,
+              payload: {
+                real: true,
+                rows: [
+                  { label: "Market median", value: "100" },
+                  { label: "Our index", value: m6.ours.toFixed(1) },
+                  ...m6.vsChains.map((c) => ({
+                    label: chainName(c.chain),
+                    value: `${c.index.toFixed(1)} · ${signed(c.gapPct)}`,
+                  })),
+                  { label: "Chains", value: "real (published price files)" },
+                  { label: "Our prices", value: "synthetic" },
+                ],
+              },
+            },
+          ],
+          insight: {
+            workstream: "risk",
+            ownerDepartmentId: trade.id,
+            title: `${cap(CATEGORY_NAME[cat])} in ${region.name} is ${signed(m6.gapPct)} above the market`,
+            whatHappened: `Our ${CATEGORY_NAME[cat]} prices in ${region.name} are ${signed(m6.gapPct)} above the market median of the chains compared. We are dearer than ${dearer.length} of ${m6.vsChains.length} chains: ${vsText}.`,
+            whyItMatters: `Shoppers compare. At a price elasticity of ${PRICE_ELASTICITY}, about ${ils(atRisk)} of weekly ${CATEGORY_NAME[cat]} sales in ${region.name} is at risk (category share of sales: ${Math.round(CATEGORY_WEIGHTS[cat] * 100)}%).`,
+            primaryUnitId: trade.id,
+            affectedUnitIds: [region.id, ...(mkt ? [mkt.id] : [])],
+            confidence: 0.8,
+            priority: {
+              compliance: 0,
+              z: Math.min(4, m6.gapPct / 3),
+              impactIls: atRisk,
+              breadth: "regional",
+              hoursToImpact: null,
+              strategicWeight: 0.7,
+              confidence: 0.8,
+            },
+            generatedBy,
+          },
+          recommendation: {
+            statement: `Bring ${CATEGORY_NAME[cat]} prices in ${region.name} back to the market`,
+            rationale:
+              "The gap is measured on the same products in the same region's stores; the cheapest fix is a price move on the items that drive it.",
+            actions: [
+              ...(tradeHead
+                ? [
+                    {
+                      type: "price_change",
+                      title: `Reprice ${CATEGORY_NAME[cat]} in ${region.name} toward the market median`,
+                      ownerUserId: tradeHead.id,
+                      targetUnitIds: [region.id],
+                      dueAt: new Date(now.getTime() + 3 * 86_400_000),
+                      estimatedCost: 0,
+                      params: { rule: "MK6", region: region.code, category: cat, gapPct: m6.gapPct },
+                    },
+                  ]
+                : []),
+              ...(regionHead
+                ? [
+                    {
+                      type: "notify_owner",
+                      title: `Brief ${regionHead.name} on the ${CATEGORY_NAME[cat]} price gap`,
+                      ownerUserId: regionHead.id,
+                      targetUnitIds: [region.id],
+                      estimatedCost: 0,
+                      params: {},
+                    },
+                  ]
+                : []),
+            ],
+          },
+        }),
+      );
+    }
   }
 
   // MK1 and MK4 compare daily snapshots; with one day of price files they cannot fire (market-intelligence.md §7).
