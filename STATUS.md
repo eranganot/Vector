@@ -50,8 +50,22 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 | 2026-10-08 | G-E4 recorded. E4e (Eran's review): dates shown as "27 Oct" across Cross-department, Waiting on you and charts; Hebrew table cells keep their padding (root cause below); the department map becomes an ordered relay (step, start date, who acts now, held-up arrows, blockers, legend); EN/HE; e2e                                                                                                                                                                                  | #51      |
 | 2026-10-08 | E4e verified on Dev (db3c43e): smoke 18/18, e2e 48/48 against Dev, demo reset after                                                                                                                                                                                                                                                                                                                                                                                                   | —        |
 | 2026-10-10 | E5a: reports builder (weekly management template; add, remove, reorder, edit charts by type, period, scope), report-v1 model, report data from the screens' read models, immutable versioned snapshots with hash and audit (migration 0013, `report.generate`), snapshot page with print view; EN/HE; smoke phase 9; e2e                                                                                                                                                              | #52      |
+| 2026-10-10 | E5a verified on Dev (0bf6db6): migrations 14/14, smoke 19/19                                                                                                                                                                                                                                                                                                                                                                                                                          | —        |
+| 2026-10-10 | E5b: board pack template (region health, top risks and opportunities), editable PowerPoint (native charts and tables, Hebrew RTL; audited download), PDF from the print view (spike: no server PDF in the demo); EN/HE; e2e                                                                                                                                                                                                                                                           | #53      |
 
 ## Root-cause records
+
+### 2026-10-10 · CI `verify` failed on PR #53: the Action Center test saw its audit operations in another order
+
+- **What happened:** `tests/integration/action-center.test.ts` expected `["message.drafted", "message.edited",
+"message.approved", "message.sent"]` and CI received the same four operations starting with `message.sent`.
+- **Root cause (proven from the CI log and the code):** the test read `audit_event` rows by entity id with no
+  `ORDER BY`; PostgreSQL returns such rows in no guaranteed order (here through the `audit_event_entity_idx` scan).
+  It passed locally and on earlier runs by chance. The new reports test had the same flaw (seen locally, worked
+  around with a sort).
+- **Ruled out:** a change in the message flow (the same four operations, each once); the merge of main (no change to
+  the Action Center code).
+- **Fix:** both tests order by the audit sequence (`seq`), which is the order the events were written.
 
 ### 2026-10-08 · Hebrew: the due date touched the next-step text in the Cross-department list
 

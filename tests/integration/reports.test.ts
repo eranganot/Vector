@@ -84,7 +84,8 @@ describe("reports (E5)", () => {
     const ops = await appDb
       .select()
       .from(s.auditEvent)
-      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id1)));
+      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id1)))
+      .orderBy(s.auditEvent.seq);
     expect(ops.map((o) => o.operation)).toEqual(["report.generated"]);
 
     const noa = await as("noa");
@@ -98,5 +99,44 @@ describe("reports (E5)", () => {
     expect((await listReports(appDb, orgId, dana)).map((x) => x.id)).toContain(own);
     const opened = (await getReport(appDb, orgId, dana, own))!;
     expect(opened.content.scope.name).toBe("Supply Chain");
+  });
+});
+
+describe("report exports (E5b)", () => {
+  it("builds an editable PowerPoint with native charts and tables, in Hebrew right to left, and audits the download", async () => {
+    const JSZip = (await import("jszip")).default;
+    const { buildDeck } = await import("@/infra/export/pptx");
+    const { deckOf } = await import("@/app/_lib/report-deck");
+    const { makeT } = await import("@/i18n/t");
+    const { localize } = await import("@/i18n/content");
+    const { recordReportDownload } = await import("@/application/commands/reports");
+    const dana = await as("dana");
+    const [group] = await reportScopes(appDb, orgId, dana);
+    const ctx = await createContext(appDb);
+    const id = await generateReport(ctx, dana, {
+      scopeUnitId: group.unitId,
+      layout: templateLayout("weekly_management"),
+      language: "he",
+    });
+    const r = (await getReport(appDb, orgId, dana, id))!;
+    const deck = deckOf(makeT("he"), { ...r, content: localize(r.content, "he") });
+    expect(deck.rtl).toBe(true);
+    expect(deck.title).toBe("דוח ניהולי שבועי");
+    const zip = await JSZip.loadAsync(await buildDeck(deck));
+    const names = Object.keys(zip.files);
+    expect(names.filter((n) => /^ppt\/charts\/chart\d+\.xml$/.test(n)).length).toBeGreaterThanOrEqual(5);
+    expect(names.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).length).toBeGreaterThan(r.content.blocks.length);
+    const tables = await Promise.all(
+      names.filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n)).map((n) => zip.file(n)!.async("string")),
+    );
+    expect(tables.some((x) => x.includes("<a:tbl>"))).toBe(true);
+    expect(tables.some((x) => x.includes('rtl="1"'))).toBe(true);
+    await recordReportDownload(ctx, dana, id, "pptx");
+    const ops = await appDb
+      .select()
+      .from(s.auditEvent)
+      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id)))
+      .orderBy(s.auditEvent.seq);
+    expect(ops.map((o) => o.operation)).toEqual(["report.generated", "report.downloaded"]);
   });
 });

@@ -8,7 +8,9 @@ import {
   moveBlock,
   PERIODS,
   removeBlock,
+  TEMPLATE_IDS,
   TEMPLATES,
+  templateLayout,
   type Layout,
 } from "@/domain/report";
 import { generateReportAction } from "../../actions";
@@ -37,7 +39,7 @@ const PERIOD_WORD: Record<string, string> = { "4w": "last 4 weeks", "8w": "last 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ s?: string; l?: string; e?: string; error?: string }>;
+  searchParams: Promise<{ s?: string; l?: string; e?: string; tp?: string; error?: string }>;
 }) {
   const sp = await searchParams;
   const { actor } = await requireActor();
@@ -54,7 +56,10 @@ export default async function ReportsPage({
   const scope = scopes.find((x) => x.unitId === sp.s) ?? scopes[0];
   const isGroup = scope.kind === "group";
   const allowed = (id: string) => isGroup && scopes.some((x) => x.unitId === id && x.kind === "department");
-  const layout = decodeLayout(sp.l, "weekly_management", allowed);
+  const decoded = decodeLayout(sp.l, "weekly_management", allowed);
+  // Choosing another template starts from its layout; the same template keeps the edits (e.g. when only the scope changes).
+  const tp = TEMPLATE_IDS.find((x) => x === sp.tp);
+  const layout = tp && tp !== decoded.template ? templateLayout(tp) : decoded;
   const selected = layout.blocks.find((b) => b.id === sp.e) ?? null;
   const resolved = (await api.resolveReport(actor, scope.unitId, layout))!;
   const href = (l: Layout, e?: string | null) => `/reports?s=${scope.unitId}&l=${encodeLayout(l)}${e ? `&e=${e}` : ""}`;
@@ -75,6 +80,21 @@ export default async function ReportsPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <form className="flex items-center gap-2" action="/reports">
+            <label className="text-xs text-muted" htmlFor="report-template">
+              {t("Template")}
+            </label>
+            <select
+              id="report-template"
+              name="tp"
+              defaultValue={layout.template}
+              className="rounded-lg border border-line bg-panel px-3 py-2 text-sm"
+            >
+              {TEMPLATE_IDS.map((x) => (
+                <option key={x} value={x}>
+                  {t(TEMPLATES[x].title)}
+                </option>
+              ))}
+            </select>
             <label className="text-xs text-muted" htmlFor="report-scope">
               {t("Scope")}
             </label>

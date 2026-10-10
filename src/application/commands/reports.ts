@@ -79,3 +79,10 @@ export async function generateReport(ctx: AppContext, actor: Actor, input: Gener
     },
   );
 }
+
+/** Records a download of a report file (reports.md §3: report.downloaded); the caller has already checked visibility. */
+export async function recordReportDownload(ctx: AppContext, actor: Actor, reportId: string, format: "pptx" | "pdf") {
+  await runCommand(ctx, actor, "report.download", { entityType: "report", entityId: reportId }, async ({ audit }) => {
+    await audit({ operation: "report.downloaded", entityType: "report", entityId: reportId, changes: { format } });
+  });
+}

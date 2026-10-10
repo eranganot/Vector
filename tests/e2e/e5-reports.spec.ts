@@ -72,3 +72,22 @@ test("Hebrew: the snapshot is generated and read right to left", async ({ page, 
   await expect(snap).toHaveAttribute("dir", "rtl");
   await expect(snap.getByRole("heading", { level: 1 })).toContainText("דוח ניהולי שבועי");
 });
+
+test("E5b: the board pack template, and the snapshot as an editable PowerPoint", async ({ page }) => {
+  await as(page, "Dana Levi");
+  await page.goto("/reports");
+  await page.locator("#report-template").selectOption("board_pack");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await expect(page.locator('[data-metric="top_risks_opportunities"]')).toBeVisible();
+  await expect(page.locator('[data-metric="health_by_region"]')).toBeVisible();
+  await page.getByTestId("generate-report").click();
+  await page.waitForURL(/\/reports\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId("report-snapshot").getByRole("heading", { level: 1 })).toContainText(
+    "Board pack report",
+  );
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("download-pptx").click()]);
+  expect(download.suggestedFilename()).toMatch(/^vector-board-pack-v\d+-en\.pptx$/);
+  const res = await page.request.get(page.url() + "/pptx");
+  expect(res.headers()["content-type"]).toContain("presentationml");
+  expect((await res.body()).subarray(0, 2).toString()).toBe("PK");
+});

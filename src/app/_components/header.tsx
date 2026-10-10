@@ -132,8 +132,11 @@ export async function Shell({
     </>
   );
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="hidden border-e border-line bg-panel/60 px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:gap-8 lg:overflow-y-auto">
+    <div className="min-h-screen lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
+      <aside
+        data-shell="nav"
+        className="hidden border-e border-line bg-panel/60 px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:gap-8 lg:overflow-y-auto"
+      >
         <Link href="/" className="flex items-center gap-2.5 px-2 no-underline">
           <Logo />
           <span className="flex flex-col leading-tight">
@@ -149,7 +152,10 @@ export async function Shell({
         </p>
       </aside>
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-30 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-ground/90 px-4 py-3 backdrop-blur sm:px-8">
+        <header
+          data-shell="top"
+          className="sticky top-0 z-30 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-line bg-ground/90 px-4 py-3 backdrop-blur sm:px-8"
+        >
           <Link href="/" className="flex items-center gap-2 no-underline lg:hidden">
             <Logo size={22} />
             <span className="text-sm font-semibold tracking-[0.14em]">{PRODUCT}</span>

@@ -48,7 +48,16 @@ export default async function ReportPage({ params }: { params: Promise<{ id: str
             sha256 {r.contentHash.slice(0, 16)}
           </p>
         </div>
-        <PrintButton label={t("Print or save as PDF")} />
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <a
+            href={`/reports/${id}/pptx`}
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink no-underline"
+            data-testid="download-pptx"
+          >
+            {t("PowerPoint (editable)")}
+          </a>
+          <PrintButton label={t("Print or save as PDF")} />
+        </div>
       </div>
       <div className="grid gap-3 lg:grid-cols-2 print:block">
         {content.blocks.map((b) => (

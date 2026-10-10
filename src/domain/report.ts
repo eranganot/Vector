@@ -36,6 +36,13 @@ export const METRICS = {
   blockers: { title: "Blockers", section: "blockers", kinds: ["table"], periods: null },
   decisions_needed: { title: "Decisions needed", section: "decisions", kinds: ["table"], periods: null },
   focus_next_week: { title: "Focus for next week", section: "focus", kinds: ["text", "table"], periods: null },
+  health_by_region: { title: "Health by region", section: "headline", kinds: ["bars", "table"], periods: null },
+  top_risks_opportunities: {
+    title: "Top risks and opportunities",
+    section: "decisions",
+    kinds: ["table"],
+    periods: null,
+  },
 } as const satisfies Record<string, MetricSpec>;
 
 export type MetricId = keyof typeof METRICS;
@@ -67,6 +74,20 @@ export const TEMPLATES = {
       "focus_next_week",
     ],
   },
+  board_pack: {
+    title: "Board pack",
+    metrics: [
+      "headline",
+      "pnl_vs_budget",
+      "projection",
+      "health_by_department",
+      "health_by_region",
+      "initiatives_status",
+      "top_risks_opportunities",
+      "decisions_needed",
+      "kpis_on_target",
+    ],
+  },
 } as const satisfies Record<string, { title: string; metrics: readonly MetricId[] }>;
 
 export type TemplateId = keyof typeof TEMPLATES;
@@ -85,8 +106,20 @@ const defaultBlock = (metric: MetricId, id: string): Block => ({
 });
 
 /** The template's starting layout. Block ids are stable ("b1", "b2", …) so links can address them. */
+/** Chart types a template starts with when they differ from the metric's first (the board pack's appendix tables). */
+const TEMPLATE_KINDS: Partial<Record<TemplateId, Partial<Record<MetricId, ChartKind>>>> = {
+  board_pack: { initiatives_status: "table", kpis_on_target: "table" },
+};
+
 export function templateLayout(template: TemplateId): Layout {
-  return { template, blocks: TEMPLATES[template].metrics.map((m, k) => defaultBlock(m, `b${k + 1}`)) };
+  return {
+    template,
+    blocks: TEMPLATES[template].metrics.map((m, k) => {
+      const b = defaultBlock(m, `b${k + 1}`);
+      const kind = TEMPLATE_KINDS[template]?.[m];
+      return kind ? { ...b, kind } : b;
+    }),
+  };
 }
 
 const nextId = (l: Layout) => `b${Math.max(0, ...l.blocks.map((b) => Number(b.id.slice(1)) || 0)) + 1}`;
