@@ -1228,4 +1228,15 @@ export const HE_SCREENS: Record<string, string> = {
   "No risk or opportunity in this scope.": "אין סיכון או הזדמנות בהיקף הזה.",
   risk: "סיכון",
   opportunity: "הזדמנות",
+  "My versions": "הגרסאות שלי",
+  "only you see them": "רק את/ה רואה אותן",
+  "Name of your version": "שם הגרסה שלך",
+  "My {template}": "{template} שלי",
+  "Save as my version": "שמירה כגרסה שלי",
+  "Edit the charts, then save them as your own version of the template.":
+    "ערכו את התרשימים ושמרו אותם כגרסה שלכם של התבנית.",
+  Delete: "מחיקה",
+  "Saved as your version. Pick it from Template next time.": "נשמר כגרסה שלך. בפעם הבאה בחרו אותה ב״תבנית״.",
+  "Your version was deleted.": "הגרסה שלך נמחקה.",
+  "name it (2 to 60 characters)": "תנו לה שם (2 עד 60 תווים)",
 };

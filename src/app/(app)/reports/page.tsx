@@ -6,6 +6,7 @@ import {
   METRIC_IDS,
   METRICS,
   moveBlock,
+  parseLayout,
   PERIODS,
   removeBlock,
   TEMPLATE_IDS,
@@ -13,7 +14,7 @@ import {
   templateLayout,
   type Layout,
 } from "@/domain/report";
-import { generateReportAction } from "../../actions";
+import { deleteReportLayoutAction, generateReportAction, saveReportLayoutAction } from "../../actions";
 import { day, dayTime } from "../../_components/format";
 import { BlockBody } from "../../_components/report-blocks";
 import { Card, Notice, SectionTitle } from "../../_components/ui";
@@ -39,13 +40,21 @@ const PERIOD_WORD: Record<string, string> = { "4w": "last 4 weeks", "8w": "last 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ s?: string; l?: string; e?: string; tp?: string; error?: string }>;
+  searchParams: Promise<{
+    s?: string;
+    l?: string;
+    e?: string;
+    tp?: string;
+    mine?: string;
+    done?: string;
+    error?: string;
+  }>;
 }) {
   const sp = await searchParams;
   const { actor } = await requireActor();
   const t = await getT();
   const scopes = await api.reportScopes(actor);
-  const list = await api.listReports(actor);
+  const [list, mine] = await Promise.all([api.listReports(actor), api.myReportLayouts(actor)]);
   if (scopes.length === 0)
     return (
       <>
@@ -59,7 +68,11 @@ export default async function ReportsPage({
   const decoded = decodeLayout(sp.l, "weekly_management", allowed);
   // Choosing another template starts from its layout; the same template keeps the edits (e.g. when only the scope changes).
   const tp = TEMPLATE_IDS.find((x) => x === sp.tp);
-  const layout = tp && tp !== decoded.template ? templateLayout(tp) : decoded;
+  // "my:<id>" loads one of the person's saved versions (G-E5a).
+  const saved = sp.tp?.startsWith("my:") ? mine.find((m) => `my:${m.id}` === sp.tp) : undefined;
+  const fromSaved = saved ? parseLayout(saved.layout, allowed) : null;
+  const layout = fromSaved ?? (tp && tp !== decoded.template ? templateLayout(tp) : decoded);
+  const current = saved ?? mine.find((m) => m.id === sp.mine);
   const selected = layout.blocks.find((b) => b.id === sp.e) ?? null;
   const resolved = (await api.resolveReport(actor, scope.unitId, layout))!;
   const href = (l: Layout, e?: string | null) => `/reports?s=${scope.unitId}&l=${encodeLayout(l)}${e ? `&e=${e}` : ""}`;
@@ -94,6 +107,15 @@ export default async function ReportsPage({
                   {t(TEMPLATES[x].title)}
                 </option>
               ))}
+              {mine.length > 0 && (
+                <optgroup label={t("My versions")}>
+                  {mine.map((m) => (
+                    <option key={m.id} value={`my:${m.id}`}>
+                      {m.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
             <label className="text-xs text-muted" htmlFor="report-scope">
               {t("Scope")}
@@ -131,7 +153,7 @@ export default async function ReportsPage({
           </form>
         </div>
       </div>
-      <Notice error={sp.error} />
+      <Notice error={sp.error} done={sp.done} />
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,9fr)]">
         <div className="flex min-w-0 flex-col gap-4">
           <Card className="flex flex-col gap-2" data-testid="report-sections">
@@ -177,6 +199,55 @@ export default async function ReportsPage({
                 </li>
               ))}
             </ol>
+          </Card>
+          <Card className="flex flex-col gap-2" data-testid="my-versions">
+            <SectionTitle aside={<span className="text-xs text-muted">{t("only you see them")}</span>}>
+              {t("My versions")}
+            </SectionTitle>
+            <form action={saveReportLayoutAction} className="flex flex-wrap items-center gap-2">
+              <input type="hidden" name="scope" value={scope.unitId} />
+              <input type="hidden" name="layout" value={encodeLayout(layout)} />
+              <input
+                name="name"
+                aria-label={t("Name of your version")}
+                defaultValue={current?.name ?? t("My {template}", { template: title })}
+                maxLength={60}
+                className="min-w-0 grow rounded-lg border border-line bg-panel px-3 py-1.5 text-sm"
+              />
+              <button
+                className="rounded-lg border border-accent px-3 py-1.5 text-sm text-accent"
+                data-testid="save-layout"
+              >
+                {t("Save as my version")}
+              </button>
+            </form>
+            {mine.length === 0 ? (
+              <p className="text-xs text-muted">
+                {t("Edit the charts, then save them as your own version of the template.")}
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-1 text-sm">
+                {mine.map((m) => (
+                  <li key={m.id} className="flex items-center gap-2" data-testid="my-version">
+                    <Link
+                      href={`/reports?s=${scope.unitId}&tp=my:${m.id}`}
+                      className="min-w-0 grow truncate text-ink no-underline hover:underline"
+                    >
+                      {m.name}
+                      <span className="ms-2 text-xs text-muted">
+                        {t(TEMPLATES[m.template as keyof typeof TEMPLATES]?.title ?? m.template)}
+                      </span>
+                    </Link>
+                    <form action={deleteReportLayoutAction}>
+                      <input type="hidden" name="id" value={m.id} />
+                      <button aria-label={t("Delete")} className="px-1.5 text-muted hover:text-p1">
+                        ×
+                      </button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
           <Card className="flex flex-col gap-2" data-testid="add-chart">
             <SectionTitle>{t("Add a chart")}</SectionTitle>

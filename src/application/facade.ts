@@ -45,8 +45,14 @@ import { workstreamMoney } from "./queries/money";
 import { initiativesView } from "./queries/initiatives";
 import { actionCenter, messagesForMe } from "./queries/action-center";
 import { dependencyFlow, eventPlan } from "./queries/flow";
-import { getReport, listReports, reportScopes, resolveReport } from "./queries/report-data";
-import { generateReport, recordReportDownload, type GenerateReportInput } from "./commands/reports";
+import { getReport, listReports, myReportLayouts, reportScopes, resolveReport } from "./queries/report-data";
+import {
+  deleteReportLayout,
+  generateReport,
+  recordReportDownload,
+  saveReportLayout,
+  type GenerateReportInput,
+} from "./commands/reports";
 import type { Layout } from "@/domain/report";
 import { approveAndSend, declineInCenter, releaseMessages, type ApproveAndSendInput } from "./commands/messages";
 import {
@@ -127,6 +133,10 @@ export const api = {
   recordReportDownload: async (a: Actor, id: string, format: "pptx" | "pdf") =>
     recordReportDownload(await ctx(), a, id, format),
   listReports: async (a: Actor) => listReports(db(), await activeOrgId(db()), a),
+  myReportLayouts: async (a: Actor) => myReportLayouts(db(), await activeOrgId(db()), a),
+  saveReportLayout: async (a: Actor, input: { name: string; layout: Layout }) =>
+    saveReportLayout(await ctx(), a, input),
+  deleteReportLayout: async (a: Actor, id: string) => deleteReportLayout(await ctx(), a, id),
   getReport: async (a: Actor, id: string) => getReport(db(), await activeOrgId(db()), a, id),
   initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
   completeMilestone: async (a: Actor, milestoneId: string) => completeMilestone(await ctx(), a, milestoneId),

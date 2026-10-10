@@ -1,6 +1,6 @@
 # Stage E5: Reports (plan v2)
 
-Status: **Built and verified on Dev (e5e85d6); awaiting Eran's E5 gate.** Prod promotion is a separate step.
+Status: **Accepted by Eran 2026-10-10 (G-E5); Prod promoted to E5 (`demo` 3d68c7f).**
 
 ## What shipped
 

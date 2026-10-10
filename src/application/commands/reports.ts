@@ -9,7 +9,9 @@ import { DomainError } from "@/domain/errors";
 import { hasPermission } from "@/domain/policy/permissions";
 import { REPORT_MODEL, type Layout } from "@/domain/report";
 import type { Actor } from "@/domain/types";
-import { orgUnit, report } from "@/infra/db/schema";
+import { orgUnit, report, reportLayout } from "@/infra/db/schema";
+
+const ZERO = "00000000-0000-0000-0000-000000000000";
 import { type AppContext, runCommand } from "../context";
 import { resolveReport } from "../queries/report-data";
 
@@ -85,4 +87,85 @@ export async function recordReportDownload(ctx: AppContext, actor: Actor, report
   await runCommand(ctx, actor, "report.download", { entityType: "report", entityId: reportId }, async ({ audit }) => {
     await audit({ operation: "report.downloaded", entityType: "report", entityId: reportId, changes: { format } });
   });
+}
+
+/**
+ * Save the person's edited layout as their own version of a template (G-E5a). Saving under an existing name replaces
+ * that version. Private to its owner; audited.
+ */
+export async function saveReportLayout(ctx: AppContext, actor: Actor, input: { name: string; layout: Layout }) {
+  return runCommand(
+    ctx,
+    actor,
+    "report.layout_save",
+    { entityType: "report_layout", entityId: ZERO },
+    async ({ tx, now, audit }) => {
+      if (actor.kind !== "user" || !actor.assignments.some((a) => hasPermission(a.role, "report.generate")))
+        throw new DomainError("PermissionDenied", "you cannot save report layouts");
+      const name = input.name.trim();
+      if (name.length < 2 || name.length > 60) throw new DomainError("Invalid", "name it (2 to 60 characters)");
+      if (input.layout.blocks.length === 0) throw new DomainError("Invalid", "add at least one chart");
+      const [existing] = await tx
+        .select()
+        .from(reportLayout)
+        .where(
+          and(
+            eq(reportLayout.orgId, ctx.orgId),
+            eq(reportLayout.ownerUserId, actor.userId),
+            eq(reportLayout.name, name),
+          ),
+        );
+      const [row] = existing
+        ? await tx
+            .update(reportLayout)
+            .set({ template: input.layout.template, layout: input.layout, updatedAt: now })
+            .where(eq(reportLayout.id, existing.id))
+            .returning()
+        : await tx
+            .insert(reportLayout)
+            .values({
+              orgId: ctx.orgId,
+              ownerUserId: actor.userId,
+              name,
+              template: input.layout.template,
+              layout: input.layout,
+              createdAt: now,
+              updatedAt: now,
+            })
+            .returning();
+      await audit({
+        operation: existing ? "report.layout_updated" : "report.layout_saved",
+        entityType: "report_layout",
+        entityId: row.id,
+        changes: { name, template: row.template, blocks: input.layout.blocks.length },
+      });
+      return row.id;
+    },
+  );
+}
+
+export async function deleteReportLayout(ctx: AppContext, actor: Actor, id: string) {
+  await runCommand(
+    ctx,
+    actor,
+    "report.layout_delete",
+    { entityType: "report_layout", entityId: id },
+    async ({ tx, audit }) => {
+      if (actor.kind !== "user") throw new DomainError("PermissionDenied", "people own layouts");
+      const [row] = await tx
+        .select()
+        .from(reportLayout)
+        .where(
+          and(eq(reportLayout.orgId, ctx.orgId), eq(reportLayout.id, id), eq(reportLayout.ownerUserId, actor.userId)),
+        );
+      if (!row) throw new DomainError("NotFound", "layout not found");
+      await tx.delete(reportLayout).where(eq(reportLayout.id, id));
+      await audit({
+        operation: "report.layout_deleted",
+        entityType: "report_layout",
+        entityId: id,
+        changes: { name: row.name },
+      });
+    },
+  );
 }

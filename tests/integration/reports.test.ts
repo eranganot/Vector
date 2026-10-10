@@ -140,3 +140,35 @@ describe("report exports (E5b)", () => {
     expect(ops.map((o) => o.operation)).toEqual(["report.generated", "report.downloaded"]);
   });
 });
+
+describe("saved layouts (G-E5a)", () => {
+  it("saves a person's own version, replaces it by name, keeps it private and deletes it, audited", async () => {
+    const { saveReportLayout, deleteReportLayout } = await import("@/application/commands/reports");
+    const { myReportLayouts } = await import("@/application/queries/report-data");
+    const { removeBlock } = await import("@/domain/report");
+    const dana = await as("dana");
+    const noa = await as("noa");
+    const ctx = await createContext(appDb);
+    const layout = removeBlock(templateLayout("board_pack"), "b2");
+    const id = await saveReportLayout(ctx, dana, { name: "Board, short", layout });
+    const again = await saveReportLayout(ctx, dana, { name: "Board, short", layout: addBlock(layout, "blockers") });
+    expect(again).toBe(id);
+    const mine = await myReportLayouts(appDb, orgId, dana);
+    expect(mine.map((m) => m.name)).toEqual(["Board, short"]);
+    expect((mine[0].layout as { blocks: unknown[] }).blocks.length).toBe(layout.blocks.length + 1);
+    expect(await myReportLayouts(appDb, orgId, noa)).toEqual([]);
+    await expect(deleteReportLayout(ctx, noa, id)).rejects.toThrow(/not found/);
+    await deleteReportLayout(ctx, dana, id);
+    expect(await myReportLayouts(appDb, orgId, dana)).toEqual([]);
+    const ops = await appDb
+      .select()
+      .from(s.auditEvent)
+      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id)))
+      .orderBy(s.auditEvent.seq);
+    expect(ops.map((o) => o.operation)).toEqual([
+      "report.layout_saved",
+      "report.layout_updated",
+      "report.layout_deleted",
+    ]);
+  });
+});
