@@ -1,6 +1,6 @@
 # Reports (E5)
 
-Status: **E5a built (2026-10-10): builder, weekly management template, in-app snapshot; see §5. PowerPoint, PDF and the board pack follow.** Proposed in E0 (2026-10-06). Implements FB item #10 and FB-9: materials for meetings, management and board
+Status: **Built (E5a–E5b, 2026-10-10): builder, weekly management and board pack templates, snapshots, editable PowerPoint, PDF from the print view; see §5–§6.** Proposed in E0 (2026-10-06). Implements FB item #10 and FB-9: materials for meetings, management and board
 discussions, in-app, as PDF and as editable PowerPoint. The weekly management report comes first, then the board pack.
 
 ## 1. Who can generate what
@@ -72,3 +72,19 @@ generated sentence uses templates (FB-11), in the reader's language.
   scope can open it; others get 404.
 - **Not yet:** editable PowerPoint, the PDF export, the board pack (E5b–E5c); saving a layout as a personal variant
   (to decide at the E5 gate).
+
+## 6. As built (E5b, 2026-10-10)
+
+- **Board pack** template: executive summary, P&L vs budget, end of month and quarter, health by department and by
+  region, strategic initiatives (table), top 5 risks and top 3 opportunities with ₪ and their response, decisions
+  needed, KPI appendix (table). The Market & competitors section joins in E6, when that data exists.
+- **Editable PowerPoint** (`/reports/<id>/pptx`, `src/infra/export/pptx.ts`, pptxgenjs 3.12): a cover slide and one
+  slide per block — native line, bar and doughnut charts and native tables (long tables split across slides), so
+  every number can be edited in PowerPoint or Google Slides. Hebrew decks are right to left (`rtl="1"`), Arial for
+  Hebrew glyphs. Checked by opening both decks (python-pptx structure, LibreOffice render) and by an integration
+  test on the file's charts, tables and RTL flags. Each download is audited (`report.downloaded`).
+- **PDF**: from the snapshot's print view ("Print or save as PDF"): the browser renders it, so Hebrew right-to-left
+  and mixed numbers are exact; the shell is hidden and the dark theme is kept (`print-color-adjust: exact`, A4
+  landscape). **Spike decision:** no server-side PDF in the demo — headless Chromium on Railway would add a few
+  hundred MB to the image for the same output the browser already gives. A server-rendered PDF (e.g. for scheduled
+  e-mail) can come with the production channels.

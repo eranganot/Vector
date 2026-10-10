@@ -83,6 +83,19 @@ export type BlockData =
 export type Sentence = { text: string; params?: Record<string, string | number> };
 
 type Tone = "good" | "watch" | "bad";
+/** Response states in words the screens already use (executive home "Risks & opportunities"). */
+const RESPONSE_WORD: Record<string, string> = {
+  proposed: "proposed",
+  pending_approval: "approval",
+  ready: "ready",
+  executing: "executing",
+  executed: "done",
+  failed: "failed",
+  cancelled: "cancelled",
+  recommended: "to decide",
+  accepted: "accepted",
+  declined: "declined",
+};
 const toneOfGap = (gapPct: number): Tone => (gapPct >= 0 ? "good" : gapPct > -3 ? "watch" : "bad");
 const toneOfStatus = (s: string): Tone => (s === "healthy" ? "good" : s === "watch" ? "watch" : "bad");
 
@@ -409,6 +422,48 @@ export async function resolveReport(
             text: "{n}. {title} ({ils} a week).",
             params: { n: k + 1, title: f.title, ils: Math.round(f.ils) },
           })),
+        };
+      }
+      case "health_by_region": {
+        const regions = home.regions;
+        if (!regions.length) return { type: "empty", reason: "Region health is shown for the group." };
+        if (b.kind === "table")
+          return {
+            type: "table",
+            columns: ["Region", "Health", "Change"],
+            rows: regions.map((r) => ({
+              label: r.name,
+              values: [Math.round(r.score), r.change],
+              tone: toneOfStatus(r.status),
+            })),
+          };
+        return {
+          type: "bars",
+          unit: "score",
+          rows: [...regions]
+            .sort((a, b) => a.score - b.score)
+            .map((r) => ({ label: r.name, value: Math.round(r.score), tone: toneOfStatus(r.status) })),
+        };
+      }
+      case "top_risks_opportunities": {
+        const row = (r: ExecutiveHome["risks"][number], opp: boolean) => ({
+          label: r.title,
+          sub: r.band,
+          values: [
+            Math.round(r.ils),
+            `${Math.round(r.confidence * 100)}%`,
+            RESPONSE_WORD[r.response ?? ""] ?? "no response yet",
+          ] as (string | number)[],
+          tone: opp ? ("good" as const) : r.band === "P1" ? ("bad" as const) : ("watch" as const),
+        });
+        return {
+          type: "table",
+          columns: ["Risk or opportunity", "₪ a week", "Confidence", "Response"],
+          rows: [
+            ...home.risks.slice(0, 5).map((r) => row(r, false)),
+            ...home.opportunities.slice(0, 3).map((r) => row(r, true)),
+          ],
+          empty: "No risk or opportunity in this scope.",
         };
       }
     }

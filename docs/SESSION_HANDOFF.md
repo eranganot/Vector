@@ -4,11 +4,12 @@ _Last updated: 2026-10-10 (E5a)_
 
 ## Current phase
 
-**Plan v2, stage E5 (reports): E5a built** (builder, weekly management template, in-app snapshot). Next: E5b editable
-PowerPoint and PDF, then the board pack and the E5 gate. E4 accepted by Eran 2026-10-08 (G-E4); E4e (his review
+**Plan v2, stage E5 (reports): E5a–E5b built** (builder, weekly management and board pack, snapshots, editable
+PowerPoint, PDF from the print view). Next: verify on Dev and write the E5 gate brief. E4 accepted by Eran 2026-10-08 (G-E4); E4e (his review
 fixes) verified on Dev db3c43e. Prod (`demo` e8ff6ab) stays on Phase 4 until Eran asks for a promotion.
 
-- E5a #52: reports (report-v1, migration 0013). Spec as built: docs/specs/reports.md §5.
+- E5a #52: reports (report-v1, migration 0013); Dev 0bf6db6 smoke 19/19. E5b #53: board pack, PowerPoint, PDF.
+  Spec as built: docs/specs/reports.md §5–§6.
 - E4 #47–#51 shipped and verified on Dev.
 
 ## Objective (E0, done)
@@ -30,7 +31,7 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. E5b: editable PowerPoint and PDF exports; then the board pack and the E5 gate brief.
+1. Verify E5 on Dev (e2e, decks opened); E5 gate brief docs/phases/STAGE_E5.md; Eran reviews.
 
 ## Reproducible commands
 

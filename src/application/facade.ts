@@ -46,7 +46,7 @@ import { initiativesView } from "./queries/initiatives";
 import { actionCenter, messagesForMe } from "./queries/action-center";
 import { dependencyFlow, eventPlan } from "./queries/flow";
 import { getReport, listReports, reportScopes, resolveReport } from "./queries/report-data";
-import { generateReport, type GenerateReportInput } from "./commands/reports";
+import { generateReport, recordReportDownload, type GenerateReportInput } from "./commands/reports";
 import type { Layout } from "@/domain/report";
 import { approveAndSend, declineInCenter, releaseMessages, type ApproveAndSendInput } from "./commands/messages";
 import {
@@ -124,6 +124,8 @@ export const api = {
   resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
     resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),
   generateReport: async (a: Actor, input: GenerateReportInput) => generateReport(await ctx(), a, input),
+  recordReportDownload: async (a: Actor, id: string, format: "pptx" | "pdf") =>
+    recordReportDownload(await ctx(), a, id, format),
   listReports: async (a: Actor) => listReports(db(), await activeOrgId(db()), a),
   getReport: async (a: Actor, id: string) => getReport(db(), await activeOrgId(db()), a, id),
   initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
