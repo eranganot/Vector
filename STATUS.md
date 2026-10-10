@@ -55,6 +55,18 @@ the place for root-cause records of fixed bugs (what broke, proven cause, what w
 
 ## Root-cause records
 
+### 2026-10-10 · CI `verify` failed on PR #53: the Action Center test saw its audit operations in another order
+
+- **What happened:** `tests/integration/action-center.test.ts` expected `["message.drafted", "message.edited",
+"message.approved", "message.sent"]` and CI received the same four operations starting with `message.sent`.
+- **Root cause (proven from the CI log and the code):** the test read `audit_event` rows by entity id with no
+  `ORDER BY`; PostgreSQL returns such rows in no guaranteed order (here through the `audit_event_entity_idx` scan).
+  It passed locally and on earlier runs by chance. The new reports test had the same flaw (seen locally, worked
+  around with a sort).
+- **Ruled out:** a change in the message flow (the same four operations, each once); the merge of main (no change to
+  the Action Center code).
+- **Fix:** both tests order by the audit sequence (`seq`), which is the order the events were written.
+
 ### 2026-10-08 · Hebrew: the due date touched the next-step text in the Cross-department list
 
 - **What happened:** in Hebrew, "10-27" ran into "להחליט על ההמלצה" with no space (Eran's screenshot).

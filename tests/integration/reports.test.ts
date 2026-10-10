@@ -84,7 +84,8 @@ describe("reports (E5)", () => {
     const ops = await appDb
       .select()
       .from(s.auditEvent)
-      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id1)));
+      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id1)))
+      .orderBy(s.auditEvent.seq);
     expect(ops.map((o) => o.operation)).toEqual(["report.generated"]);
 
     const noa = await as("noa");
@@ -134,7 +135,8 @@ describe("report exports (E5b)", () => {
     const ops = await appDb
       .select()
       .from(s.auditEvent)
-      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id)));
-    expect(ops.map((o) => o.operation).sort()).toEqual(["report.downloaded", "report.generated"]);
+      .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, id)))
+      .orderBy(s.auditEvent.seq);
+    expect(ops.map((o) => o.operation)).toEqual(["report.generated", "report.downloaded"]);
   });
 });

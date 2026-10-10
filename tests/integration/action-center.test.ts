@@ -112,6 +112,7 @@ describe("Action Center (E4)", () => {
         .select()
         .from(s.auditEvent)
         .where(and(eq(s.auditEvent.orgId, orgId), eq(s.auditEvent.entityId, msgId)))
+        .orderBy(s.auditEvent.seq)
     ).map((e) => e.operation);
     expect(ops).toEqual(["message.drafted", "message.edited", "message.approved", "message.sent"]);
   });
