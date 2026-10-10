@@ -264,6 +264,22 @@ const checks: Check[] = [
       return `migrations ${body.migrations.applied} · 3 routes → /login`;
     },
   },
+  {
+    phase: 9,
+    name: "E5: reports are migrated (0013); the builder and a snapshot require sign-in and leak nothing",
+    run: async (base) => {
+      const body = JSON.parse((await get(base, "/api/health")).text);
+      if (body.migrations.applied < 14) throw new Error(`expected migration 0013, got ${body.migrations.applied}`);
+      for (const path of ["/reports", "/reports/00000000-0000-0000-0000-000000000000"]) {
+        const res = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(15_000) });
+        const loc = res.headers.get("location") ?? "";
+        if (![302, 303, 307, 308].includes(res.status) || !loc.includes("/login"))
+          throw new Error(`${path}: status ${res.status} location ${loc}`);
+        if (/Reports builder|sha256|Decisions needed/.test(await res.text())) throw new Error(`${path} leaked content`);
+      }
+      return `migrations ${body.migrations.applied} · 2 routes → /login`;
+    },
+  },
 ];
 
 async function main() {

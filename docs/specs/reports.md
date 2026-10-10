@@ -1,6 +1,6 @@
 # Reports (E5)
 
-Status: **Proposed (E0, 2026-10-06).** Implements FB item #10 and FB-9: materials for meetings, management and board
+Status: **E5a built (2026-10-10): builder, weekly management template, in-app snapshot; see §5. PowerPoint, PDF and the board pack follow.** Proposed in E0 (2026-10-06). Implements FB item #10 and FB-9: materials for meetings, management and board
 discussions, in-app, as PDF and as editable PowerPoint. The weekly management report comes first, then the board pack.
 
 ## 1. Who can generate what
@@ -49,3 +49,26 @@ generated sentence uses templates (FB-11), in the reader's language.
   formats. Numbers match the screens at the same clock time (integration test).
 - The PPTX opens in PowerPoint and in Google Slides, with editable text, tables and charts (checked by opening the file).
 - A user cannot generate for a unit outside their scope (integration test).
+
+## 5. As built (E5a, 2026-10-10)
+
+- **Model** `report-v1` (`src/domain/report.ts`, pure, unit-tested): 12 chart blocks (headline, health by department,
+  sales vs budget, P&L vs budget, end of month and quarter, costs vs budget, headcount cost, initiatives, KPIs on
+  target, blockers, decisions needed, focus for next week), each offering its chart types (line, bars, ring, waterfall,
+  table, text) and, where it has a time axis, a period (last 4 / 8 / 13 weeks). Layouts are validated on every request;
+  up to 20 blocks.
+- **Builder** (`/reports`, wireframe v3 #6): template and scope (the group and departments the viewer may read,
+  ADR-008); sections with ↑ ↓ ×; "Add a chart"; click a chart's title to edit its type, period and (in a group report)
+  narrow it to one department. The layout lives in the URL, so every edit is a link and the preview is the server's
+  numbers. The board pack template, region and branch scopes come in a later step.
+- **Numbers** (`src/application/queries/report-data.ts`) come from the screens' read models: the executive home
+  (health, money lines, projections, KPIs, focus), initiatives, commitments, dependencies, barriers and open
+  recommendations. Sales and headcount cost are weekly actual vs budget from the ledger (trading-day weighted
+  budgets). "Last year" is not shown: the synthetic data holds 52 weeks.
+- **Snapshot** (`report` table, migration 0013): generating stores the resolved blocks with the layout, the as-of
+  clock time, the language, a version per template, scope and language, and a SHA-256 content hash; audited as
+  `report.generated` (capability `report.generate`: Executive, Department and Regional managers). `/reports/<id>`
+  shows it in the language it was generated in, with a print view ("Print or save as PDF"). Only people who read its
+  scope can open it; others get 404.
+- **Not yet:** editable PowerPoint, the PDF export, the board pack (E5b–E5c); saving a layout as a personal variant
+  (to decide at the E5 gate).

@@ -740,3 +740,32 @@ export const initiativeReminder = pgTable(
   },
   (t) => [index("initiative_reminder_initiative_idx").on(t.initiativeId)],
 );
+
+/**
+ * A generated report (plan v2, E5; reports.md §3): an immutable snapshot of a layout resolved as of the demo clock, in
+ * one language. Regenerating creates a new version. Visible to the units that may read its scope.
+ */
+export const report = pgTable(
+  "report",
+  {
+    id: id(),
+    orgId: orgId(),
+    template: text("template").notNull(),
+    /** 1, 2, … per template, scope and language. */
+    version: integer("version").notNull(),
+    scopeUnitId: uuid("scope_unit_id")
+      .notNull()
+      .references(() => orgUnit.id),
+    asOf: ts("as_of").notNull(),
+    generatedBy: text("generated_by")
+      .notNull()
+      .references(() => user.id),
+    language: text("language").notNull(),
+    layout: jsonb("layout").notNull(),
+    content: jsonb("content").notNull(),
+    contentHash: text("content_hash").notNull(),
+    visibleUnitIds: uuid("visible_unit_ids").array().notNull(),
+    createdAt: ts("created_at").notNull(),
+  },
+  (t) => [index("report_org_created_idx").on(t.orgId, t.createdAt)],
+);

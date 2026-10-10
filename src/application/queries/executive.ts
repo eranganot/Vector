@@ -73,7 +73,7 @@ const SOON_HOURS = 168;
 
 const sum = (xs: number[]) => xs.reduce((a, x) => a + x, 0);
 const mean = (xs: number[]) => (xs.length ? sum(xs) / xs.length : 0);
-const monthOf = (day: string) => day.slice(0, 7);
+export const monthOf = (day: string) => day.slice(0, 7);
 function quarterStart(day: string) {
   const m = Number(day.slice(5, 7));
   return `${day.slice(0, 4)}-${String(m - ((m - 1) % 3)).padStart(2, "0")}-01`;
@@ -87,7 +87,7 @@ function quarterEnd(day: string) {
   const qs = quarterStart(day);
   return monthEnd(`${qs.slice(0, 5)}${String(Number(qs.slice(5, 7)) + 2).padStart(2, "0")}-01`);
 }
-function daysIn(from: string, to: string) {
+export function daysIn(from: string, to: string) {
   const out: string[] = [];
   for (let d = from; d <= to; d = addDays(d, 1)) out.push(d);
   return out;
@@ -115,7 +115,7 @@ export type MoneyLine = {
  * The money ledger for one scope (all regions, or one): daily actuals and daily budgets per account, summed over the
  * scope's units. Derived lines are computed per day from their components.
  */
-class Ledger {
+export class Ledger {
   private actual = new Map<string, Map<string, number>>();
   private budgetMonth = new Map<string, Map<string, number>>();
   private weightCache = new Map<string, number>();

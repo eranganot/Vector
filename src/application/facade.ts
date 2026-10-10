@@ -45,6 +45,9 @@ import { workstreamMoney } from "./queries/money";
 import { initiativesView } from "./queries/initiatives";
 import { actionCenter, messagesForMe } from "./queries/action-center";
 import { dependencyFlow, eventPlan } from "./queries/flow";
+import { getReport, listReports, reportScopes, resolveReport } from "./queries/report-data";
+import { generateReport, type GenerateReportInput } from "./commands/reports";
+import type { Layout } from "@/domain/report";
 import { approveAndSend, declineInCenter, releaseMessages, type ApproveAndSendInput } from "./commands/messages";
 import {
   completeMilestone,
@@ -117,6 +120,12 @@ export const api = {
   dependencyFlow: async (a: Actor, commitmentIds: string[], whatIf?: { nodeId: string; days: number }) =>
     dependencyFlow(db(), await activeOrgId(db()), a, commitmentIds, whatIf),
   eventPlan: async (a: Actor) => eventPlan(db(), await activeOrgId(db()), a),
+  reportScopes: async (a: Actor) => reportScopes(db(), await activeOrgId(db()), a),
+  resolveReport: async (a: Actor, scopeUnitId: string, layout: Layout) =>
+    resolveReport(db(), await activeOrgId(db()), a, { scopeUnitId, layout }),
+  generateReport: async (a: Actor, input: GenerateReportInput) => generateReport(await ctx(), a, input),
+  listReports: async (a: Actor) => listReports(db(), await activeOrgId(db()), a),
+  getReport: async (a: Actor, id: string) => getReport(db(), await activeOrgId(db()), a, id),
   initiatives: async (a: Actor, key?: string) => initiativesView(db(), await activeOrgId(db()), a, { key }),
   completeMilestone: async (a: Actor, milestoneId: string) => completeMilestone(await ctx(), a, milestoneId),
   moveMilestone: async (a: Actor, milestoneId: string, dueOn: string, reason: string) =>
@@ -212,6 +221,7 @@ export type { ValuePoint } from "./queries/value-map";
 export type { InitiativesView, WorkItem, YourItem } from "./queries/initiatives";
 export type { ActionCenterView, QueueItem } from "./queries/action-center";
 export type { DependencyFlow, EventPlan } from "./queries/flow";
+export type { ResolvedBlock, ResolvedReport, BlockData, ReportScopeOption } from "./queries/report-data";
 export { headlineFor } from "./queries/performance";
 export type { ActionFilter } from "./queries/actions";
 

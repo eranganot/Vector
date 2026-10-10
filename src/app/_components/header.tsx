@@ -28,6 +28,7 @@ const ICONS = {
   demo: "M12 8v4l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z",
   cross: "M5 5h5v5H5zM14 14h5v5h-5zM14 5h5v5h-5zM10 7.5h4M16.5 10v4M7.5 10v6.5H14",
   center: "M13 2L4 14h7l-1 8 9-12h-7z",
+  reports: "M7 3h7l5 5v13H7zM14 3v5h5M10 17v-3M13 17v-6M16 17v-4",
 };
 
 function groupOf(title: string | null) {
@@ -100,6 +101,11 @@ export async function Shell({
       {seeCross && (
         <NavLink href="/initiatives">
           <Icon d={ICONS.cross} /> {t("Cross-department")}
+        </NavLink>
+      )}
+      {seeCross && (
+        <NavLink href="/reports">
+          <Icon d={ICONS.reports} /> {t("Reports")}
         </NavLink>
       )}
       <NavLink href="/commitments">

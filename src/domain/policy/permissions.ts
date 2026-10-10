@@ -18,6 +18,8 @@ export const CAPABILITIES = [
   "initiative.record",
   /** Plan v2 (E3): complete or move a milestone, raise or resolve a barrier, send a reminder. */
   "initiative.update",
+  /** Plan v2 (E5): generate a report for your own scope or a unit below it (reports.md §1). */
+  "report.generate",
   "audit.read",
   "config.priority_weights.propose",
   "config.priority_weights.approve",
@@ -40,6 +42,7 @@ const MANAGER: Capability[] = [
   "outcome.review",
   "commitment.record",
   "commitment.update",
+  "report.generate",
   "audit.read",
 ];
 
