@@ -4,12 +4,10 @@ _Last updated: 2026-10-10 (E5a)_
 
 ## Current phase
 
-**Plan v2, stage E6 (market & competitors): built, awaiting Eran's review (G-E6).** E6a #56 (real data, basket
-index, the tab), E6b #57 (market-v1 → insights, What changed outside, board-pack market block) and E6c #58 (Eran's
-review: takeaways on every card, growth & expansion, us among competitors, MK6 price gap, Ask-your-data preview). **Prod is on E5**
-(`demo` 3d68c7f: migrations 14, seed p5-v2); E6 goes to Prod only on Eran's sign-off.
+**Plan v2, stage E7 (mail agent / Inbox): built, awaiting Eran's review (G-E7).** E7 #59. E6 is built (#56–#58, ₪
+assumptions kept, G-E6e); Eran said "continue to E7" without asking for a Prod promotion, so **Prod is still on E5**
+(`demo` 3d68c7f). Ask before promoting.
 
-- E6a Dev verified at a76ef05 (smoke 20/20, e2e 55/55 on Dev, demo reset after).
 - Refresh market data: `pnpm market:fetch` from Claude's workspace, commit the new `data/market/snapshot-<day>.json`.
 
 ## Objective (E0, done)
@@ -31,8 +29,8 @@ weights, projection-v1 terms, department money lines, M1–M5 rules, wireframes 
 
 ## Next recommended action
 
-1. Eran reviews E6 again after E6c (G-E6, docs/phases/STAGE_E6.md).
-2. After sign-off: promote Prod to E6; then E7 (mail agent).
+1. Eran reviews E7 (G-E7, docs/phases/STAGE_E7.md); ask whether to promote Prod (to E6 or E7).
+2. Next stage after sign-off: the end-to-end MVP (v1 Phase 7).
 
 ## Reproducible commands
 

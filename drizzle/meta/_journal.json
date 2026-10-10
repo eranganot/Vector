@@ -113,6 +113,13 @@
       "when": 1791645605536,
       "tag": "0015_market",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791662244097,
+      "tag": "0016_inbox",
+      "breakpoints": true
     }
   ]
 }

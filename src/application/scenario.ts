@@ -6,6 +6,7 @@
 import { CATALOG } from "@/infra/seed/catalog";
 import { runCommitmentMonitor } from "./commands/commitments";
 import { seedCommitments } from "./commitments-seed";
+import { seedInbox } from "./inbox-seed";
 import { seedInitiatives } from "./initiatives-seed";
 import { and, eq, inArray } from "drizzle-orm";
 import { addDays } from "@/domain/calendar";
@@ -156,7 +157,13 @@ export async function bootstrapEpoch(db: Db, password: string) {
     catalogIds,
     commitments.commitments,
   );
-  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor, initiatives };
+  // Plan v2 (E7): each C-suite persona's synthetic inbox, linked to the stories above.
+  const inbox = await seedInbox(await createContext(db, { orgId: r.orgId }), {
+    catalog: catalogIds,
+    commitments: commitments.commitments,
+    initiatives,
+  });
+  return { orgId: r.orgId, detections, catalog, commitments: commitments.monitor, initiatives, inbox };
 }
 
 /** Starts a fresh demo epoch (new organization; history of the old one stays intact). */

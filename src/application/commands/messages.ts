@@ -5,7 +5,7 @@
  * channel seam; in the demo that is in-app only (FB-8). Every step is audited.
  */
 import { createHash } from "node:crypto";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { DomainError } from "@/domain/errors";
 import { assertAuthorized, authorizeSystem } from "@/domain/policy/authorize";
 import type { Actor } from "@/domain/types";
@@ -139,12 +139,14 @@ export async function releaseMessages(ctx: AppContext, decisionId?: string) {
       and(
         eq(outboundMessage.orgId, ctx.orgId),
         eq(outboundMessage.status, "approved"),
+        // Inbox replies (E7) carry no decision and are sent when approved; only Action Center messages wait here.
+        isNotNull(outboundMessage.decisionId),
         ...(decisionId ? [eq(outboundMessage.decisionId, decisionId)] : []),
       ),
     );
   let sent = 0;
   for (const m of waiting) {
-    const acts = await ctx.db.select().from(action).where(eq(action.decisionId, m.decisionId));
+    const acts = await ctx.db.select().from(action).where(eq(action.decisionId, m.decisionId!));
     const live = acts.filter((a) => a.status !== "cancelled" && a.status !== "rejected");
     if (live.length === 0) {
       await runCommand(

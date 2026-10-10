@@ -68,9 +68,13 @@ export default async function ApprovalsPage({
                   {m.copy ? t("{name} copied you", { name: m.from }) : t("from {name}", { name: m.from })} ·{" "}
                   {shortDay(m.sentAt, locale)}
                 </span>
-                <Link href={`/insights/${m.insightId}`} className="ms-auto text-accent">
-                  {t("full analysis →")}
-                </Link>
+                {m.insightId ? (
+                  <Link href={`/insights/${m.insightId}`} className="ms-auto text-accent">
+                    {t("full analysis →")}
+                  </Link>
+                ) : (
+                  <span className="ms-auto">{t("reply from their inbox")}</span>
+                )}
               </div>
               <b>{m.subject}</b>
               <p className="whitespace-pre-line text-sm text-muted">{m.body}</p>
